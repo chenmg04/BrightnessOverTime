@@ -47,6 +47,10 @@ classdef brightnessOverTime < handle
         function obj = brightnessOverTime
             
             defaultsize=round(obj.screendims(3)/1366*9);
+            os=computer;
+            if defaultsize>9 && strfind(os,'PC')
+                defaultsize=9;
+            end
             set(0,'defaultUicontrolFontSize',defaultsize);
             
             obj.hMain    =figure('Name','BrightnessOverTime',...
