@@ -47,10 +47,6 @@ classdef brightnessOverTime < handle
         function obj = brightnessOverTime
             
             defaultsize=round(obj.screendims(3)/1366*9);
-            os=computer;
-            if defaultsize>9 && strfind(os,'PC')
-                defaultsize=9;
-            end
             set(0,'defaultUicontrolFontSize',defaultsize);
             
             obj.hMain    =figure('Name','BrightnessOverTime',...
@@ -3124,10 +3120,6 @@ classdef brightnessOverTime < handle
                     set(fg,'color',[0.729 0.831 0.957])
                     baseline=zeros(nFrames,1);
                     plot(fluoTime,RelativeF, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
-                    axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
-                    end
                  %analyze trail
                 elseif get(obj.fluoAnalyzer.trailByTrail,'Value')
                     fg=figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Trails'],'NumberTitle','off');
@@ -3141,10 +3133,6 @@ classdef brightnessOverTime < handle
                         sti= stidata(prestartFrame(k):traceFrame(k));
                         baseline=zeros(1,traceLength+round(1/frameRate));
                         plot(t,RelativeF(:,k),t,sti,t,baseline,'--k','LineWidth',1);hold on;
-                    end
-                    axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
                     end
                     %analyze average
                 else
@@ -3160,9 +3148,9 @@ classdef brightnessOverTime < handle
                         t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
                         nTrail=length(patternInfo{i}.trailN);
                         total=[];
-                        for m=1:nTrail
-                            trailN=patternInfo{i}.trailN(m);
-                            total(:,m)=RelativeF(:,trailN);
+                        for n=1:nTrail
+                            trailN=patternInfo{i}.trailN(n);
+                            total(:,n)=RelativeF(:,trailN);
                             h=plot(t,RelativeF(:,trailN),'k','LineWidth',1);
                             set(h,'color',[0.827 0.827 0.827]);
                             hold on;
@@ -3177,11 +3165,7 @@ classdef brightnessOverTime < handle
                             plot(t,traceAve(:,i),'r',t,sti(:,i),t,baseline,'--r','LineWidth',1.5);
                         else
                             plot(t,traceAve(:,i),'k',t,sti(:,i),t,baseline,'--r','LineWidth',1.5);
-                        end  
-                    end
-                    axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
+                        end
                     end
                     % ANALYSIS MODULE FOR DS
                     if get(obj.fluoAnalyzer.ds,'Value')
@@ -3202,7 +3186,7 @@ classdef brightnessOverTime < handle
                         disp(dsindex);
                         
                         %Plot
-                        figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Polar Plot'],'NumberTitle','off');
+                        figure(666);
                         polar([onds.data(:,1);2*pi],[onds.data(:,2);onds.data(1,2)],'r'); hold on;
                         polar([0 onds.pd/360*2*pi],[0 onds.vpd],'r');hold on;
                         polar([offds.data(:,1);2*pi],[offds.data(:,2);offds.data(1,2)],'g'); hold on;
@@ -3210,7 +3194,10 @@ classdef brightnessOverTime < handle
                     end
                     
                 end
-               
+                axis([xmin xmax ymin ymax])
+                if ~get(obj.fluoAnalyzer.showAxis,'value')
+                    axis off;
+                end
                 
                 
             %Choose ROIs
@@ -3225,9 +3212,9 @@ classdef brightnessOverTime < handle
                  end
                 
                 p=getappdata(obj.fluoAnalyzer.allRois,'ROIs');
-                nroi=length(p);
+                n=length(p);
                 
-                for j=1:nroi
+                for j=1:n
                     intensityAve=[];
                     [intensityAve]=getintensity(obj,p(j),chN);
                     f(:,j)=moving_average(intensityAve,avenum);
@@ -3236,7 +3223,7 @@ classdef brightnessOverTime < handle
                 if get(obj.fluoAnalyzer.wholeTrail,'Value')
                     baseline=zeros(nFrames,1);
                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Raw'],'NumberTitle','off');
-                    for j=1:nroi
+                    for j=1:n
                         F0(j)              = mean(f(1:baselineLength,j));
                         RelativeF(:,j)     = (f(:,j)-F0(j))/F0(j)*100;
                         %plot
@@ -3250,7 +3237,7 @@ classdef brightnessOverTime < handle
                 elseif get(obj.fluoAnalyzer.trailByTrail,'Value') 
                     baseline=zeros(1,traceLength+round(1/frameRate));
                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Trails'],'NumberTitle','off');
-                    for j=1:nroi
+                    for j=1:n
                         for k=1:nSti
                             F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
                             F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
@@ -3270,7 +3257,7 @@ classdef brightnessOverTime < handle
                 else
                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Average'],'NumberTitle','off');
                     baseline=zeros(1,traceLength+round(1/frameRate));
-                    for j=1:nroi
+                    for j=1:n
                         
                         for k=1:nSti
                             F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
@@ -3282,9 +3269,9 @@ classdef brightnessOverTime < handle
                             t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
                             nTrail=length(patternInfo{i}.trailN);
                             totalAll=[];
-                            for m=1:nTrail
-                                trailN=patternInfo{i}.trailN(m);
-                                totalAll(:,m,j)=RelativeF(:,trailN,j);
+                            for n=1:nTrail
+                                trailN=patternInfo{i}.trailN(n);
+                                totalAll(:,n,j)=RelativeF(:,trailN,j);
                                 subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.5);hold on;
                                 set(h,'color',[0.827 0.827 0.827]);                             
                             end
@@ -3315,7 +3302,7 @@ classdef brightnessOverTime < handle
                         %Define ON, OFF based on stimulus
                         stiDuration=trailInfo(1).endFrameN-trailInfo(1).startFrameN+1;
                         stiOn=round(1/frameRate); stiEnd=stiOn+stiDuration-1;
-                        for j=1:nroi
+                        for j=1:n
                             for i=1:nPat %nPat here equals to n of directions
                                 onPeak(j,i) =max(traceAve(stiOn:stiEnd,i,j));
                                 offPeak(j,i)=max(traceAve(stiEnd+1:end,i,j));
