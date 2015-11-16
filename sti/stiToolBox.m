@@ -30,33 +30,23 @@ detectMenu = uimenu(fig,...
     'Label','Detect',...
     'Tag','detect menu');
 uimenu(detectMenu,...
-    'Label','Stimuli',...
+    'Label','Stimuli Onset',...
     'Separator','off',...
     'Callback',@detectStimulus);
-detectPatternMenu= uimenu(detectMenu,...
-    'Label','Pattern',...
-    'Separator','off');
 
-uimenu(detectPatternMenu,...
-    'Label','Auto Detection',...
-    'Separator','off',...
-    'Callback',@autoPatternDetection);
-uimenu(detectPatternMenu,...
-    'Label','Manual Detection',...
-    'Separator','off',...
-    'Callback',@manualPatternDetection);
 % Edit Menu
 editMenu= uimenu(fig,...
     'Label','Edit',...
     'Tag','detect menu');
 uimenu(editMenu,...
-    'Label','Insert Stimulus',...
-    'Separator','off',...
-    'Callback',@insertStimulus);
-uimenu(editMenu,...
     'Label','Set Pattern',...
     'Separator','off',...
     'Callback',@setPattern);
+uimenu(editMenu,...
+    'Label','Insert Stimulus',...
+    'Separator','off',...
+    'Callback',@insertStimuli);
+
 % View Menu
 viewMenu = uimenu(fig,...
     'Label','View',...
@@ -106,23 +96,11 @@ if ~isempty(stiobj.data)
         stiobj.showTrace(haxes,'Raw');
     end
 end
-
+%
     function []=openStimulus(varargin)
         
         stiobj.loadData;
-%         if ~isempty(stiobj.data)
-%             try
-%                 stiobj.showTrace(haxes,'Pattern');
-%             catch
-%                 try
-                    stiobj.showTrace(haxes,'Raw');
-%                 catch
-%                     baseline=mean(stiobj.data(1:50,1));
-%                     stiobj.data(:,2)=(stiobj.data(:,1)-baseline)/stiobj.data(1,1);
-%                     stiobj.showTrace(haxes,'Raw');
-%                 end
-%             end
-%         end
+        stiobj.showTrace(haxes,'Raw');
     end
 
     function []=saveStimulus(varargin)
@@ -176,11 +154,15 @@ end
         else
             def={'0'};
         end
-        p=str2double(inputdlg(prompt,dlg_title,num_lines,def));
+        I=inputdlg(prompt,dlg_title,num_lines,def);
+        p=str2num(I{1});
         stiobj.setStiPattern(p);
-        pos=get(fig,'Position');
-        stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,p,pos);
+        showPatternParameter();
+%         patN=length(stiobj.patternInfo);
+%         pos=get(fig,'Position');
+%         stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
     end
+
 %function to show raw trace
     function []=showRawTrace(varargin)
         
@@ -201,9 +183,15 @@ end
         else
             stiobj.showTrace(haxes,'Pattern');
         end
-        
     end
-
+%function to show pattern parameter
+    function showPatternParameter(varargin)
+        if ~isempty(stiobj.patternInfo)
+            patN=length(stiobj.patternInfo);
+            pos=get(fig,'Position');
+            stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
+        end
+    end
 
 
 end

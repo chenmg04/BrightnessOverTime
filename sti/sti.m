@@ -192,7 +192,7 @@ classdef sti < handle
                 if ~isempty(obj.patternInfo)
                     patN=length(obj.patternInfo);
                     if ~isempty(obj.paraInfo)
-                        for i=1:nPat
+                        for i=1:patN
                             para(i)=obj.paraInfo(obj.patternInfo(i).trailN(1));
                         end
                     else
