@@ -3326,7 +3326,7 @@ classdef brightnessOverTime < handle
                             disp(dsindex);
                             
                             %Plot
-                            figure(666);subplot(row,col,j);
+                            figure ('name',[obj.openStates.image.fileName(end-3:end)  '-Polar Plot'],'NumberTitle','off');subplot(row,col,j);
                             polar([onds.data(:,1);2*pi],[onds.data(:,2);onds.data(1,2)],'r');hold on;
                             polar([0 onds.pd/360*2*pi],[0 onds.vpd],'r'); hold on;
                             polar([offds.data(:,1);2*pi],[offds.data(:,2);offds.data(1,2)],'g');hold on;
