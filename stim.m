@@ -175,13 +175,15 @@ classdef stim < handle
             end
             
             try
-                plot(obj.data(:,2),'Parent',obj.h.axes);
+%                 plot(obj.data(:,2),'Parent',obj.h.axes);
+                 showFitTrace (obj);
             catch
                 baseline=mean(obj.data(1:50,1)); 
                 obj.data(:,2)=(obj.data(:,1)-baseline)/obj.data(1,1);
-                plot(obj.data(:,2),'Parent',obj.h.axes);
+                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
+                xlabel('Frame #'); ylabel('delta F/F');title('Raw');
             end
-            xlabel('Frame #'); ylabel('delta F/F');title('Raw');
+            
              
         end
         
@@ -283,6 +285,7 @@ classdef stim < handle
                 plot(obj.data(:,3),'color','r');
                 return;
             end
+            
             detectStiOnset(obj, p)
         end
        
@@ -291,7 +294,7 @@ classdef stim < handle
             obj.threshold=p;
            % p(1) baseline length; p(2) threshold value; p(3) filter value
             norSti=moving_average(obj.data(:,2),p(4));
-             axes(obj.h.axes); cla; plot(norSti);   
+            axes(obj.h.axes); cla; plot(norSti);   
             baselineAve=mean(norSti(1:p(1)));
             sd= std(norSti(1:p(1)));
             
@@ -299,7 +302,7 @@ classdef stim < handle
             s=zeros(); i=1;
             if p(3)~=0
                 for n=2:nFrames;
-                    if abs(norSti(n))>baselineAve+p(3)
+                    if abs(norSti(n))>p(3)
                         s(i)= n;
                         i=i+1;
                     end
@@ -323,10 +326,17 @@ classdef stim < handle
             endFrameN(nSti)=s(end)-p(4);
             
             obj.trailInfo=[];  obj.data(:,3)=0;
+            yLimits=get(obj.h.axes,'YLim');
              for i=1: nSti
                 obj.trailInfo(i). startFrameN=startFrameN(i);
                 obj.trailInfo(i). endFrameN=endFrameN(i);
-                obj.trailInfo(i). amplitude=max(obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,2));
+                
+                amplitude=mean(obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,2));
+                if amplitude<0
+                    obj.trailInfo(i). amplitude=yLimits(1)/2;
+                else
+                    obj.trailInfo(i). amplitude=yLimits(2)/2;
+                end
                 obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
              end
              
@@ -352,16 +362,23 @@ classdef stim < handle
             def={'0','0'};
             insertFrameN=str2double(inputdlg(prompt,dlg_title,num_lines,def));
             
-            % update trailInfo
+            % insert new stimulus into the end
             nSti=length(obj.trailInfo);
             obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
             obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
-            obj.trailInfo(nSti+1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
+            
+            yLimits=get(obj.h.axes,'YLim');
+            amplitude=mean(obj.data(obj.trailInfo(nSti+1). startFrameN:obj.trailInfo(nSti+1). endFrameN,2));
+            if amplitude<0
+                obj.trailInfo(nSti+1). amplitude=yLimits(1)/2;
+            else
+                obj.trailInfo(nSti+1). amplitude=yLimits(2)/2;
+            end
             obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1).amplitude;
             
             %sortrows
              mtrail=(squeeze(cell2mat(struct2cell(obj.trailInfo))))';
-             if ~issorted(mtrail)
+             if ~issorted(mtrail,'rows')
                  sortedmtrail=sortrows(mtrail);
                  for i=1:nSti+1
                      obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
@@ -369,7 +386,10 @@ classdef stim < handle
                      obj.trailInfo(i).amplitude=sortedmtrail(i,3);
                  end
              end
-             
+              axes(obj.h.axes);  cla;
+              plot(obj.data(:,2)); hold on;    
+              plot(obj.data(:,3),'color','r'); 
+            
             
             
 %             % update trailInfo
@@ -543,12 +563,12 @@ classdef stim < handle
              % single scalar, e.g., 8, indicates 8 patterns, and the repeat
              % of patterns is 1-2-3-...1-2-3-...
              if length(q)==1
-                 patN=str2num(p{1});
+                 patN=str2double(p{1});
                  nSti=1:length(obj.trailInfo);
                  for i=1:patN-1
                      obj.patternInfo(i).trailN=nSti(find(mod(nSti, patN)==i));
                  end
-                 obj.patternInfo(p).trailN=nSti(find(mod(nSti, patN)==0));
+                 obj.patternInfo(patN).trailN=nSti(find(mod(nSti, patN)==0));
              else
                  patN=length(q);
                  for i=patN
@@ -602,9 +622,7 @@ classdef stim < handle
          function showRawTrace (obj, ~, ~)
              
             axes(obj.h.axes);cla;
-%             norSti=moving_average(obj.data(:,2),5);
-%             plot(norSti);
-            plot(obj.data(:,2));
+            plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);
             xlabel('Frame #'); ylabel('delta F/F');title('Raw');
          end
          
@@ -612,6 +630,7 @@ classdef stim < handle
          function showFitTrace (obj, ~, ~)
              
             axes(obj.h.axes);cla;
+             plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);hold on;
             plot(obj.data(:,3),'Color','r');
             xlabel('Frame #'); ylabel('delta F/F');title('Fitted');
          end
