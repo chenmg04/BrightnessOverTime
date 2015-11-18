@@ -14,32 +14,7 @@ classdef stim < handle
     end
     
     methods
-        function obj = stim (varargin)
-            
-%             if nargin
-%                 try
-%                     obj.threshold=varargin{1}.threshold;
-%                     obj.data=varargin{1}.data;
-%                     obj.trailInfo=varargin{1}.trailInfo;
-%                     obj.patternInfo=varargin{1}.patternInfo;
-%                     obj.paraInfo=varargin{1}.paraInfo;
-%                 catch
-%                     obj.data=varargin{1};
-%                 end
-%                 
-%             else
-%                 obj.data=[];
-%                 choice=questdlg('No Stimulus File Found! Would you like to import stimulus file?',...
-%                     'Import Stimulus File',...
-%                     'No', 'Yes', 'Yes');
-%                 switch choice
-%                     case 'Yes',
-%                         openStimulus(obj);
-%                     case 'No'
-%                         return;
-%                 end
-%             end
-            
+        function obj = stim (varargin)         
              
             %--------------------------------------------------------------
             % Build GUI
@@ -55,9 +30,9 @@ classdef stim < handle
             %align stimulus gui with the main figure
              main=findobj('Name','BrightnessOverTime');
              if isempty(main)
-                 set(obj.h.fig,'Position', [300 5 512 250]);
+                 set(obj.h.fig,'Position', [300 40 512 250]);
              else
-                 set(obj.h.fig,'Position',[main.Position(1) 5 512 250]);
+                 set(obj.h.fig,'Position',[main.Position(1) 40 512 250]);
              end
             
              % File Menu
@@ -81,18 +56,6 @@ classdef stim < handle
                 'Accelerator','S',...
                 'Separator','off',...
                 'Callback',@obj.detectStimulus);
-%            detectPatternMenu= uimenu(detectMenu,...
-%                 'Label','Pattern',...
-%                 'Separator','off');
-%              
-%            uimenu(detectPatternMenu,...
-%                 'Label','Auto Detection',...
-%                 'Separator','off',...
-%                 'Callback',@obj.autoPatternDetection);
-%            uimenu(detectPatternMenu,...
-%                 'Label','Manual Detection',...
-%                 'Separator','off',...
-%                 'Callback',@obj.manualPatternDetection);
             % Edit Menu
             editMenu= uimenu(obj.h.fig,...
                 'Label','Edit',...
@@ -351,8 +314,7 @@ classdef stim < handle
             plot(obj.data(:,3),'color','r'); title('Fitted');
                     
         end
-        
-        
+          
         %
         function insertStimulus (obj,~, ~)
             
@@ -389,136 +351,9 @@ classdef stim < handle
               axes(obj.h.axes);  cla;
               plot(obj.data(:,2)); hold on;    
               plot(obj.data(:,3),'color','r'); 
-            
-            
-            
-%             % update trailInfo
-%             nSti=length(obj.trailInfo);
-%             if nSti==1
-%                 obj.trailInfo(2).startFrameN=insertFrameN(1);
-%                 obj.trailInfo(2).endFrameN=insertFrameN(2);
-%                 obj.trailInfo(2).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                 if  obj.trailInfo(2).amplitude<0.01
-%                      obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                 end
-%                 obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(2). amplitude;
-%                 return;
-%             end
-%             
-%             if insertFrameN(1)<obj.trailInfo(1).startFrameN
-%                 obj.trailInfo(2:end+1)=obj.trailInfo;
-%                 obj.trailInfo(1).startFrameN=insertFrameN(1);
-%                 obj.trailInfo(1).endFrameN=insertFrameN(2);
-%                 obj.trailInfo(1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                  if  obj.trailInfo(2).amplitude<0.01
-%                      obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                 end
-%                 obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(1). amplitude;
-%             else
-%                 for i=2:nSti
-%                     if  insertFrameN(1)<obj.trailInfo(i).startFrameN && insertFrameN(1)>obj.trailInfo(i-1).startFrameN
-%                         obj.trailInfo(i+1:end+1)=obj.trailInfo(i:end);
-%                         obj.trailInfo(i).startFrameN=insertFrameN(1);
-%                         obj.trailInfo(i).endFrameN=insertFrameN(2);
-%                         obj.trailInfo(i).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                         if  obj.trailInfo(2).amplitude<0.01
-%                             obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                         end
-%                         obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(i). amplitude;
-%                         break;
-%                     end
-%                     
-%                     if i==nSti
-%                         obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
-%                         obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
-%                         obj.trailInfo(nSti+1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                         obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1). amplitude;
-%                     end
-%                 end
-%             end
-            
-            
-                     
-            
+
         end
-        %% function to detect stimulus pattern automatically 
-        
-%          function detectPattern(obj,~, ~)
-%              
-%              nSti=length(obj.trailInfo); 
-%              
-%              stiLength=zeros(1,nSti);
-%              for i=1:nSti
-%                  stiLength(i)=obj.trailInfo(i). endFrameN-obj.trailInfo(i). startFrameN+1;
-%              end
-%              % due to the accuracy of stimulus detection, the length of each stimulus detected is not exact the same
-%              minLength=min(stiLength); 
-%             
-%              detectedStiData=zeros(minLength-1,nSti);
-%              for i=1:nSti
-%                  detectedStiData(1:minLength-1,i)=obj.data( obj.trailInfo(i). startFrameN+1: obj.trailInfo(i). startFrameN+minLength-1,2);
-%              end
-%              
-%              % To detect whether stimulus is the same  based on ANOVA
-%              [~,~,stats] = anova1(detectedStiData);
-%              differenceDetection=multcompare(stats);
-%              
-%              % Find stimulus id # which are not different statistically
-%              s=differenceDetection(find(differenceDetection(:,6)>0.05),1:2);
-%              p=size(s);
-%              
-%              curPat=1;
-%              obj.patternInfo=[];
-%              obj.patternInfo(1).trailN=s(1,:);
-%              
-%              if p(1)~=1
-%                  for i=2:length(s)
-%                      
-%                      patN=length(obj.patternInfo);
-%                      j=1;
-%                      while j<=patN
-%                          
-%                          if find(ismember(s(i,:),obj.patternInfo(j).trailN)==1)
-%                              obj.patternInfo(j).trailN=[obj.patternInfo(j).trailN,s(i,:)];
-%                              break;
-%                          end
-%                          j=j+1;
-%                          
-%                      end
-%                      
-%                      if j==patN+1
-%                          curPat=patN+1;
-%                          obj.patternInfo(curPat).trailN=s(i,:);
-%                      end
-%                      
-%                  end
-%              end
-%              
-%              for i=1:curPat
-%                  obj.patternInfo(i).trailN=unique(obj.patternInfo(i).trailN);
-%              end
-%              
-%              % make sure every stimulus is in a pattern
-%              for i=1:nSti
-%                  
-%                  patN=length(obj.patternInfo);
-%                  j=1;
-%                  while j<=patN
-%                      
-%                      if find(obj.patternInfo(j).trailN==i)
-%                          break;
-%                      end
-%                      j=j+1;
-%                      
-%                  end
-%                  
-%                  if j==patN+1
-%                      obj.patternInfo(patN+1).trailN=i;
-%                  end
-%                  
-%              end
-%                          
-%          end
+       
          
          function showPatternParameter(obj,~,~)
              
@@ -571,7 +406,7 @@ classdef stim < handle
                  obj.patternInfo(patN).trailN=nSti(find(mod(nSti, patN)==0));
              else
                  patN=length(q);
-                 for i=patN
+                 for i=1:patN
                  obj.patternInfo(i).trailN=str2num(q{i});
                  end
              end
@@ -580,43 +415,7 @@ classdef stim < handle
               showPatternParameter(obj);
              
              
-         end 
-         
-%           function autoPatternDetection(obj,~, ~)
-%               
-%                try
-%                   axes(obj.h.axes);cla;
-%                   plot(obj.data(:,2));hold on;
-%                   plot(obj.data(:,3),'Color','r');
-%               catch
-%                   detectStimulus(obj);
-%               end
-%               
-%               detectPattern(obj);
-%                plotPatternTrace(obj);
-%                showPatternParameter(obj);
-%               
-%           end
-        
-        %% function to detect stimulus pattern  manually 
-        
-%           function manualPatternDetection (obj, ~, ~)
-%               
-%               try
-%                   axes(obj.h.axes);cla;
-%                   plot(obj.data(:,2));hold on;
-%                   plot(obj.data(:,3),'Color','r');
-%               catch
-%                   detectStimulus(obj);
-%               end
-%               
-%               nSti=length(obj.trailInfo);
-%               hpara=stimPara(obj.paraInfo, nSti);
-%               waitfor(hpara.h.fig);
-%               obj.paraInfo=hpara.data;
-%                updateStiPattern (obj);
-%                plotPatternTrace(obj);
-%           end
+         end    
                   
          %function to show raw trace
          function showRawTrace (obj, ~, ~)
@@ -647,86 +446,10 @@ classdef stim < handle
                  xlabel('Frame #'); ylabel('delta F/F');title('Pattern');
              end
          end
-         
-         % function to update and generate stimulus pattern
-%          function updateStiPattern (obj, ~, ~)
-%              
-%              
-%              nSti=length(obj.paraInfo);
-%              for n=1:nSti
-%                  if isempty(obj.patternInfo)
-%                      
-%                      % if no stimulus pattern existed, creat the first one
-%                      curPat=1;
-% %                      temp(1)=obj.data(n);
-% %                      obj.patternInfo=temp;
-%                      
-% %                      obj.patternInfo(curPat)=obj.data(n);
-%                      obj.patternInfo(curPat).trailN(1)=1;
-%                      m(1)=n;
-%                  else
-%                      patN=length(obj.patternInfo); % number of existing patterns
-%                      i=1;
-%                      while i<=patN
-%                          
-%                          info=obj.paraInfo(obj.patternInfo(i).trailN(1));
-%                          if isequal(info,obj.paraInfo(n)) % trail n is belong to pattern i
-%                              m(n)=i;
-%                              if find(obj.patternInfo(i).trailN==n)                % trail n is alreay in pattern i
-%                                  break;
-%                              end
-%                              patTrailN=length(obj.patternInfo(i).trailN);         % trail n is not in pattern i yet, add n
-%                              obj.patternInfo(i).trailN(patTrailN+1)=n;
-%                              break;
-%                          else
-%                              if find(obj.patternInfo(i).trailN==n)                % trail n is not in pattern i, but n in it, delete the number
-%                                  en=find(obj.patternInfo(i).trailN==n);
-%                                  obj.patternInfo(i).trailN(en)=[];
-%                              end
-%                              i=i+1;
-%                          end
-%                          
-%                          % trail n is not belong to any in the existing patterns, so
-%                          % creat a new pattern
-%                          if i==patN+1
-%                              curPat=patN+1;
-%                              m(n)=patN+1;
-% %                              obj.patternInfo(curPat)=obj.data(n);
-%                              obj.patternInfo(curPat).trailN(1)=n;
-%                          end
-%                      end
-%                  end
-%              end
-%              
-%              % if there is wrong n in some pattern, which is not belong to beyond the trailN (e.g, 20 stimulus total, but have # 21, 22 appears in some pattern, probably due to some update issue for threshold reset)
-%              trailArray=1:1:nSti;
-%              patN=length(obj.patternInfo);
-%              for i=1:patN
-%                  if find(ismember(obj.patternInfo(i).trailN,trailArray)==0)
-%                      delTrailN=find(ismember(obj.patternInfo(i).trailN,trailArray)==0);
-%                      obj.patternInfo(i).trailN(delTrailN)=[];
-%                  end
-%              end
-%              
-%              % if there is one in the existed pattern does not match any stimulus info (e.g, out of updated), delete this one
-%              if exist('m','var')
-%                  m(find(m==0))=[];
-%                  um=unique(m);
-%                  patarray=1:1:patN;
-%                  if find(ismember(patarray,um)==0)
-%                      delPatN=find(ismember(patarray,um)==0);
-%                      for j=1:length(delPatN)
-%                          obj.patternInfo(delPatN(j))=[];
-%                      end
-%                      obj.patternInfo = obj.patternInfo(~cellfun(@isempty, obj.patternInfo));
-%                  end
-%              end
-%              
-%         end
+           
          
           function plotPatternTrace (obj, ~,~)
                  
-             
              patN=length(obj.patternInfo);
              patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
              for i=1:patN
