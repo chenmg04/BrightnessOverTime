@@ -48,7 +48,7 @@ classdef brightnessOverTime < handle
             
             defaultsize=round(obj.screendims(3)/1366*9);
             os=computer;
-            if defaultsize>9 && strfind(os,'PC')
+            if defaultsize>9 && ~isempty(strfind(os,'PC'))
                 defaultsize=9;
             end
             set(0,'defaultUicontrolFontSize',defaultsize);
@@ -304,14 +304,15 @@ classdef brightnessOverTime < handle
             analyzeMenu =uimenu(obj.hMain,...
                 'Label','Analyze',...
                 'Tag','analyze menu');
+            % Measure
+            uimenu(analyzeMenu,...
+                'Label','Measure',...
+                'Callback',@obj.fluoChangeProcessor);
             % Auto Fluorescence Detection
             uimenu(analyzeMenu,...
                 'Label','Auto Fluorescence Detection',...
                 'Callback',@obj.autoFluoChangeDetection);
-            % Brightness Over Time
-            uimenu(analyzeMenu,...
-                'Label','Brightness Over Time',...
-                'Callback',@obj.fluoChangeProcessor);
+            
             
         end
         
@@ -2661,7 +2662,7 @@ classdef brightnessOverTime < handle
             
             roiFigPos=get(obj.roiTool.fig,'Position');
                
-            obj.fluoAnalyzer.fig  =figure   ('Name','Brightness Over Time','NumberTitle','off',...
+            obj.fluoAnalyzer.fig  =figure   ('Name','Measure','NumberTitle','off',...
                                              'MenuBar','none','Position',[roiFigPos(1)+roiFigPos(3)+20 roiFigPos(2)+roiFigPos(4)-400 200 400],...
                                              'Resize','off','Color','white',...
                                              'CloseRequestFcn',@obj.fluoChangeProcessorClose);
@@ -3054,6 +3055,7 @@ classdef brightnessOverTime < handle
             
            % stimulus information, do not read stimulus if raw
 %            if ~get(obj.fluoAnalyzer.wholeTrail,'Value')
+%                if chN~=1
                try
                    stidata=obj.stiTool.data(:,3);
                    trailInfo= obj.stiTool.trailInfo;
@@ -3323,7 +3325,6 @@ classdef brightnessOverTime < handle
                             disp(dsindex);
                             
                             %Plot
-                            
                             subplot(row,col,j);
                             polar([onds.data(:,1);2*pi],[onds.data(:,2);onds.data(1,2)],'r');hold on;
                             polar([0 onds.pd/360*2*pi],[0 onds.vpd],'r'); hold on;

@@ -33,16 +33,15 @@ classdef stimPara < handle
             
             ht=uitoolbar(obj.h.fig);
             
-            [X,map] = imread('C:\Users\Minggang\Documents\MATLAB\icons\file_open.gif');
-            icon = ind2rgb(X,map);
-            htt = uipushtool(ht,'CData',icon,'TooltipString','Import Stimulus Pattern','Separator','off');
-                            set(htt, 'ClickedCallback',@obj.importPattern);
+            path=fileparts(which('stim'));
             
-            [X,map] = imread('C:\Users\Minggang\Documents\MATLAB\icons\file_save.gif');
+            [X,map] = imread([path '\icons\file_open.gif']);
             icon = ind2rgb(X,map);
-            htt = uipushtool(ht,'CData',icon,'TooltipString','Save Stimulus Pattern as','Separator','off');
-                            set(htt, 'ClickedCallback',@obj.savePattern);           
-                            
+            uipushtool(ht,'CData',icon,'TooltipString','Import Stimulus Pattern','Separator','off','ClickedCallback',@obj.importPattern);
+            
+            [X,map] = imread([path '\icons\file_save.gif']);
+            icon = ind2rgb(X,map);
+            uipushtool(ht,'CData',icon,'TooltipString','Save Stimulus Pattern as','Separator','off','ClickedCallback',@obj.savePattern);                              
             
             stiProperties         =uipanel('Title','',...
                 'Parent', obj.h.fig,...
@@ -61,7 +60,7 @@ classdef stimPara < handle
                 'Position',[0,0,1,1],...
                 'Margins',{[0,-1,1,0],'pixels'},...
                 'PanelBorderType','line',...
-                'Title',{'Parameters','Motion','Position'});
+                'Title',{'Para','Motion','Position','Contrast'});
             
             obj.h.stiList               =uicontrol('Style','listbox',...
                 'Parent',stiProperties,...
@@ -77,7 +76,7 @@ classdef stimPara < handle
             obj.h.stiTypeTxt            =uicontrol('Style','text',...
                 'String','Type:',...
                 'BackgroundColor','white',...
-                'Position',[110 130 30 20],...
+                'Position',[100 130 40 20],...
                 'Parent',hpanel(1));
             obj.h.stiTypeEdit           =uicontrol('Style','popupmenu',...
                 'String','Select|Circle|Rectangle',...
@@ -88,7 +87,7 @@ classdef stimPara < handle
             obj.h.stiDurationTxt        =uicontrol('Style','text',...
                 'String','Duration:',...
                 'BackgroundColor','white',...
-                'Position',[87 100 60 20],...
+                'Position',[80 100 60 20],...
                 'Parent',hpanel(1));
             obj.h.stiDurationEdit       =uicontrol('Style','Edit',...
                 'String','0',...
@@ -99,7 +98,7 @@ classdef stimPara < handle
             obj.h.stiRadiusTxt            =uicontrol('Style','text',...
                 'String','Radius:',...
                 'BackgroundColor','white',...
-                'Position',[100 70 40 20],...
+                'Position',[90 70 50 20],...
                 'Visible', 'off',...
                 'Parent',hpanel(1));                                  
             obj.h.stiRadiusEdit           =uicontrol('Style','Edit',...
@@ -112,7 +111,7 @@ classdef stimPara < handle
             obj.h.stiWidthTxt            =uicontrol('Style','text',...
                 'String','Width:',...
                 'BackgroundColor','white',...
-                'Position',[107 70 30 20],...
+                'Position',[92 70 50 20],...
                 'Visible', 'off',...
                 'Parent',hpanel(1));                                  
             obj.h.stiWidthEdit           =uicontrol('Style','Edit',...
@@ -125,7 +124,7 @@ classdef stimPara < handle
             obj.h.stiHeightTxt            =uicontrol('Style','text',...
                 'String','Height:',...
                 'BackgroundColor','white',...
-                'Position',[102 40 40 20],...
+                'Position',[90 40 50 20],...
                 'Visible', 'off',...
                 'Parent',hpanel(1));                                  
             obj.h.stiHeightEdit           =uicontrol('Style','Edit',...
@@ -140,7 +139,7 @@ classdef stimPara < handle
             obj.h.movTypeTxt            =uicontrol('Style','text',...
                 'String','Type:',...
                 'BackgroundColor','white',...
-                'Position',[110 130 30 20],...
+                'Position',[100 130 40 20],...
                 'Parent',hpanel(2));
             obj.h.movTypeEdit           =uicontrol('Style','popupmenu',...
                 'String','None|Smooth',...
@@ -199,6 +198,30 @@ classdef stimPara < handle
                 'Parent',hpanel(3),...
                 'Callback',@obj.posY);
             
+            % Panel 4, contrast
+            obj.h.bckTxt        =uicontrol('Style','text',...
+                'String','Background:',...
+                'BackgroundColor','white',...
+                'Position',[55 100 90 20],...
+                'Parent',hpanel(4));
+            obj.h.bckEdit       =uicontrol('Style','Edit',...
+                'String','0',...
+                'BackgroundColor','white',...
+                'Position',[145 104 60 20],...
+                'Parent',hpanel(4),...
+                'Callback',@obj.bckb);
+            obj.h.objTxt            =uicontrol('Style','text',...
+                'String','Object:',...
+                'BackgroundColor','white',...
+                'Position',[90 70 50 20],...
+                'Parent',hpanel(4));                                  
+            obj.h.objEdit           =uicontrol('Style','Edit',...
+                'String','0',...
+                'BackgroundColor','white',...
+                'Position',[145 74 60 20],...
+                'Parent',hpanel(4),...
+                'Callback',@obj.objb);
+            
             % Buttons
             obj.h.stiUpdate             =uicontrol('Style','pushbutton',...
                 'String','OK',...
@@ -227,11 +250,25 @@ classdef stimPara < handle
                     selectMovType=obj.data(1).movType;
                     set(obj.h.movTypeEdit,'Value',selectMovType);setMovCtrBoxes(obj, selectMovType, 1);
                     set(obj.h.stiDurationEdit,'String',obj.data(1).duration);  
-                    if isfield(obj.data(1), 'Position')
-                        set(obj.h.posXEdit,'Value',obj.data(1).position(1));
-                        set(obj.h.posXEdit,'Value',obj.data(1).position(2));
+                    if isfield(obj.data(1), 'position')
+                        set(obj.h.posXEdit,'String',obj.data(1).position(1));
+                        set(obj.h.posXEdit,'String',obj.data(1).position(2));
+                    else
+                        for i=1:num % position was added later;
+                            obj.data(i).position(1)=0;
+                            obj.data(i).position(2)=0;
+                        end
                     end
-               
+                    
+                    if isfield(obj.data(1), 'contrast')
+                        set(obj.h.bckEdit,'String',obj.data(1).contrast(1));
+                        set(obj.h.objEdit,'String',obj.data(1).contrast(2));
+                    else
+                        for i=1:num %contrast was added later;
+                            obj.data(i).contrast(1)=0;
+                            obj.data(i).contrast(2)=0;
+                        end
+                    end
             else
                 for i=1:num
                     obj.data(i).stiType=1; 
@@ -240,6 +277,8 @@ classdef stimPara < handle
                     obj.data(i).size=[];
                     obj.data(i).position(1)=0;
                     obj.data(i).position(2)=0;
+                    obj.data(i).contrast(1)=0;
+                    obj.data(i).contrast(2)=0;
                 end
             end
         end
@@ -267,6 +306,15 @@ classdef stimPara < handle
             selectMovType=obj.data(1).movType;
             set(obj.h.movTypeEdit,'Value',selectMovType);setMovCtrBoxes(obj, selectMovType, 1);
             set(obj.h.stiDurationEdit,'String',obj.data(1).duration);
+            if isfield(obj.data(1), 'position')
+                set(obj.h.posXEdit,'String',obj.data(1).position(1));
+                set(obj.h.posXEdit,'String',obj.data(1).position(2));
+            end
+            
+            if isfield(obj.data(1), 'contrast')
+                set(obj.h.bckEdit,'String',obj.data(selectIndex).contrast(1));
+                set(obj.h.objEdit,'String',obj.data(selectIndex).contrast(2));
+            end
         end
         
         function savePattern (obj, ~, ~)
@@ -453,18 +501,32 @@ classdef stimPara < handle
             obj.data(selectIndex).mov.speed=get(hObject,'string');
         end
         
-        % function to change motion direction
+        % function to change position X
         function posX(obj, hObject, ~)
             
             selectIndex=get(obj.h.stiList,'Value');
-            obj.data(selectIndex).position(1)=get(hObject,'string');
+            obj.data(selectIndex).position(1)=get(hObject,'String');
         end
         
-        % function to change motion speed
+        % function to change position Y
         function posY(obj, hObject, ~)
             
             selectIndex=get(obj.h.stiList,'Value');
-            obj.data(selectIndex).position(2)=get(hObject,'string');
+            obj.data(selectIndex).position(2)=get(hObject,'String');
+        end
+        
+         % function to change background brightness
+        function bckb(obj, hObject, ~)
+            
+            selectIndex=get(obj.h.stiList,'Value');
+            obj.data(selectIndex).contrast(1)=str2double(get(hObject,'String'));
+        end
+        
+        % function to change object brightness
+        function objb(obj, hObject, ~)
+            
+            selectIndex=get(obj.h.stiList,'Value');
+            obj.data(selectIndex).contrast(2)=str2double(get(hObject,'String'));
         end
         
          % function to select different sti
@@ -478,10 +540,15 @@ classdef stimPara < handle
              set(obj.h.movTypeEdit,'Value',selectMovType); setMovCtrBoxes(obj, selectMovType,selectIndex);
              
              set(obj.h.stiDurationEdit,'String',obj.data(selectIndex).duration);
-              if isfield(obj.data(selectIndex), 'Position')
-                        set(obj.h.posXEdit,'Value',obj.data(selectIndex).position(1));
-                        set(obj.h.posXEdit,'Value',obj.data(selectIndex).position(2));
-             end
+              if isfield(obj.data(selectIndex), 'position')
+                        set(obj.h.posXEdit,'String',obj.data(selectIndex).position(1));
+                        set(obj.h.posXEdit,'String',obj.data(selectIndex).position(2));
+              end
+             
+              if isfield(obj.data(selectIndex), 'contrast')
+                        set(obj.h.bckEdit,'String',obj.data(selectIndex).contrast(1));
+                        set(obj.h.objEdit,'String',obj.data(selectIndex).contrast(2));
+              end
          end
          
          % function to set all stimulus the same
@@ -497,7 +564,9 @@ classdef stimPara < handle
                      obj.data(i).size=obj.data(selectIndex).size;
                      obj.data(i).position(1)=obj.data(selectIndex).position(1);
                      obj.data(i).position(2)=obj.data(selectIndex).position(2);
-                    
+                     obj.data(i).contrast(1)=obj.data(selectIndex).contrast(1);
+                     obj.data(i).contrast(2)=obj.data(selectIndex).contrast(2);
+                     
                      if isfield(obj.data(selectIndex),'mov')
                          obj.data(i).mov=obj.data(selectIndex).mov;
                      end
@@ -517,6 +586,8 @@ classdef stimPara < handle
                  obj.data(i).size=[];
                  obj.data(i).position(1)=0;
                  obj.data(i).position(2)=0;
+                 obj.data(i).contrast(1)=0;
+                 obj.data(i).contrast(2)=0;
              end
              
              set(obj.h.stiTypeEdit,'Value',1);setStiSizeCtrBoxes (obj,1,1);

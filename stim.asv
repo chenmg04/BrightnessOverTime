@@ -352,70 +352,69 @@ classdef stim < handle
             def={'0','0'};
             insertFrameN=str2double(inputdlg(prompt,dlg_title,num_lines,def));
             
-            % update trailInfo
+            % insert new stimulus into the end
             nSti=length(obj.trailInfo);
             obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
             obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
             obj.trailInfo(nSti+1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-            obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1).amplitude;
+            obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1). amplitude;
             
             %sortrows
              mtrail=(squeeze(cell2mat(struct2cell(obj.trailInfo))))';
-             if ~issorted(mtrail)
-                 sortedmtrail=sortrows(mtrail);
-                 for i=1:nSti+1
-                     obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
-                     obj.trailInfo(i).endFrameN=sortedmtrail(i,2);
-                     obj.trailInfo(i).amplitude=sortedmtrail(i,3);
-                 end
+             
+             sortedmtrail=sortrows(mtrail);
+             for i=1:nSti+1
+                 obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
+                 obj.trailInfo(i).endFrameN=sortedmtrail(i,2);
+                 obj.trailInfo(i).amplitude=sortedmtrail(i,3);
              end
              
             
             
-%             % update trailInfo
-%             nSti=length(obj.trailInfo);
-%             if nSti==1
-%                 obj.trailInfo(2).startFrameN=insertFrameN(1);
-%                 obj.trailInfo(2).endFrameN=insertFrameN(2);
-%                 obj.trailInfo(2).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                 if  obj.trailInfo(2).amplitude<0.01
-%                      obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                 end
-%                 obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(2). amplitude;
-%                 return;
-%             end
-%             
-%             if insertFrameN(1)<obj.trailInfo(1).startFrameN
-%                 obj.trailInfo(2:end+1)=obj.trailInfo;
-%                 obj.trailInfo(1).startFrameN=insertFrameN(1);
-%                 obj.trailInfo(1).endFrameN=insertFrameN(2);
-%                 obj.trailInfo(1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                  if  obj.trailInfo(2).amplitude<0.01
-%                      obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                 end
-%                 obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(1). amplitude;
-%             else
-%                 for i=2:nSti
-%                     if  insertFrameN(1)<obj.trailInfo(i).startFrameN && insertFrameN(1)>obj.trailInfo(i-1).startFrameN
-%                         obj.trailInfo(i+1:end+1)=obj.trailInfo(i:end);
-%                         obj.trailInfo(i).startFrameN=insertFrameN(1);
-%                         obj.trailInfo(i).endFrameN=insertFrameN(2);
-%                         obj.trailInfo(i).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                         if  obj.trailInfo(2).amplitude<0.01
-%                             obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
-%                         end
-%                         obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(i). amplitude;
-%                         break;
-%                     end
-%                     
-%                     if i==nSti
-%                         obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
-%                         obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
-%                         obj.trailInfo(nSti+1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
-%                         obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1). amplitude;
-%                     end
-%                 end
-%             end
+            % update trailInfo
+            nSti=length(obj.trailInfo);
+            if nSti==1
+                obj.trailInfo(2).startFrameN=insertFrameN(1);
+                obj.trailInfo(2).endFrameN=insertFrameN(2);
+                obj.trailInfo(2).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
+                if  obj.trailInfo(2).amplitude<0.01
+                     obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
+                end
+                obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(2). amplitude;
+                return;
+            end
+            
+            if insertFrameN(1)<obj.trailInfo(1).startFrameN
+                obj.trailInfo(2:end+1)=obj.trailInfo;
+                obj.trailInfo(1).startFrameN=insertFrameN(1);
+                obj.trailInfo(1).endFrameN=insertFrameN(2);
+                obj.trailInfo(1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
+                 if  obj.trailInfo(2).amplitude<0.01
+                     obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
+                end
+                obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(1). amplitude;
+            else
+                for i=2:nSti
+                    if  insertFrameN(1)<obj.trailInfo(i).startFrameN && insertFrameN(1)>obj.trailInfo(i-1).startFrameN
+                        obj.trailInfo(i+1:end+1)=obj.trailInfo(i:end);
+                        obj.trailInfo(i).startFrameN=insertFrameN(1);
+                        obj.trailInfo(i).endFrameN=insertFrameN(2);
+                        obj.trailInfo(i).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
+                        if  obj.trailInfo(2).amplitude<0.01
+                            obj.trailInfo(2).amplitude= obj.trailInfo(2).amplitude*100;
+                        end
+                        obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(i). amplitude;
+                        break;
+                    end
+                    
+                    if i==nSti
+                        obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
+                        obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
+                        obj.trailInfo(nSti+1).amplitude=max(obj.data(insertFrameN(1):insertFrameN(2),2));
+                        obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1). amplitude;
+                    end
+                end
+            end
             
             
                      
