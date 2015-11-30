@@ -138,8 +138,8 @@ classdef stim < handle
             end
             
             try
-%                 plot(obj.data(:,2),'Parent',obj.h.axes);
-                 showFitTrace (obj);
+                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
+%                  showFitTrace (obj);
             catch
                 baseline=mean(obj.data(1:50,1)); 
                 obj.data(:,2)=(obj.data(:,1)-baseline)/obj.data(1,1);

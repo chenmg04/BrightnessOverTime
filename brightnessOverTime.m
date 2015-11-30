@@ -342,6 +342,11 @@ classdef brightnessOverTime < handle
 %                 close(stimulus);
 %                 obj.stiTool=[];
 %             end
+
+            % 
+            if ~isempty(findobj('Name','Stimulus'))
+                close('Stimulus');
+            end
             % To add more
             delete(hObject);
         end
@@ -1013,8 +1018,10 @@ classdef brightnessOverTime < handle
                                                    
            appPos=get(obj.hMain,'Position');  
            selectFileNames=selectBatchFromFolder (appPos);
-           for i=1:length(selectFileNames)
-               processImage(obj,selectFileNames{i});
+           if ~isempty(selectFileNames)
+               for i=1:length(selectFileNames)
+                   processImage(obj,selectFileNames{i});
+               end
            end
            
 %            curFileN=1; 
@@ -2393,38 +2400,45 @@ classdef brightnessOverTime < handle
                'Units','pixels',...
                'Position',[2 40 158 60],...
                'Parent',  obj.autoFluoDetector.fig);
+            %Sti radio group
+            obj.autoFluoDetector.sti                     =uibuttongroup('Units','pixels',...
+               'BorderType','none',...
+               'BackgroundColor','white',...
+               'Position',[0 35 190 25],...
+               'Parent',obj.autoFluoDetector.para);
             obj.autoFluoDetector.withSti            =uicontrol('Style','radiobutton',...
                 'String','With Sti',...
                 'BackgroundColor','white',...
-                'Position',[1 35 70 20],...
+                'Position',[1 0 70 20],...
                 'Value',1,...
-                'Parent',  obj.autoFluoDetector.para,...
-                'Callback',@obj.withSti);
+                'Parent',  obj.autoFluoDetector.sti);
             obj.autoFluoDetector.withoutSti         =uicontrol('Style','radiobutton',...
                 'String','Without',...
                 'BackgroundColor','white',...
-                'Position',[70 35 70 20],...
-                'Parent',  obj.autoFluoDetector.para,...
-                'Callback',@obj.withoutSti);
+                'Position',[70 0 70 20],...
+                'Parent',  obj.autoFluoDetector.sti);
+             %onoff radio group
+            obj.autoFluoDetector.resp                    =uibuttongroup('Units','pixels',...
+               'BorderType','none',...
+               'BackgroundColor','white',...
+               'Position',[0 5 190 25],...
+               'Parent',obj.autoFluoDetector.para);
             obj.autoFluoDetector.onResp            =uicontrol('Style','radiobutton',...
                 'String','ON',...
                 'BackgroundColor','white',...
-                'Position',[1 5 60 20],...
+                'Position',[1 0 60 20],...
                 'Value',1,...
-                'Parent',  obj.autoFluoDetector.para,...
-                'Callback',@obj.onResp);
+                'Parent', obj.autoFluoDetector.resp);
             obj.autoFluoDetector.offResp         =uicontrol('Style','radiobutton',...
                 'String','OFF',...
                 'BackgroundColor','white',...
-                'Position',[41 5 55 20],...
-                'Parent',  obj.autoFluoDetector.para,...
-                'Callback',@obj.offResp);
+                'Position',[41 0 55 20],...
+                'Parent', obj.autoFluoDetector.resp);
             obj.autoFluoDetector.onoffResp         =uicontrol('Style','radiobutton',...
                 'String','ONOFF',...
                 'BackgroundColor','white',...
-                'Position',[87 5 60 20],...
-                'Parent',  obj.autoFluoDetector.para,...
-                'Callback',@obj.onoffResp);
+                'Position',[87 0 60 20],...
+                'Parent',  obj.autoFluoDetector.resp);
             % Buttons
            
            obj.autoFluoDetector.processAutoDetection  =uicontrol('Style','pushbutton',...
@@ -2440,64 +2454,7 @@ classdef brightnessOverTime < handle
             delete(hObject);
             obj.autoFluoDetector=[];
         end
-           
-        function withSti (obj,hObject, ~)
-            
-            switch get(hObject,'Value')
-                case 0
-                    set(hObject,'Value',1)
-                case 1
-                    set (obj.autoFluoDetector.withoutSti,'Value',0)
-            end
-            
-        end
-        
-        function withoutSti (obj,hObject, ~)
-            
-            switch get(hObject,'Value')
-                case 0
-                    set(hObject,'Value',1)
-                case 1
-                    set (obj.autoFluoDetector.withSti,'Value',0)
-            end
-            
-        end
-        
-        function onResp (obj,hObject, ~)
-            
-            switch get(hObject,'Value')
-                case 0
-                    set(hObject,'Value',1)
-                case 1
-                    set (obj.autoFluoDetector.offResp,'Value',0)
-                    set (obj.autoFluoDetector.onoffResp,'Value',0)
-            end
-            
-        end
-        
-        function offResp (obj,hObject, ~)
-            
-            switch get(hObject,'Value')
-                case 0
-                    set(hObject,'Value',1)
-                case 1
-                    set (obj.autoFluoDetector.onResp,'Value',0)
-                    set (obj.autoFluoDetector.onoffResp,'Value',0)
-            end
-            
-        end
-        
-        function onoffResp (obj,hObject, ~)
-            
-            switch get(hObject,'Value')
-                case 0
-                    set(hObject,'Value',1)
-                case 1
-                    set (obj.autoFluoDetector.onResp,'Value',0)
-                    set (obj.autoFluoDetector.offResp,'Value',0)
-            end
-            
-        end
+
         % function to detect fluorescence change automatically
         function processAutoDetection (obj,hObject, ~)
             
@@ -2516,7 +2473,10 @@ classdef brightnessOverTime < handle
             
             [fluoChangeData]=caculateFluoChange(obj,option);
 %             filteredFluoChangeData=moving_average(fluoChangeData,1);
-            filteredFluoChangeData=100*fluoChangeData;
+% kernel = [-1 -1 -1;-1 900 -1;-1 -1 -1];
+% filteredFluoChangeData=imfilter(fluoChangeData,kernel,'same');
+             filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
+%             filteredFluoChangeData=100*fluoChangeData;
             showFluoChange(obj,hObject,filteredFluoChangeData);
             
         end
@@ -3078,7 +3038,13 @@ classdef brightnessOverTime < handle
                
                nSti=length(trailInfo);
                nPat=length(patternInfo1);
-               stidata=stidata*( ymax/max(stidata)/2)+ymin;
+               stidata(stidata>0)=max(stidata)*( ymax/max(stidata)/2)+ymin;
+               stidata(stidata<0)=min(stidata)*( ymin/min(stidata)/2)+ymin/3;
+%                if max(stidata)>0
+%                stidata=stidata*( ymax/max(stidata)/2)+ymin;
+%                else
+%                    stidata=stidata*( ymin/min(stidata)/2)+ymin/3;
+%                end
                
                if ~iscell(patternInfo1)
                    for i=1:nPat
@@ -3421,11 +3387,11 @@ function colorSelection(selected_color)
 
 switch selected_color
     case 'Green'
-        cmap=zeros(64,3);cmap(:,2)=0:1/63:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,2)=0:1/255:1;colormap(cmap);
     case 'Red'
-        cmap=zeros(64,3);cmap(:,1)=0:1/63:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,1)=0:1/255:1;colormap(cmap);
     case 'Blue'
-        cmap=zeros(64,3);cmap(:,3)=0:1/63:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,3)=0:1/255:1;colormap(cmap);
     case 'Gray'
         colormap(gray);
     case 'Jet'

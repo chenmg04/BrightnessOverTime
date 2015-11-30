@@ -4,6 +4,7 @@ filedir=uigetdir;
 
 if ~filedir
     %                 set(obj.infoTxt,'String','No folder selected!');
+    selectFileNames=[];
     return;
 end
 

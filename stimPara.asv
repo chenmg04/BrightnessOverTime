@@ -528,19 +528,17 @@ classdef stimPara < handle
             prompt={'Enter Center Position (X, Y)','Enter Image Size (pixels)','Enter micronsPerPixel'};
             dlg_title='Map Stimulus';
             num_lines=1;
-            def={'520,415','99,89','0.78'};
+            def={'520,415','0,0','0'};
             p=inputdlg(prompt,dlg_title,num_lines,def);
             
-            pos=strsplit(p{1},',');
-            xpos=str2double(pos{1});ypos=str2double(pos{2});
-            imsize=strsplit(p{2},',');
-            imwidth=str2double(imsize{1})*str2double(p{3});imheight=str2double(imsize{2})*str2double(p{3});
+            cenX=strsplit(p{1},''
             figure;
             
-            line([xpos-imwidth/4 xpos-imwidth/4 xpos+imwidth/4 xpos+imwidth/4 xpos-imwidth/4], [-ypos+imheight/4 -ypos-imheight/4 -ypos-imheight/4 -ypos+imheight/4 -ypos+imheight/4], 'linewidth', 2);hold on;
-            text(xpos-imwidth/4, -ypos+imheight/4, 'Image');
-            line([xpos-50 xpos+50],[-415 -415]); hold on;
-            line([520 520], [-ypos+50 -ypos-50]);hold on;
+%             axis([0 1024 -768 0]);
+            line([0 1024],[-415 -415]); hold on;
+            line([520 520], [0 -768]);
+            imwidth=99*0.7764; imheight=89*0.7764;
+            line([520-imwidth/4 520-imwidth/4 520+imwidth/4 520+imwidth/4 520-imwidth/4], [-415+imheight/4 -415-imheight/4 -415-imheight/4 -415+imheight/4 -415+imheight/4], 'linewidth', 2);
             
             for i=1:length(obj.data)
             th = 0:pi/50:2*pi;
