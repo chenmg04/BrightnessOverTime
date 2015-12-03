@@ -330,27 +330,29 @@ classdef stim < handle
             dlg_title='Insert';
             num_lines=1;
             def={'0','0'};
-            insertFrameN=str2double(inputdlg(prompt,dlg_title,num_lines,def));
+            insertFrameN=inputdlg(prompt,dlg_title,num_lines,def);
             
+            s=str2num(insertFrameN{1});
+            n=str2num(insertFrameN{2});
             % insert new stimulus into the end
             nSti=length(obj.trailInfo);
-            obj.trailInfo(nSti+1).startFrameN=insertFrameN(1);
-            obj.trailInfo(nSti+1).endFrameN=insertFrameN(2);
-            
             yLimits=get(obj.h.axes,'YLim');
-            amplitude=mean(obj.data(obj.trailInfo(nSti+1). startFrameN:obj.trailInfo(nSti+1). endFrameN,2));
-            if amplitude<0
-                obj.trailInfo(nSti+1). amplitude=yLimits(1)/2;
-            else
-                obj.trailInfo(nSti+1). amplitude=yLimits(2)/2;
+            for i=1:length(s)
+                obj.trailInfo(nSti+i).startFrameN=s(i);
+                obj.trailInfo(nSti+i).endFrameN=n(i);
+                amplitude=mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
+                if amplitude<0
+                    obj.trailInfo(nSti+i). amplitude=yLimits(1)/2;
+                else
+                    obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
+                end
+                obj.data(s(i):n(i),3)=obj.trailInfo(nSti+i).amplitude;
             end
-            obj.data(insertFrameN(1):insertFrameN(2),3)=obj.trailInfo(nSti+1).amplitude;
-            
             %sortrows
              mtrail=(squeeze(cell2mat(struct2cell(obj.trailInfo))))';
              if ~issorted(mtrail,'rows')
                  sortedmtrail=sortrows(mtrail);
-                 for i=1:nSti+1
+                 for i=1:nSti+length(s)
                      obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
                      obj.trailInfo(i).endFrameN=sortedmtrail(i,2);
                      obj.trailInfo(i).amplitude=sortedmtrail(i,3);
