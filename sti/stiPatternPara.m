@@ -54,7 +54,7 @@ tab = uitabpanel(...
     'Position',[0,0,1,1],...
     'Margins',{[0,-1,1,0],'pixels'},...
     'PanelBorderType','line',...
-    'Title',{'Parameters','Motion'});
+    'Title',{'Para','Motion','Position','Contrast'});
 
 stiList               =uicontrol('Style','listbox',...
     'Parent',stiProperties,...
@@ -168,6 +168,60 @@ movSpeedEdit       =uicontrol('Style','Edit',...
     'Parent',hpanel(2),...
     'Callback',@movSpeed);
 
+ % Panel 3, position
+ posXTxt        =uicontrol('Style','text',...
+     'String','X:',...
+     'BackgroundColor','white',...
+     'Position',[87 100 60 20],...
+     'Parent',hpanel(3));
+ posXEdit       =uicontrol('Style','Edit',...
+     'String','0',...
+     'BackgroundColor','white',...
+     'Position',[145 104 60 20],...
+     'Parent',hpanel(3),...
+     'Callback',@posX);
+ posYTxt            =uicontrol('Style','text',...
+     'String','Y:',...
+     'BackgroundColor','white',...
+     'Position',[100 70 40 20],...
+     'Parent',hpanel(3));
+ posYEdit           =uicontrol('Style','Edit',...
+     'String','0',...
+     'BackgroundColor','white',...
+     'Position',[145 74 60 20],...
+     'Parent',hpanel(3),...
+     'Callback',@posY);
+ stiMap            =uicontrol('Style','pushbutton',...
+     'String','Map',...
+     'BackgroundColor','white',...
+     'Position',[145 30 60 25],...
+     'Parent',hpanel(3),...
+     'Callback',@mapStimulus);
+ 
+  % Panel 4, contrast
+  bckTxt        =uicontrol('Style','text',...
+      'String','Background:',...
+      'BackgroundColor','white',...
+      'Position',[55 100 90 20],...
+      'Parent',hpanel(4));
+  bckEdit       =uicontrol('Style','Edit',...
+      'String','0',...
+      'BackgroundColor','white',...
+      'Position',[145 104 60 20],...
+      'Parent',hpanel(4),...
+      'Callback',@bckb);
+  objTxt            =uicontrol('Style','text',...
+      'String','Object:',...
+      'BackgroundColor','white',...
+      'Position',[90 70 50 20],...
+      'Parent',hpanel(4));
+  objEdit           =uicontrol('Style','Edit',...
+      'String','0',...
+      'BackgroundColor','white',...
+      'Position',[145 74 60 20],...
+      'Parent',hpanel(4),...
+      'Callback',@objb);
+
 % Buttons
 stiUpdateButton             =uicontrol('Style','pushbutton',...
     'String','OK',...
@@ -187,21 +241,43 @@ setAllButton              =uicontrol('Style','pushbutton',...
     'Position',[20 10 60 25],...
     'Parent',fig,...
     'Callback',@setAll);
+
 % Initiation
 if ~isempty(data)
-    %             if isfield (obj.data(1),'stiType')
     selectStiType=data(1).stiType;
     set(stiTypeEdit,'Value',selectStiType);setStiSizeCtrBoxes (selectStiType,1);
     selectMovType=data(1).movType;
     set(movTypeEdit,'Value',selectMovType);setMovCtrBoxes(selectMovType, 1);
     set(stiDurationEdit,'String',data(1).duration);
+    if isfield(data(1), 'position')
+        set(posXEdit,'String',data(1).position(1));
+        set(posYEdit,'String',data(1).position(2));
+    else
+        for i=1:num % position was added later;
+            data(i).position(1)=0;
+            data(i).position(2)=0;
+        end
+    end
     
+    if isfield(data(1), 'contrast')
+        set(bckEdit,'String',data(1).contrast(1));
+        set(objEdit,'String',data(1).contrast(2));
+    else
+        for i=1:num %contrast was added later;
+            data(i).contrast(1)=0;
+            data(i).contrast(2)=0;
+        end
+    end
 else
     for i=1:num
         data(i).stiType=1;
         data(i).movType=1;
         data(i).duration=0;
         data(i).size=[];
+        data(i).position(1)=0;
+        data(i).position(2)=0;
+        data(i).contrast(1)=0;
+        data(i).contrast(2)=0;
     end
 end
 
@@ -223,6 +299,15 @@ waitfor(fig);
         selectMovType=data(1).movType;
         set(movTypeEdit,'Value',selectMovType);setMovCtrBoxes(selectMovType, 1);
         set(stiDurationEdit,'String',data(1).duration);
+        if isfield(data(1), 'position')
+            set(posXEdit,'String',data(1).position(1));
+            set(posXEdit,'String',data(1).position(2));
+        end
+        
+        if isfield(data(1), 'contrast')
+            set(bckEdit,'String',data(selectIndex).contrast(1));
+            set(objEdit,'String',data(selectIndex).contrast(2));
+        end
     end
 
     function []=savePattern (varargin)
@@ -378,6 +463,63 @@ waitfor(fig);
         data(selectIndex).mov.speed=get(movSpeedEdit,'String');
     end
 
+% function to change position X
+    function []=posX(varargin)
+        
+        selectIndex=get(stiList,'Value');
+        obj.data(selectIndex).position(1)=str2double(get(hObject,'String'));
+    end
+
+% function to change position Y
+    function []=posY(varargin)
+        
+        selectIndex=get(stiList,'Value');
+        obj.data(selectIndex).position(2)=str2double(get(hObject,'String'));
+    end
+
+% funtion to map stimulus based pos
+    function[]= mapStimulus(varargin)
+        
+        prompt={'Enter Center Position (X, Y)','Enter Image Size (pixels)','Enter micronsPerPixel'};
+        dlg_title='Map Stimulus';
+        num_lines=1;
+        def={'520,415','99,89','0.78'};
+        p=inputdlg(prompt,dlg_title,num_lines,def);
+        
+        post=strsplit(p{1},',');
+        xpos=str2double(post{1});ypos=str2double(post{2});
+        imsize=strsplit(p{2},',');
+        imwidth=str2double(imsize{1})*str2double(p{3});imheight=str2double(imsize{2})*str2double(p{3});
+        figure;
+        
+        line([xpos-imwidth/4 xpos-imwidth/4 xpos+imwidth/4 xpos+imwidth/4 xpos-imwidth/4], [-ypos+imheight/4 -ypos-imheight/4 -ypos-imheight/4 -ypos+imheight/4 -ypos+imheight/4], 'linewidth', 2);hold on;
+        text(xpos-imwidth/4, -ypos+imheight/4, 'Image');
+        line([xpos-50 xpos+50],[-ypos -ypos]); hold on;
+        line([xpos xpos], [-ypos+50 -ypos-50]);hold on;
+        
+        for j=1:length(data)
+            th = 0:pi/50:2*pi;
+            xunit = data(j).size * cos(th) + data(j).position(1);
+            yunit = data(j).size * sin(th) + (-1*data(j).position(2));
+            plot(xunit, yunit); hold on;
+            text(data(j).position(1),(-1*data(j).position(2)), num2str(j));
+        end
+    end
+
+% function to change background brightness
+    function []=bckb(varargin)
+        
+        selectIndex=get(stiList,'Value');
+        data(selectIndex).contrast(1)=str2double(get(hObject,'String'));
+    end
+
+% function to change object brightness
+    function []=objb(varargin)
+        
+        selectIndex=get(stiList,'Value');
+        data(selectIndex).contrast(2)=str2double(get(hObject,'String'));
+    end
+    
 % function to select different sti
     function []=selectStiList (varargin)
         
@@ -389,6 +531,15 @@ waitfor(fig);
         set(movTypeEdit,'Value',selectMovType); setMovCtrBoxes(selectMovType,selectIndex);
         
         set(stiDurationEdit,'String',data(selectIndex).duration);
+        if isfield(data(selectIndex), 'position')
+            set(posXEdit,'String',data(selectIndex).position(1));
+            set(posYEdit,'String',data(selectIndex).position(2));
+        end
+        
+        if isfield(data(selectIndex), 'contrast')
+            set(bckEdit,'String',data(selectIndex).contrast(1));
+            set(objEdit,'String',data(selectIndex).contrast(2));
+        end
     end
 
 % function to set all stimulus the same
@@ -402,7 +553,10 @@ waitfor(fig);
                 data(j).movType=data(selectIndex).movType;
                 data(j).duration=data(selectIndex).duration;
                 data(j).size=data(selectIndex).size;
-                
+                data(j).position(1)=data(selectIndex).position(1);
+                data(j).position(2)=data(selectIndex).position(2);
+                data(j).contrast(1)=data(selectIndex).contrast(1);
+                data(j).contrast(2)=data(selectIndex).contrast(2);
                 if isfield(data(selectIndex),'mov')
                     data(j).mov=data(selectIndex).mov;
                 end
@@ -420,6 +574,10 @@ waitfor(fig);
             data(j).movType=1;
             data(j).duration=0;
             data(j).size=[];
+            data(j).position(1)=0;
+            data(j).position(2)=0;
+            data(j).contrast(1)=0;
+            data(j).contrast(2)=0;
         end
         
         set(stiTypeEdit,'Value',1);setStiSizeCtrBoxes (1,1);

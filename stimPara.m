@@ -6,8 +6,6 @@ classdef stimPara < handle
     
     properties
         data
-%         para
-%         patternInfo
     end
     
     methods
@@ -539,8 +537,8 @@ classdef stimPara < handle
             
             line([xpos-imwidth/4 xpos-imwidth/4 xpos+imwidth/4 xpos+imwidth/4 xpos-imwidth/4], [-ypos+imheight/4 -ypos-imheight/4 -ypos-imheight/4 -ypos+imheight/4 -ypos+imheight/4], 'linewidth', 2);hold on;
             text(xpos-imwidth/4, -ypos+imheight/4, 'Image');
-            line([xpos-50 xpos+50],[-415 -415]); hold on;
-            line([520 520], [-ypos+50 -ypos-50]);hold on;
+            line([xpos-50 xpos+50],[-ypos -ypos]); hold on;
+            line([xpos xpos], [-ypos+50 -ypos-50]);hold on;
             
             for i=1:length(obj.data)
             th = 0:pi/50:2*pi;
@@ -635,7 +633,6 @@ classdef stimPara < handle
          % function to update and generate stimulus pattern
          function updateStiPattern (obj,~, ~)
              
-          
             delete(obj.h.fig);
             obj.h=[];
          end

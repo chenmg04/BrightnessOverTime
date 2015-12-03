@@ -1,6 +1,5 @@
 classdef sti < handle
 
-    
     properties
         data % traces for stimulus
         threshold      
@@ -11,7 +10,6 @@ classdef sti < handle
     
     methods
         function obj = sti (varargin)
-            
             if nargin
                 try
                     obj.threshold=varargin{1}.threshold;
@@ -22,13 +20,16 @@ classdef sti < handle
                 catch
                     obj.data=varargin{1};
                 end
-                
             else
                 obj.data=[];
-                
             end
             
+             if size(obj.data,2)==1
+                baseline=mean(obj.data(1:50,1)); 
+                obj.data(:,2)=(obj.data(:,1)-baseline)/baseline;
+            end
         end
+        
         % function to load stimulus data
         function loadData(obj,~,~)
             
@@ -36,8 +37,6 @@ classdef sti < handle
             if isequal(filename,0) || isequal(pathname,0)
                 disp('User pressed cancel');
                 return;
-            else
-                disp(['User selected ', fullfile(pathname, filename)]);
             end
             fullfilename=fullfile(pathname, filename);
             b=load(fullfilename);
@@ -62,39 +61,49 @@ classdef sti < handle
 
         end
         
-        function autoDetStiOnset(obj,~,~)
-            
-            % use first 50 data point to get sd
-            % and use 3 times of sd as the threshold to detect stimulus
-            
-            stidata=obj.data(:,1);
-            sd= std(stidata(1:50));
-            p=10*sd;
-            detectStiOnset(obj,p,stidata);
-        end
-        
-        function manDetStiOnset(obj,p,~)
-            
-            % manually set a threshold p
-            % and use delta F/F data to detect stimulus
-            
-            stidata=obj.data(:,2);
-            detectStiOnset(obj,p,stidata);
-            
-        end
+%         function autoDetStiOnset(obj,~,~)
+%             
+%             % use first 50 data point to get sd
+%             % and use 3 times of sd as the threshold to detect stimulus
+%             
+%             stidata=obj.data(:,1);
+%             sd= std(stidata(1:50));
+%             p=10*sd;
+%             detectStiOnset(obj,p,stidata);
+%         end
+%         
+%         function manDetStiOnset(obj,p,~)
+%             
+%             % manually set a threshold p
+%             % and use delta F/F data to detect stimulus
+%             
+%             stidata=obj.data(:,2);
+%             detectStiOnset(obj,p,stidata);
+%             
+%         end
         
         % function to detect stimulus onset time
-        function detectStiOnset(obj,p,stidata)            
+        function detectStiOnset(obj, p)            
             
-            if isequal(obj.threshold,p)
+            if isequal(obj.threshold, p)
                 return;
-            end  
-            obj.threshold=p;   
-            
-            nFrames=length(stidata);
+            end
+            obj.threshold=p;
+            % check data range for detection
+            if isempty(p{1})
+                stidata=obj.data(:,2);
+                rs=1;rn=length(stidata);
+            else
+                rs=p{1}(1);rn=p{1}(2);
+                stidata=obj.data(rs:rn,2);
+            end
+            % filter, boxcar
+            stidata=moving_average(stidata,p{3});
+           
+            % thresholding
             s=zeros(); i=1;
-            for n=2:nFrames;
-                if abs(stidata(n))>p
+            for n=rs:rn
+                if abs(stidata(n))>p{2}
                     s(i)= n;
                     i=i+1;
                 end
@@ -102,13 +111,12 @@ classdef sti < handle
                 
             d=find(diff(s)~=1); 
             nSti=length(d)+1;
-            
             startFrameN=[];
             endFrameN=[];
-            startFrameN(1)=s(1);
-            startFrameN(2:nSti)=s(d+1);          
-            endFrameN(1:nSti-1)=s(d);
-            endFrameN(nSti)=s(end);
+            startFrameN(1)=s(1)+p{3};
+            startFrameN(2:nSti)=s(d+1)+p{3};          
+            endFrameN(1:nSti-1)=s(d)-p{3};
+            endFrameN(nSti)=s(end)-p{3};
             
             obj.trailInfo=[];  obj.data(:,3)=0;
              for i=1: nSti
@@ -128,33 +136,73 @@ classdef sti < handle
             
         end
         
+        % function to insert stimulus
+        function insertStimulus(obj, s, n)
+            % s, startFrameN; n, endFrameN. s, n must be in pairs
+            
+            % insert new stimulus into the end
+            nSti=length(obj.trailInfo);
+            for i=1:length(s)
+                obj.trailInfo(nSti+i).startFrameN=s(i);
+                obj.trailInfo(nSti+i).endFrameN =n(i);
+                obj.trailInfo(nSti+i).amplitude     =mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
+                obj.data(s(i):n(i),3)                     =obj.trailInfo(nSti+i).amplitude;
+            end
+            %sortrows
+             mtrail=(squeeze(cell2mat(struct2cell(obj.trailInfo))))';
+             if ~issorted(mtrail,'rows')
+                 sortedmtrail=sortrows(mtrail);
+                 for i=1:nSti+length(s)
+                     obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
+                     obj.trailInfo(i).endFrameN =sortedmtrail(i,2);
+                     obj.trailInfo(i).amplitude     =sortedmtrail(i,3);
+                 end
+             end
+            
+        end
         % function to set stimulus pattern
-        function setStiPattern(obj, patN)
+        function setStiPattern(obj, q)
             
             if isempty(obj.trailInfo)
                 sprintf('Please detect stimulus first!');
                 return;
             end
             
-            nSti=1:length(obj.trailInfo);
             obj.patternInfo=[];
-            if isscalar(patN)
-                for i=1:patN-1
-                    obj.patternInfo(i).trailN=nSti(find(mod(nSti,patN)==i));
-                end
-                obj.patternInfo(patN).trailN=nSti(find(mod(nSti, patN)==0));
-            elseif iscell(patN)
-                for i=1:length(patN)
-                    j=patN{i};
-                    obj.patternInfo(i).trailN=j;
-                end
-            elseif ismatrix(patN)
-                for i=1:size(patN,1)
-                    obj.patternInfo(i).trailN=patN(i,:);
-                end
+            if length(q)==1
+                 nSti=1:length(obj.trailInfo);
+                 for i=1:q-1
+                     obj.patternInfo(i).trailN=nSti(find(mod(nSti, q)==i));
+                 end
+                 obj.patternInfo(q).trailN=nSti(find(mod(nSti, q)==0));
+             else
+                 patN=length(q);
+                 for i=1:patN
+                 obj.patternInfo(i).trailN=q{i};
+                 end
+            end
+            
+            % generate pattern traces, for later plots
+            patN=length(obj.patternInfo);
+            patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
+            for i=1:patN
                 
-            end                  
-           
+                firstTrailN=obj.patternInfo(i).trailN(1);
+                firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
+                lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
+                
+                % Manually defined length
+                preStartFrame=20;
+                
+                curLength=length(patternTrace);
+                s=curLength+1;
+                e=s+lastFrameN(i)-firstFrameN(i)+2*preStartFrame;
+                patternTrace(curLength+1:e)=obj.data(firstFrameN(i)-preStartFrame:lastFrameN(i)+preStartFrame,3);
+            end
+            patternTraceLength=length(patternTrace);
+            obj.data(1,4)=patternTraceLength;
+            obj.data(2:patternTraceLength+1,4)=patternTrace;
+            
         end
         
         % function to show stimulus trace, three options, raw, fit and pattern    
@@ -192,8 +240,12 @@ classdef sti < handle
                 if ~isempty(obj.patternInfo)
                     patN=length(obj.patternInfo);
                     if ~isempty(obj.paraInfo)
-                        for i=1:patN
-                            para(i)=obj.paraInfo(obj.patternInfo(i).trailN(1));
+                        try % old version
+                            for i=1:nPat
+                                para(i)=obj.paraInfo(obj.patternInfo(i).trailN(1));
+                            end
+                        catch
+                            para=obj.paraInfo;
                         end
                     else
                         para=[];
