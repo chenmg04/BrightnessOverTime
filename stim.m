@@ -154,7 +154,7 @@ classdef stim < handle
             
             if ~isempty(obj.lastSti)
                 obj.threshold=obj.lastSti.threshold;
-                detectStiOnset(obj,obj.threshold);
+                detectStimulus(obj);
                 obj.patternInfo=obj.lastSti.patternInfo;
                 obj.paraInfo=obj.lastSti.paraInfo;
                 plotPatternTrace(obj);
@@ -376,6 +376,7 @@ classdef stim < handle
              q=strsplit(p{1},';');
              % single scalar, e.g., 8, indicates 8 patterns, and the repeat
              % of patterns is 1-2-3-...1-2-3-...
+             obj.patternInfo=[];
              if length(q)==1
                  patN=str2double(p{1});
                  nSti=1:length(obj.trailInfo);

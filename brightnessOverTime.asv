@@ -2511,16 +2511,14 @@ classdef brightnessOverTime < handle
             end
             
             if get(obj.autoFluoDetector.individualPattern,'Value')
-                pat=str2num(get(obj.autoFluoDetector.patternEdit,'String'));
-                patN=length(pat);
-                figure(666); 
-                col=ceil(sqrt(patN));
-                row=ceil(patN/col);
+                pat=get(obj.autoFluoDetector.patternInfo)
+                patN=length(stiInfo.patternInfo);
+                figure(666);
                 for i=1:patN
-                trailN=stiInfo.patternInfo(pat(i)).trailN;
+                trailN=stiInfo.patternInfo(i).trailN;
                  [fluoChangeData]=caculateFluoChange(obj,option,trailN);
                   filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-                  subplot(row,col,i),imshow(filteredFluoChangeData,[0 1500]);title(num2str(i));colorbar;axis off;drawnow;colormap(jet);
+                  subplot(3,3,i),imshow(filteredFluoChangeData,[0 1500]);title(num2str(i));colorbar;axis off;drawnow;colormap(jet);
 %                   imagesc(filteredFluoChangeData)
                 end
                 
