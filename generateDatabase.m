@@ -177,7 +177,8 @@ g.updateButton =uicontrol(g.figure,...
                 patN= length(stimdata.stidata.patternInfo); 
                 for i=1:stiminfoNameN
                     for j=1:patN
-                        stiminfoValue{i}(j)=stimdata.stidata.paraInfo(stimdata.stidata.patternInfo(j).trailN(1)).(stiminfoName{i});
+%                         stiminfoValue{i}(j)=stimdata.stidata.paraInfo(stimdata.stidata.patternInfo(j).trailN(1)).(stiminfoName{i});
+                            stiminfoValue{i}(j)=stimdata.stidata.paraInfo(j).(stiminfoName{i});
                     end
                     stiminfo{i}=sprintf('%s : %s',stiminfoName{i},num2str(unique(stiminfoValue{i})));
                 end

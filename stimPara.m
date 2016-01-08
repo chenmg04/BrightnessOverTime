@@ -317,8 +317,8 @@ classdef stimPara < handle
             end
             
             if isfield(obj.data(1), 'contrast')
-                set(obj.h.bckEdit,'String',obj.data(selectIndex).contrast(1));
-                set(obj.h.objEdit,'String',obj.data(selectIndex).contrast(2));
+                set(obj.h.bckEdit,'String',obj.data(1).contrast(1));
+                set(obj.h.objEdit,'String',obj.data(1).contrast(2));
             end
         end
         
@@ -547,6 +547,7 @@ classdef stimPara < handle
             plot(xunit, yunit); hold on;
             text(obj.data(i).position(1),(-1*obj.data(i).position(2)), num2str(i));
             end
+%               set(gca,'xdir','reverse');
         end
         
          % function to change background brightness

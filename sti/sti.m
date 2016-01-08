@@ -103,7 +103,8 @@ classdef sti < handle
             % thresholding
             s=zeros(); i=1;
             for n=rs:rn
-                if abs(stidata(n))>p{2}
+%                 if abs(stidata(n))>p{2}
+                 if stidata(n)>p{2}
                     s(i)= n;
                     i=i+1;
                 end

@@ -824,7 +824,8 @@ classdef brightnessOverTime < handle
                     if   obj.data.metadata.iminfo.channel==2
                         
                         if obj.openStates.image.viewMode==1 % view Average Frame
-                            hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+%                             hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                             hAxes1(nhAxes1+1)=imshow(obj.data.metadata.previewFrame{chSliderValue},[], 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
                         else % view Original Stacks
                             hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
                         end
@@ -2513,15 +2514,22 @@ classdef brightnessOverTime < handle
             if get(obj.autoFluoDetector.individualPattern,'Value')
                 pat=str2num(get(obj.autoFluoDetector.patternEdit,'String'));
                 patN=length(pat);
-                figure(666); 
-                col=ceil(sqrt(patN));
-                row=ceil(patN/col);
-                for i=1:patN
-                trailN=stiInfo.patternInfo(pat(i)).trailN;
-                 [fluoChangeData]=caculateFluoChange(obj,option,trailN);
-                  filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-                  subplot(row,col,i),imshow(filteredFluoChangeData,[0 1500]);title(num2str(i));colorbar;axis off;drawnow;colormap(jet);
-%                   imagesc(filteredFluoChangeData)
+                if patN==1
+                    trailN=stiInfo.patternInfo(pat).trailN;
+                    [fluoChangeData]=caculateFluoChange(obj,option,trailN);
+                    filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
+                    showFluoChange(obj,hObject,filteredFluoChangeData);
+                else
+                    figure(666);
+                    col=ceil(sqrt(patN));
+                    row=ceil(patN/col);
+                    for i=1:patN
+                        trailN=stiInfo.patternInfo(pat(i)).trailN;
+                        [fluoChangeData]=caculateFluoChange(obj,option,trailN);
+                        filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
+                        subplot(row,col,i),imshow(filteredFluoChangeData,[-3000 3000]);title(num2str(pat(i)));axis off;drawnow;colormap(jet);
+                        %                   imagesc(filteredFluoChangeData)
+                    end
                 end
                 
             end
@@ -2589,14 +2597,16 @@ classdef brightnessOverTime < handle
             onStart  =stiInfo.trailInfo(trailN(i)).startFrameN;
             onEnd   =stiInfo.trailInfo(trailN(i)).endFrameN;
             offStart =stiInfo.trailInfo(trailN(i)).endFrameN+1;
-            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(4/frameRate);
-            BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(5/frameRate):onStart),4);
+            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(2/frameRate);
+            BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(1/frameRate):onStart),4);
             sum1   =sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:onEnd),4))-BL;
              sum2  =sum2+squeeze(mean(obj.data.imagedata(:,:,chN,offStart:offEnd),4))-BL;
-            sum3=sum3+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:offEnd),4))-BL;
             end
+%             sum1=sum1/nSti; sum2=sum2/nSti;
+            sum3=sum1-sum2;
             fluoCh={sum1 sum2 sum3};
             fluoChangeData=fluoCh{option};
+%             fluoChangeData=fluoCh{2}-fluoCh{1};
             
             
             
@@ -2643,7 +2653,7 @@ classdef brightnessOverTime < handle
             hAxes1(end)=[];
             nhAxes1=length(hAxes1);
             
-            hAxes1(nhAxes1+1)=imshow(fluoChangeData,[0 5000 ], 'Parent',obj.axes1);axis off;drawnow;colormap(gray);
+            hAxes1(nhAxes1+1)=imshow(fluoChangeData,[-3000 3000 ], 'Parent',obj.axes1);axis off;drawnow;colormap(jet);
             obj.openStates.curImage=fluoChangeData;
             
             if ~isfield(obj.openStates,'roi')
@@ -3200,8 +3210,8 @@ classdef brightnessOverTime < handle
 %                         for m=1:nTrail
                             trailN=patternInfo{i}.trailN(m);
                             total(:,m)=RelativeF(:,trailN);
-%                             h=plot(t,RelativeF(:,trailN),'k','LineWidth',1);
-%                             set(h,'color',[0.827 0.827 0.827]);
+                            h=plot(t,RelativeF(:,trailN),'k','LineWidth',1);
+                            set(h,'color',[0.827 0.827 0.827]);
                             hold on;
                         end
                         traceAve(:,i)=sum(total(:,:),2)/(nTrail(2)-nTrail(1)+1);
@@ -3326,8 +3336,8 @@ classdef brightnessOverTime < handle
 %                             for m=1:nTrail
                                 trailN=patternInfo{i}.trailN(m);
                                 totalAll(:,m,j)=RelativeF(:,trailN,j);
-%                                 subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.5);hold on;
-%                                 set(h,'color',[0.827 0.827 0.827]);   
+                                subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.5);hold on;
+                                set(h,'color',[0.827 0.827 0.827]);   
 
                                 
                             end

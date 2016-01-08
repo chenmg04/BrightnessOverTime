@@ -273,7 +273,8 @@ classdef stim < handle
             s=zeros(); i=1;
 %             if p(3)~=0
                 for n=1:nFrames;
-                    if abs(norSti(dataRange(n)))>str2double(p{2})
+%                     if abs(norSti(dataRange(n)))>str2double(p{2})
+                    if norSti(dataRange(n))>str2double(p{2})
                         s(i)= n;
                         i=i+1;
                     end
