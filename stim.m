@@ -163,28 +163,30 @@ classdef stim < handle
         
         function openStimulus(obj,~,~)
             
-            [filename, pathname] = uigetfile('*.mat', 'Pick a file');
+             [filename, pathname] = uigetfile('*.mat', 'Pick a file');
             if isequal(filename,0) || isequal(pathname,0)
                 disp('User pressed cancel');
                 return;
-            else
-                disp(['User selected ', fullfile(pathname, filename)]);
             end
             fullfilename=fullfile(pathname, filename);
-            load(fullfilename);
+            b=load(fullfilename);
             try
-                obj.threshold=stidata.threshold;
-                obj.data=stidata.data;
-                obj.trailInfo=stidata.trailInfo;
-                obj.patternInfo=stidata.patternInfo;
-                obj.paraInfo=stidata.paraInfo;
+                obj.threshold=b.stidata.threshold;
+                obj.data=b.stidata.data;
+                obj.trailInfo=b.stidata.trailInfo;
+                obj.patternInfo=b.stidata.patternInfo;
+                obj.paraInfo=b.stidata.paraInfo;
             catch  
-            obj.data=stidata;
+                try
+                    obj.data=b.stidata;
+                catch
+                    obj.data=(b.data)'; % labchart files saved as .mat file
+                end
             end
-            showPatternTrace (obj);
-            hpara= findobj('Name','Stimulus Pattern');
-            if ~isempty(hpara)
-                close(hpara);
+            
+            if size(obj.data,2)==1
+                baseline=mean(obj.data(1:50,1)); 
+                obj.data(:,2)=(obj.data(:,1)-baseline)/baseline;
             end
             
         end
@@ -297,6 +299,9 @@ classdef stim < handle
             endFrameN(1:nSti-1)=s(d)-filtern;
             endFrameN(nSti)=s(end)-filtern;
             
+            startFrameN=startFrameN+dataRange(1)-1;
+            endFrameN=endFrameN+dataRange(1)-1;
+            
             obj.trailInfo=[];  obj.data(:,3)=0;
             yLimits=get(obj.h.axes,'YLim');
              for i=1: nSti
@@ -318,8 +323,8 @@ classdef stim < handle
                  chkerr (12:22,i)=obj.data(obj.trailInfo(i).endFrameN-5: obj.trailInfo(i).endFrameN+5,2);
              end
             disp(chkerr);
-            disp(startFrameN);
-            axes(obj.h.axes); hold on;    
+            disp(startFrameN);disp(endFrameN);
+            axes(obj.h.axes); hold on;   
             plot(obj.data(:,3),'color','r'); title('Fitted');
                     
         end
