@@ -154,7 +154,8 @@ classdef stim < handle
             
             if ~isempty(obj.lastSti)
                 obj.threshold=obj.lastSti.threshold;
-                detectStimulus(obj);
+                obj.threshold{1}=['1:' num2str(length(obj.data))];
+                 detectStiOnset(obj, obj.threshold);
                 obj.patternInfo=obj.lastSti.patternInfo;
                 obj.paraInfo=obj.lastSti.paraInfo;
                 plotPatternTrace(obj);
@@ -259,10 +260,10 @@ classdef stim < handle
                 return;
             end
             
-%             detectStiOnset(obj, p)
-%         end
-%        
-%             function detectStiOnset(obj, p,~)
+            detectStiOnset(obj, p)
+        end
+       
+            function detectStiOnset(obj, p,~)
                 
             obj.threshold=p;
             filtern=str2double(p{3});
