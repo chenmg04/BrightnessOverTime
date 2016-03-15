@@ -298,7 +298,8 @@ classdef stimPara < handle
         
         function importPattern (obj, ~, ~)
             
-            defaultPathname='C:\Users\Minggang\Documents\MATLAB\Stim Pattern Library';
+            path=fileparts(which('stim'));
+            defaultPathname=[path '\sti\pattern_lib'];
             [filename, pathname] = uigetfile('*.mat','Select file',defaultPathname);
             if isequal(filename,0) || isequal(pathname,0)
                 return;

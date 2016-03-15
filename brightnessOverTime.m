@@ -3166,16 +3166,16 @@ classdef brightnessOverTime < handle
                    patternInfo=patternInfo1;
                end
                
-               %check baseline length
-               if baselineLength > s(1) || baselineLength > s(2)-s(1)
-                   set(obj.infoTxt,'string','Error! BaseLine value is too big!');
-                   return;
-               end
-               %check trace length
-               if traceLength > s(2)-s(1)
-                   set(obj.infoTxt,'string','Error! TraceLength value is too big!');
-                   return;
-               end
+%                %check baseline length
+%                if baselineLength > s(1) || baselineLength > s(2)-s(1)
+%                    set(obj.infoTxt,'string','Error! BaseLine value is too big!');
+%                    return;
+%                end
+%                %check trace length
+%                if traceLength > s(2)-s(1)
+%                    set(obj.infoTxt,'string','Error! TraceLength value is too big!');
+%                    return;
+%                end
                
                % needs improvements
                startFrame        = s;
