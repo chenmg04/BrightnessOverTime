@@ -3276,11 +3276,11 @@ classdef brightnessOverTime < handle
                         st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));% needs attention!
                         baseline=zeros(1,traceLength+round(1/frameRate));
                         if get(obj.fluoAnalyzer.blueColor,'Value')
-                            plot(t,traceAve(:,i),'b',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
+                            plot(t,traceAve(:,i),'b',t,st(:,i),'t,baseline,'--r','LineWidth',1.5);
                         elseif get(obj.fluoAnalyzer.redColor,'Value')
-                            plot(t,traceAve(:,i),'r',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
+                            plot(t,traceAve(:,i),'r',t,st(:,i),t,baseline,'--r','LineWidth',1.5);
                         else
-                            plot(t,traceAve(:,i),'k',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
+                            plot(t,traceAve(:,i),'k',t,st(:,i),t,baseline,'--r','LineWidth',1.5);
                         end  
                     end
                     axis([xmin xmax ymin ymax])

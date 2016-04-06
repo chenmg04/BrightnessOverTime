@@ -548,7 +548,7 @@ classdef stimPara < handle
             plot(xunit, yunit); hold on;
             text(obj.data(i).position(1),(-1*obj.data(i).position(2)), num2str(i));
             end
-%               set(gca,'xdir','reverse');
+              set(gca,'xdir','reverse');
         end
         
          % function to change background brightness
