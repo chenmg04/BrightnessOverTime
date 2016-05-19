@@ -1262,6 +1262,10 @@ classdef brightnessOverTime < handle
             [imagedata, metadata] = importPrairieTif(obj,filedir);
             else
                 [imagedata, metadata] = openTiffStack(obj,filedir);
+                [filepath, filename] = fileparts (filedir);
+                obj.data.info.metamat.name=[filepath '\meta_' filename '.mat'];
+                obj.data.info.immat.name=[filepath '\im_' filename '.mat'];
+                obj.data.info.stimmat.name=[filepath '\stim_' filename '.mat'];
             end
             
             imsize=size(imagedata);
@@ -1287,13 +1291,17 @@ classdef brightnessOverTime < handle
                 end
                 
             else
-                
+%                 try
                 if metadata.iminfo.channel ==1
                     metadata.previewFrame =mean(imagedata(:,:,:),3);
                 else
                     metadata.previewFrame{1}=mean(imagedata(:,:,1,:),4);
                     metadata.previewFrame{2}=mean(imagedata(:,:,2,:),4);
                 end
+%                 catch
+%                     metadata.iminfo.channel =1;
+%                     metadata.previewFrame =mean(imagedata(:,:,:),3);
+%                 end
                 %             metadata.stiInfo.sti(:,1)= 1:1:metadata.iminfo.framenumber;
                 %             metadata.stiInfo.sti(:,2)= squeeze(mean((mean(imagedata(:,:,1,:),1)),2)); % average all pixel intensity in every frame in CH1 to show light stimulus
                 
@@ -1456,7 +1464,7 @@ classdef brightnessOverTime < handle
             
         end
         
-        function [imagedata, metadata]=openTiffStack (obj,filedir)
+        function [imagedata, metadata] = openTiffStack (obj,filedir)
             
             infoImage = imfinfo(filedir);
             % now only supports tiffs written by ScanImage or ImageJ
@@ -3200,7 +3208,7 @@ classdef brightnessOverTime < handle
 %                end
                
                % needs improvements
-               startFrame        = s;
+               startFrame        = s-1; % s number represents light on Frame#
                pre=round(1/frameRate);onFrame=min(e-s);
                prestartFrame   = startFrame-pre;
                baselineFrame   = startFrame-baselineLength;
@@ -3214,9 +3222,11 @@ classdef brightnessOverTime < handle
             if get(obj.fluoAnalyzer.curRoi,'Value')
                 [intensityAve]=getintensity(obj,selectIndex,chN);
                 f=moving_average(intensityAve,avenum);
+%                   f = fil(intensityAve);
                 %analyze raw
                 if get(obj.fluoAnalyzer.wholeTrail,'Value')
-                    F0            =mode(f);
+%                     F0            =mode(f);
+                    F0              = mean(f(startFrame(1)-baselineLength:startFrame(1)));
 %                     F0            = mean(f(1:baselineLength));
                     RelativeF  = (f-F0)/F0*100;
                     %plot
@@ -3253,7 +3263,9 @@ classdef brightnessOverTime < handle
                     figure(555);
                     for k=1:nSti
                         F(:,k)           = f(prestartFrame(k):traceFrame(k));
-                        F0(k)            = mean(f(baselineFrame(k):startFrame(k)));
+                        F0(k)              = mean(f(startFrame(1)-baselineLength:startFrame(1)));
+%                         F0(k)            = mean(f(1:baselineLength));
+%                         F0(k)            = mean(f(baselineFrame(k):startFrame(k)));
                         RelativeF(:,k)   = ( F(:,k)-F0(k))/F0(k)*100;
                     end
                     
@@ -3261,24 +3273,24 @@ classdef brightnessOverTime < handle
                         t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
                         nTrail=length(patternInfo{i}.trailN);
                         total=[];
-                                                nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
-                        for m=nTrail(1):nTrail(2)
-%                         for m=1:nTrail
+%                                                 nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
+%                         for m=nTrail(1):nTrail(2)
+                        for m=1:nTrail
                             trailN=patternInfo{i}.trailN(m);
                             total(:,m)=RelativeF(:,trailN);
                             h=plot(t,RelativeF(:,trailN),'k','LineWidth',1);
                             set(h,'color',[0.827 0.827 0.827]);
                             hold on;
                         end
-                        traceAve(:,i)=sum(total(:,:),2)/(nTrail(2)-nTrail(1)+1);
-%                         traceAve(:,i)=sum(total(:,:),2)/nTrail;
+%                         traceAve(:,i)=sum(total(:,:),2)/(nTrail(2)-nTrail(1)+1);
+                        traceAve(:,i)=sum(total(:,:),2)/nTrail;
                         firstTrail=patternInfo{i}.trailN(1);
                         st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));% needs attention!
                         baseline=zeros(1,traceLength+round(1/frameRate));
                         if get(obj.fluoAnalyzer.blueColor,'Value')
                             plot(t,traceAve(:,i),'b',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
                         elseif get(obj.fluoAnalyzer.redColor,'Value')
-                            plot(t,traceAve(:,i),'r',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
+                            plot(t,traceAve(:,i),'r',t,st(:,i),'y',t,baseline,'--r','LineWidth',1.5);
                         else
                             plot(t,traceAve(:,i),'k',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
                         end  
@@ -3341,7 +3353,7 @@ classdef brightnessOverTime < handle
                     baseline=zeros(nFrames,1);
                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Raw'],'NumberTitle','off');
                     for j=1:nroi
-                        F0(j)              = mean(f(1:baselineLength,j));
+                        F0(j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
                         RelativeF(:,j)     = (f(:,j)-F0(j))/F0(j)*100;
                         %plot
                         subplot(row,col,j);plot(fluoTime,RelativeF(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
@@ -3379,7 +3391,8 @@ classdef brightnessOverTime < handle
                         
                         for k=1:nSti
                             F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
-                            F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
+                            F0(k,j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
+%                             F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
                             RelativeF(:,k,j)   = ( F(:,k,j)-F0(k,j))/F0(k,j)*100;
                         end
                         
@@ -3387,18 +3400,18 @@ classdef brightnessOverTime < handle
                             t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
                             nTrail=length(patternInfo{i}.trailN);
                             totalAll=[];
-                            nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
-                            for m=nTrail(1):nTrail(2)
-%                             for m=1:nTrail
+%                             nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
+%                             for m=nTrail(1):nTrail(2)
+                            for m=1:nTrail
                                 trailN=patternInfo{i}.trailN(m);
                                 totalAll(:,m,j)=RelativeF(:,trailN,j);
-                                subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.01);hold on;
+                                subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.5);hold on;
                                 set(h,'color',[0.827 0.827 0.827]);   
 
                                 
                             end
-                             traceAve(:,i,j)=sum(totalAll(:,:,j),2)/(nTrail(2)-nTrail(1)+1);
-%                             traceAve(:,i,j)=sum(totalAll(:,:,j),2)/nTrail;
+%                              traceAve(:,i,j)=sum(totalAll(:,:,j),2)/(nTrail(2)-nTrail(1)+1);
+                            traceAve(:,i,j)=sum(totalAll(:,:,j),2)/nTrail;
                             firstTrail=patternInfo{i}.trailN(1);
                             st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));
                             subplot(row,col,j);title(p(j));
@@ -3468,7 +3481,8 @@ ax2 = subplot(1,2,2);
                     
                     for k=1:nSti
                         F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
-                        F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
+                        F0(k,j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
+%                         F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
                         RelativeF(:,k,j)   = ( F(:,k,j)-F0(k,j))/F0(k,j)*100;
                     end
                     
@@ -3520,6 +3534,7 @@ ax2 = subplot(1,2,2);
                     end
                 end
                 
+                
 %                 mRelativeF=mean(RelativeF,3);
 %                 figure(755);
 %                     baseline=zeros(1,traceLength+round(1/frameRate));
@@ -3560,11 +3575,12 @@ ax2 = subplot(1,2,2);
                 outdata.t=frameRate*(1:1:responseLength);
                 outdata.t=outdata.t';
                 outdata.baseline=zeros(responseLength,1);
+                outdata.peakAve = squeeze(peakAve);
                 try
-                outdata.sti=st;
+                    outdata.sti=st;
                 catch
                     outdat.sti=stidata;
-                    end
+                end
                 
                 L=size(RelativeF);
                 if length(L)~=3
@@ -3575,6 +3591,7 @@ ax2 = subplot(1,2,2);
                     for i=1:L(3)
                         outdata.roi{i}.relativeF=RelativeF(:,:,i);
                         outdata.roi{i}.ave=traceAve(:,:,i);
+                        
                     end
                 end
                 

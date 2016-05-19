@@ -303,6 +303,17 @@ classdef stim < handle
             startFrameN=startFrameN+dataRange(1)-1;
             endFrameN=endFrameN+dataRange(1)-1;
             
+            % make more accurate startFrameN and endFrameN
+            for i = 1:nSti
+                amplitude=mean(obj.data(startFrameN(i) :endFrameN(i),2));
+                
+                if obj.data(startFrameN(i),2) > amplitude * 0.6
+                    startFrameN(i) = startFrameN(i) - 1;
+                end
+                
+                
+            end
+            
             obj.trailInfo=[];  obj.data(:,3)=0;
             yLimits=get(obj.h.axes,'YLim');
              for i=1: nSti
