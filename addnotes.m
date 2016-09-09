@@ -1,21 +1,24 @@
 function notes = addnotes(varargin)
 
 
+t ='';
+
 % creat main figure
 fig = figure('Name','Notes',...
     'MenuBar','none',...
     'ToolBar','none',...
     'NumberTitle','off',...
     'Resize','off',...
-    'Position',[200 200 300 300]);
+    'Position',[200 200 300 300],...
+    'CloseRequestFcn',@closeMainFcn);
 
 % creat pushtools
 ht=uitoolbar(fig);
 path=fileparts(which('addnotes'));
 
-[X,map] = imread([path '\icons\file_open.gif']);
-icon = ind2rgb(X,map);
-uipushtool(ht,'CData',icon,'TooltipString','Open Notes','Separator','off','ClickedCallback',@obj.importPattern);
+% [X,map] = imread([path '\icons\file_open.gif']);
+% icon = ind2rgb(X,map);
+% uipushtool(ht,'CData',icon,'TooltipString','Open Notes','Separator','off','ClickedCallback',@obj.importPattern);
 
 [X,map] = imread([path '\icons\file_save.gif']);
 icon = ind2rgb(X,map);
@@ -38,14 +41,16 @@ notesEdit =uicontrol(fig,...
 % initialize edit box value 
 if nargin 
     if isfield(varargin{1},'notes')
-        data=varargin{1}.notes;
-        set(notesEdit,'String', data);
+        t=varargin{1}.notes; 
+        set(notesEdit,'String', t);
     end
 end
 
-
-waitfor(notesEdit,'String');
-notes=get(notesEdit,'String');
+origTest = t;
+waitfor(fig);
+% waitfor(notesEdit,'String');
+% notes=get(notesEdit,'String');
+notes = t;
  %
     function []=saveNotes(varargin)
         
@@ -53,13 +58,13 @@ notes=get(notesEdit,'String');
         metafilename=['meta_' filename '.mat'];
         if exist(metafilename,'file')
             load(metafilename);
-            notes=get(notesEdit,'String');
-            metadata.notes=notes;
+            t = get(notesEdit,'String');
+            metadata.notes = t;
             save(metafilename,'metadata'); 
         else
             saveNotesAs;
         end
-        
+        delete(fig);
     end
 
 %
@@ -70,9 +75,29 @@ notes=get(notesEdit,'String');
         else
             disp(['User selected ', fullfile(pathname, filename)])
         end
-        notesname=fullfile(pathname,filename);
-        notes=get(notesEdit,'String');
-        save(notesname,'notes','-ascii');
-        
+%         notesname=fullfile(pathname,filename);
+        t   = get(notesEdit,'String');
+        fid = fopen('MyFile.txt','w');
+        fprintf(fid, t);
+        fclose(fid);
+%         save(notesname,'notes','-ascii');
+        delete(fig);
+    end
+
+    function [] = closeMainFcn (varargin)
+        curTest   = get(notesEdit,'String');
+        if strcmp(origTest, curTest)
+            delete(fig);
+        else
+            selection=questdlg('Notes were changed, do you want to save the changes?',...
+                    'Notes',...
+                    'Yes','No','Yes');
+                switch selection
+                    case'Yes'
+                        saveNotes;    
+                    case'No'
+                        delete(fig);
+                end
+        end
     end
 end

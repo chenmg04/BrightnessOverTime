@@ -162,6 +162,10 @@ classdef brightnessOverTime < handle
                 'Label','Open Batch',...
                 'Separator','off',...
                 'Callback',@obj.openBatchFromFolder);
+            uimenu(fileMenu,...
+                'Label','Open Cell',...
+                'Separator','off',...
+                'Callback',@obj.openCell);
 %             openSampleMenu=uimenu(fileMenu,...
 %                 'Label','Open Sample',...
 %                 'Separator','off');
@@ -314,7 +318,7 @@ classdef brightnessOverTime < handle
                 'Callback',@obj.stimulus);
              uimenu(toolMenu,...
                 'Label','Notes',...
-                'Callback',@obj.addnotes);
+                'Callback',@obj.addnote);
             uimenu(toolMenu,...
                 'Label','Generate database',...
                 'Callback',@obj.gendatabase);
@@ -1074,6 +1078,21 @@ classdef brightnessOverTime < handle
 %             end
         end
         
+        function openCell (obj,~,~)
+            
+            filedir=uigetdir;
+            cd(filedir);
+            [~, cellname] = fileparts(filedir);
+            cellInfoName  =['info_' cellname '.mat'];
+            if exist(cellInfoName,'file')
+                cellInfo = load(cellInfoName);
+                for i = 1: length(cellInfo.data.filedir)
+                    processImage(obj,cellInfo.data.filedir{i});
+                end
+                obj.hgendatabase=generateCell(cellInfo.data);
+                
+            end
+         end
         
         % Function to open a file from the open list
         function openListFile (obj,~,~,filedir)
@@ -2409,10 +2428,14 @@ classdef brightnessOverTime < handle
 %             end
         end
         
-        function addnotes(obj, ~,~)
+        function addnote(obj, ~,~)
             
 %             load(obj.data.info.metamat.name);
 %             obj.data.metadata=metadata;
+            if ~isempty(findobj('Name','Notes'))
+                return;
+            end
+            
             if isfield(obj.data,'metadata')
                 obj.data.metadata.notes=addnotes(obj.data.metadata);
             else
@@ -2421,7 +2444,19 @@ classdef brightnessOverTime < handle
         end
         
         function gendatabase(obj, ~,~)
-            obj.hgendatabase=generateDatabase;
+            
+            
+            selection=questdlg('Select from Open List ?',...
+                    '',...
+                    'Yes','No','Yes');
+                switch selection
+                    case'Yes'
+                        selectFilenames = selectBatchFromFolder (obj.fileInfo.fullFileName);  
+                        obj.hgendatabase=generateCell(selectFilenames);
+                    case'No'
+                        obj.hgendatabase=generateCell;
+                end
+            
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Part 4. Analyze
@@ -3180,7 +3215,7 @@ classdef brightnessOverTime < handle
                
                nSti=length(trailInfo);
                nPat=length(patternInfo1);
-               stidata(stidata>0)=max(stidata)*( ymax/max(stidata)/2)+ymin;
+               stidata(stidata>0)=max(stidata)*( ymax/max(stidata)/4)+ymin;
                stidata(stidata<0)=min(stidata)*( ymin/min(stidata)/2)+ymin/3;
 %                if max(stidata)>0
 %                stidata=stidata*( ymax/max(stidata)/2)+ymin;
@@ -3209,7 +3244,7 @@ classdef brightnessOverTime < handle
                
                % needs improvements
                startFrame        = s-1; % s number represents light on Frame#
-               pre=round(1/frameRate);onFrame=min(e-s);
+               pre=round(2/frameRate);onFrame=min(e-s);
                prestartFrame   = startFrame-pre;
                baselineFrame   = startFrame-baselineLength;
                traceFrame       = startFrame + traceLength-1;
@@ -3233,8 +3268,9 @@ classdef brightnessOverTime < handle
                     fg=figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Raw'],'NumberTitle','off');
                     set(fg,'color',[0.729 0.831 0.957])
                     baseline=zeros(nFrames,1);
-                    plot(fluoTime,RelativeF, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
-                    axis([xmin xmax ymin ymax])
+%                     plot(fluoTime,RelativeF, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
+                    plot(fluoTime,f, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
+%                     axis([xmin xmax ymin ymax])
                     if ~get(obj.fluoAnalyzer.showAxis,'value')
                         axis off;
                     end
@@ -3260,7 +3296,7 @@ classdef brightnessOverTime < handle
                 else
 %                    figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Average'],'NumberTitle','off');
 %                     set(fg,'color',[0.729 0.831 0.957])
-                    figure(555);
+                    figure(558);
                     for k=1:nSti
                         F(:,k)           = f(prestartFrame(k):traceFrame(k));
                         F0(k)              = mean(f(startFrame(1)-baselineLength:startFrame(1)));
@@ -3286,7 +3322,7 @@ classdef brightnessOverTime < handle
                         traceAve(:,i)=sum(total(:,:),2)/nTrail;
                         firstTrail=patternInfo{i}.trailN(1);
                         st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));% needs attention!
-                        baseline=zeros(1,traceLength+round(1/frameRate));
+                        baseline=zeros(1,traceLength+round(2/frameRate));
                         if get(obj.fluoAnalyzer.blueColor,'Value')
                             plot(t,traceAve(:,i),'b',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
                         elseif get(obj.fluoAnalyzer.redColor,'Value')
@@ -3355,13 +3391,16 @@ classdef brightnessOverTime < handle
                     for j=1:nroi
                         F0(j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
                         RelativeF(:,j)     = (f(:,j)-F0(j))/F0(j)*100;
+                        FS(j) = std(RelativeF(startFrame(1)-round(5/frameRate):startFrame(1),j));
                         %plot
-                        subplot(row,col,j);plot(fluoTime,RelativeF(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
-                        axis([xmin xmax ymin ymax])
+%                         subplot(row,col,j);plot(fluoTime,RelativeF(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
+                        subplot(row,col,j);plot(fluoTime,f(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
+%                         axis([xmin xmax ymin ymax])
                         if ~get(obj.fluoAnalyzer.showAxis,'value')
                             axis off;
                         end
                     end
+                    display(FS);
                  %analyze trail
                 elseif get(obj.fluoAnalyzer.trailByTrail,'Value') 
                     baseline=zeros(1,traceLength+round(1/frameRate));
@@ -3385,10 +3424,24 @@ classdef brightnessOverTime < handle
                     %analyze average
                 else
 %                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Average'],'NumberTitle','off');
-                    figure(565);
-                    baseline=zeros(1,traceLength+round(1/frameRate));
+                    figure(568);
+                    baseline=zeros(1,traceLength+round(2/frameRate));
                     for j=1:nroi
                         
+                        % get baseline sd value, using the datapoints
+                        % before stimulus onset
+%                         nrepeat = nSti / nPat;
+%                         sp = round((5:5:5+5*(nrepeat-1))/frameRate);
+%                         ep = sp + round(4/frameRate);
+%                         bs = sp -baselineLength;
+%                         
+%                         for re = 1:nrepeat
+%                             bf(:,re,j) = f(sp(re):ep(re),j);
+%                             f0bf(re,j) = mean(f(bs(re):sp(re)-1,j));
+%                             relativebf (:,re,j) = (bf(:,re,j) - f0bf(re,j))/ f0bf(re,j) *100;
+%                         end
+%                         stdbf(j) = std (mean (relativebf (:,:,j),2));
+%                         
                         for k=1:nSti
                             F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
                             F0(k,j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
@@ -3412,6 +3465,9 @@ classdef brightnessOverTime < handle
                             end
 %                              traceAve(:,i,j)=sum(totalAll(:,:,j),2)/(nTrail(2)-nTrail(1)+1);
                             traceAve(:,i,j)=sum(totalAll(:,:,j),2)/nTrail;
+                            stdtA(i,j) = std(traceAve(:,i,j));med(i,j) = median(traceAve(:,i,j));
+                            peakAve(1,i,j)=max(traceAve(pre:pre+onFrame,i,j));stdAve(1,i,j)= std(traceAve(pre:pre+onFrame,i,j));
+                            peakAve(2,i,j)=max(traceAve(pre+onFrame:end,i,j));stdAve(2,i,j)= std(traceAve(pre+onFrame:end,i,j));
                             firstTrail=patternInfo{i}.trailN(1);
                             st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));
                             subplot(row,col,j);title(p(j));
@@ -3432,6 +3488,37 @@ classdef brightnessOverTime < handle
                             axis off;
                         end
                     end
+                    
+                    if get(obj.fluoAnalyzer.expData,'Value')
+                    peakAA = mean(peakAve,3); peakAS = std(peakAve,0,3);
+                    asyInd = (peakAve(1,:,:) - peakAve(2,:,:)) ./ (peakAve(1,:,:) + peakAve(2,:,:));
+                    asyIndAve = mean(asyInd,3); asyIndStd = std(asyInd,0,3);
+                    peakAve = squeeze(peakAve); asyInd = squeeze(asyInd);
+                    peakAA = squeeze(peakAA); peakAS = squeeze(peakAS);
+                    asyIndAve = squeeze(asyIndAve); asyIndStd = squeeze(asyIndStd);
+                    
+                    out.stdtA = stdtA;
+                    out.med = med;
+%                     out.stdbf = stdbf;
+                    out.peakAve = peakAve;
+                    out.stdAve =stdAve;
+                    out.peakAA = peakAA;
+                    out.peakAs = peakAS;
+                    out.asyInd = asyInd;
+                    out.asyIndAve = asyIndAve;
+                    out.asyIndStd = asyIndStd;
+                    
+                    save('out.mat','out');
+                    end
+%                     xlswrite('data.xls',peakAve,'peakAve');
+%                     xlswrite('data.xls',peakAA, 'peakAA');
+%                     xlswrite('data.xls',peakAA, 'peakAS');
+%                     xlswrite('data.xls',asyInd, 'Asymmetry Index');
+%                     xlswrite('data.xls',asyIndAve, 'asyIndAve');
+%                     xlswrite('data.xls',asyIndStd, 'asyIndStd');
+%                     disp(peakAve);disp(asyInd);
+%                     disp(asyIndAve);disp(asyIndStd);
+%                     disp(peakAA); disp(peakAS)
                     
                     % ANALYSIS MODULE FOR DS
                     if get(obj.fluoAnalyzer.ds,'Value')
@@ -3472,7 +3559,7 @@ ax1 = subplot(1,2,1); % top subplot
 ax2 = subplot(1,2,2);
 % ax = axes('position',[0,0,1,1],'visible','on');
                
-                baseline=zeros(1,traceLength+round(1/frameRate));
+                baseline=zeros(1,traceLength+round(2/frameRate));
                 
                 for j=1:nROIs
                     intensityAve=[];
@@ -3570,34 +3657,35 @@ ax2 = subplot(1,2,2);
  
             set(obj.infoTxt,'string','Process done!');
             
-            if get(obj.fluoAnalyzer.expData,'Value')
-                
-                outdata.t=frameRate*(1:1:responseLength);
-                outdata.t=outdata.t';
-                outdata.baseline=zeros(responseLength,1);
-                outdata.peakAve = squeeze(peakAve);
-                try
-                    outdata.sti=st;
-                catch
-                    outdat.sti=stidata;
-                end
-                
-                L=size(RelativeF);
-                if length(L)~=3
-                outdata.relativeF=RelativeF;
-                outdata.ave=traceAve;
-                
-                else
-                    for i=1:L(3)
-                        outdata.roi{i}.relativeF=RelativeF(:,:,i);
-                        outdata.roi{i}.ave=traceAve(:,:,i);
-                        
-                    end
-                end
-                
-                save('output.mat','outdata');
-                                
-            end
+%             if get(obj.fluoAnalyzer.expData,'Value')
+%                 
+%                 outdata.t=frameRate*(1:1:responseLength);
+%                 outdata.t=outdata.t';
+%                 outdata.baseline=zeros(responseLength,1);
+%                 outdata.peakAve = squeeze(peakAve);
+%                 try
+%                     outdata.sti=st;
+%                 catch
+%                     outdat.sti=stidata;
+%                 end
+%                 
+%                 L=size(RelativeF);
+%                 if length(L)~=3
+%                 outdata.relativeF=RelativeF;
+%                 outdata.ave=traceAve;
+%                 
+%                 else
+%                     for i=1:L(3)
+%                         outdata.roi{i}.relativeF=RelativeF(:,:,i);
+%                         outdata.roi{i}.ave=traceAve(:,:,i);
+%                         
+%                     end
+%                 end
+%                 
+%                 save('output.mat','outdata');
+%                                 
+%             end
+
 %               load('output.mat');
 %             if get(obj.fluoAnalyzer.expData,'Value')
 %                 L=size(RelativeF);
