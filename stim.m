@@ -219,7 +219,9 @@ classdef stim < handle
             catch
             end
                 
-            
+            delete(obj.h.fig);
+            obj.h.fig=[];
+            obj.h.axes=[];
         end
         
         %function to close main stimulus figure

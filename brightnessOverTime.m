@@ -1,6 +1,6 @@
 classdef brightnessOverTime < handle
     
-    properties
+    properties (Access = public)
         hMain
         infoTxt
         loadTxt
@@ -21,7 +21,7 @@ classdef brightnessOverTime < handle
         stiTool
         autoFluoDetector
         fluoAnalyzer
-        notes
+        nf % notes figure
         hgendatabase
         
         fileInfo
@@ -101,13 +101,7 @@ classdef brightnessOverTime < handle
                 'YColor',get(obj.dispFig,'Color'),...
                 'XTick',[],...
                 'YTick',[],...
-                'Position',[0 15 512 512]);
-            
-%              c=uicontextmenu(obj.dispFig);
-%             obj.axes1.UIContextMenu=c;
-%             uimenu(c,'Label','Open in New Window','Callback',@obj.openImageInNewWindow);
-           
-           
+                'Position',[0 15 512 512]);                     
             
             obj.chSlider = uicontrol(obj.dispFig,...
                 'Style','slider',...
@@ -139,6 +133,9 @@ classdef brightnessOverTime < handle
                  hListener = handle.listener (hhSlider, hProp, 'PostSet', @obj.frameSelection);% for matlab version before 2014
                 end
                 setappdata ( obj.frameSlider, 'sliderListener', hListener);
+                
+                clear; 
+                clc;
             
         end
         
@@ -1087,9 +1084,10 @@ classdef brightnessOverTime < handle
             if exist(cellInfoName,'file')
                 cellInfo = load(cellInfoName);
                 for i = 1: length(cellInfo.data.filedir)
-                    processImage(obj,cellInfo.data.filedir{i});
+                    fullfilename{i} = fullfile(filedir, cellInfo.data.filedir{i});
+                    processImage(obj, fullfilename{i});
                 end
-                obj.hgendatabase=generateCell(cellInfo.data);
+                obj.hgendatabase=generateCell(fullfilename);
                 
             end
          end
@@ -1269,6 +1267,22 @@ classdef brightnessOverTime < handle
                     
                     load(obj.data.info.stimmat.name);
                     obj.stiTool=stidata;
+                end
+                
+                if ~isempty(obj.nf) 
+                    if ~isempty(obj.nf.h) % notes figure is open
+                        try
+                            obj.nf.notes = obj.data.metadata.notes;
+                            obj.nf.h.editField.String = obj.nf.notes;
+                        catch
+%                             delete(obj.nf.h.fig);
+%                             obj.nf =[];
+                            obj.nf.notes = [];
+                            obj.nf.h.editField.String = '';
+                        end
+                    else
+                        obj.nf =[];
+                    end
                 end
 %                 go=1;
 %             end
@@ -2430,17 +2444,35 @@ classdef brightnessOverTime < handle
         
         function addnote(obj, ~,~)
             
-%             load(obj.data.info.metamat.name);
-%             obj.data.metadata=metadata;
-            if ~isempty(findobj('Name','Notes'))
-                return;
+            if isempty(obj.nf)
+                if isfield(obj.data,'metadata')
+                    try
+                        obj.nf = notewriter(obj.data.metadata.notes);
+                    catch
+                        obj.nf = notewriter;
+                    end
+                else
+                    return;
+                end
+            else
+                if isempty(obj.nf.h)
+                    obj.nf = notewriter(obj.nf.notes);
+                else
+                    return;
+                end
             end
             
-            if isfield(obj.data,'metadata')
-                obj.data.metadata.notes=addnotes(obj.data.metadata);
-            else
-                return;
-            end
+%             obj.nf = addnotes;
+%             
+%             if ~isempty(findobj('Name','Notes'))
+%                 return;
+%             end
+%             
+%             try isfield(obj.data,'metadata')
+%                 obj.data.metadata.notes=addnotes(obj.data.metadata);
+%             catch
+%                 return;
+%             end
         end
         
         function gendatabase(obj, ~,~)
@@ -3244,7 +3276,7 @@ classdef brightnessOverTime < handle
                
                % needs improvements
                startFrame        = s-1; % s number represents light on Frame#
-               pre=round(2/frameRate);onFrame=min(e-s);
+               pre=round(1/frameRate);onFrame=min(e-s);
                prestartFrame   = startFrame-pre;
                baselineFrame   = startFrame-baselineLength;
                traceFrame       = startFrame + traceLength-1;
@@ -3322,7 +3354,7 @@ classdef brightnessOverTime < handle
                         traceAve(:,i)=sum(total(:,:),2)/nTrail;
                         firstTrail=patternInfo{i}.trailN(1);
                         st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));% needs attention!
-                        baseline=zeros(1,traceLength+round(2/frameRate));
+                        baseline=zeros(1,traceLength+round(1/frameRate));
                         if get(obj.fluoAnalyzer.blueColor,'Value')
                             plot(t,traceAve(:,i),'b',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
                         elseif get(obj.fluoAnalyzer.redColor,'Value')
@@ -3425,7 +3457,7 @@ classdef brightnessOverTime < handle
                 else
 %                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Average'],'NumberTitle','off');
                     figure(568);
-                    baseline=zeros(1,traceLength+round(2/frameRate));
+                    baseline=zeros(1,traceLength+round(1/frameRate));
                     for j=1:nroi
                         
                         % get baseline sd value, using the datapoints

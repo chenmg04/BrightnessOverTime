@@ -1,7 +1,7 @@
-function [g] =generateCell (varargin)
+function g =generateCell (varargin)
 
 
-g. figure = figure('Name','Cell generator',...
+g.figure = figure('Name','Cell generator',...
     'MenuBar','none',...
     'ToolBar','none',...
     'NumberTitle','off',...
@@ -107,7 +107,6 @@ g.iminfoList=uicontrol('Style','text',...
     'HorizontalAlignment','left',...
     'Position',[0 0 285 325],...
     'Parent',hpanel(1));
-
 g.cellSummary=uicontrol('Style','edit',...
     'BackgroundColor','White',...
     'String', '',...
@@ -123,12 +122,13 @@ if nargin && iscell(varargin{1})
     g.filedir = varargin{1};
     loadInfo;
     
-elseif nargin && isstruct(varargin{1}) 
-    g.filedir = varargin{1}.filedir;
-     loadInfo;
-    g.imdata  = varargin{1}.imdata;
-    g.celldata=  varargin{1}.celldata;
-    set(g.cellSummary,'String',g.celldata);
+% elseif nargin && isstruct(varargin{1}) 
+%     g.filedir = varargin{1}.filedir;
+% %      loadInfo;
+%     
+%     g.imdata  = varargin{1}.imdata;
+%     g.celldata=  varargin{1}.celldata;
+%     set(g.cellSummary,'String',g.celldata);
 else
     g.imdata=[];
     g.filedir=[];
@@ -147,6 +147,7 @@ end
             fileList=get(g.fileList, 'String');
             fileList=[fileList; shortFilename];
             set(g.fileList,'String', fileList);
+            set(g.fileList, 'Value',i);
             
             % iminfo
             name_metadata=['meta_' filename '.mat'];
@@ -158,7 +159,7 @@ end
                     g.imdata(i).notes = '';
                 end
                 set(g.iminfoList, 'String', g.imdata(i).notes);
-                set(g.iminfoList, 'Value',i);
+%                 set(g.iminfoList, 'Value',i);
             end
         end
     end
@@ -184,7 +185,6 @@ end
         
         fileIndex=get(g.fileList,'Value');
         set(g.iminfoList, 'String', g.imdata(fileIndex).notes);
-        %         set(g.stiminfoTxt, 'String', g.stimdata(fileIndex).stiminfo);
     end
 
 % generate cell database
@@ -196,14 +196,14 @@ end
         fullCellName=fullfile(pathName,cellName);
         for i=1:fileN
             cd(g.filedir{i});
-            [~,newdir]=fileparts(g.filedir{i});
-            newfullName{i} = fullfile(fullCellName, newdir);
-            mkdir(fullCellName, newdir);
+            [~,filename{i}]=fileparts(g.filedir{i});
+            newfullName{i} = fullfile(fullCellName, filename{i});
+            mkdir(fullCellName, filename{i});
             copyfile('*.mat', newfullName{i});
         end
-        data.filedir = newfullName;
-        data.imdata=g.imdata;
-        data.celldata=get(g.cellSummary,'String');
+        data.filedir = filename;
+        data.iminfo=g.imdata;
+        data.cellinfo=get(g.cellSummary,'String');
         cd(fullCellName);
         save(['info_' cellName], 'data');
         delete(g.figure);
