@@ -63,8 +63,15 @@ classdef notewriter< handle
                     obj.notes = obj.h.editField.String;
                     metadata.notes = obj.notes;
                     save(metafilename,'metadata');
+                    
+                    try
+                        hMain=findobj('Name','BrightnessOverTime');
+                        infoPanel=findobj(hMain, 'Tag','infopanel');
+                        set(infoPanel, 'String', 'Notes was saved!')
+                    catch
+                    end
                 else
-                    saveNotesAs;
+                    saveNotesAs(obj);
                 end
 
             end
@@ -78,17 +85,17 @@ classdef notewriter< handle
                     disp(['User selected ', fullfile(pathname, filename)])
                 end
                 obj.notes = obj.h.editField.String;
-                fid = fopen('MyFile.txt','w');
+                fid = fopen(filename,'w');
                 fprintf(fid, obj.notes);
                 fclose(fid);
             end
             
             
-            function [] = closeMainFcn (obj,~,~)
+            function closeMainFcn (obj,~,~)
                 
-                if isempty(obj.notes)
-                    obj.notes = '';
-                end
+%                 if isempty(obj.notes)
+%                     obj.notes = '';
+%                 end
 
                 if strcmp(obj.notes, obj.h.editField.String)
                      delete(obj.h.fig);
@@ -99,7 +106,7 @@ classdef notewriter< handle
                         'Yes','No','Yes');
                     switch selection
                         case'Yes'
-                            saveNotes;
+                            saveNotes(obj);
                         case'No'
                             delete(obj.h.fig);
                             obj.h =[];

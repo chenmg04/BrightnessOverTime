@@ -2171,31 +2171,31 @@ classdef brightnessOverTime < handle
             try 
                 d = obj.data.metadata.ROIdata;
             catch
-                obj.infoTxt.String = 'Error! No Image or No ROI data!';
-                return;
-            end
+                obj.infoTxt.String','ROIs Saved!');
+           
             
-            nROIs  =length(d); %only save ROI info, no fluo intensity.
+            d=obj.data.metadata;
+            nROIs  =length(d.ROIdata); %only save ROI info, no fluo intensity.
             for i=1:nROIs
-                if isfield(d{i},'intensity')
-                    d{i}=rmfield(d,'intensity');                   
+                if isfield(d.ROIdata{i},'intensity')
+                    d.ROIdata{i}=rmfield(d.ROIdata{i},'intensity');                   
                 end
                 
-                if isfield(d{i},'linehandles')
-                    d{i}=rmfield(d{i},'linehandles');                   
+                if isfield(d.ROIdata{i},'linehandles')
+                    d.ROIdata{i}=rmfield(d.ROIdata{i},'linehandles');                   
                 end
                 
-                if isfield(d{i},'ROIhandles')
-                    d{i}=rmfield(d{i},'ROIhandles');
+                if isfield(d.ROIdata{i},'ROIhandles')
+                    d.ROIdata{i}=rmfield(d.ROIdata{i},'ROIhandles');
                 end
                 
-                 if isfield(d{i},'thandles')
-                     d{i}=rmfield(d{i},'thandles');
+                 if isfield(d.ROIdata{i},'thandles')
+                     d.ROIdata{i}=rmfield(d.ROIdata{i},'thandles');
                 end
             end
             
             load(obj.data.info.metamat.name); 
-            metadata.ROIdata = d;
+            metadata.ROIdata = d.ROIdata;
             save(obj.data.info.metamat.name, 'metadata');
             set(obj.infoTxt,'string','ROIs Saved!');
         end

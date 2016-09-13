@@ -206,7 +206,7 @@ classdef stim < handle
 %             else
 %                 disp(['User selected ', fullfile(pathname, filename)])
 %             end
-            pathname=cd;
+            pathname=pwd;
             [~, filename]=fileparts(pathname);
             filename=['stim_' filename];
             filename=fullfile(pathname,filename);
