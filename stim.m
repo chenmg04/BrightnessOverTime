@@ -10,6 +10,7 @@ classdef stim < handle
         patternInfo % pattern info 
         paraInfo % stimulus parameters
         
+        
         lastSti
     end
     
@@ -194,6 +195,9 @@ classdef stim < handle
         
         function saveStimulus(obj,~,~)
             
+            
+            
+            
             stidata.threshold=obj.threshold;
             stidata.data=obj.data;
             stidata.trailInfo=obj.trailInfo;
@@ -206,10 +210,11 @@ classdef stim < handle
 %             else
 %                 disp(['User selected ', fullfile(pathname, filename)])
 %             end
-            pathname=pwd;
-            [~, filename]=fileparts(pathname);
+            imf = findobj('Tag', 'dispfig');
+            filedir = imf.UserData;
+            [~, filename]=fileparts(filedir);
             filename=['stim_' filename];
-            filename=fullfile(pathname,filename);
+            filename=fullfile(filedir,filename);
             save(filename,'stidata');
             
             try

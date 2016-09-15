@@ -56,8 +56,17 @@ classdef notewriter< handle
             % 
             function saveNotes(obj,~,~)
                 
-                [~, filename]=fileparts(pwd);
+                imf = findobj('Tag', 'dispfig'); 
+                if isempty(imf)
+                    saveNotesAs(obj);
+                    return;
+                end
+                
+                filedir = imf.UserData;
+                [~, filename]=fileparts(filedir);
                 metafilename=['meta_' filename '.mat'];
+                
+                cd(filedir);
                 if exist(metafilename,'file')
                     load(metafilename);
                     obj.notes = obj.h.editField.String;
@@ -78,13 +87,15 @@ classdef notewriter< handle
             
             %
             function saveNotesAs(obj,~,~)
+                obj.notes = obj.h.editField.String;
+                
                 [filename, pathname] = uiputfile('*.txt', 'Save Notes As');
                 if isequal(filename,0) || isequal(pathname,0)
                     disp('User pressed cancel')
                 else
                     disp(['User selected ', fullfile(pathname, filename)])
                 end
-                obj.notes = obj.h.editField.String;
+                cd(pathname);
                 fid = fopen(filename,'w');
                 fprintf(fid, obj.notes);
                 fclose(fid);

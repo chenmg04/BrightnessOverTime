@@ -1121,6 +1121,8 @@ classdef brightnessOverTime < handle
         % Function to process image information when openning files
         function  processImage (obj, filedir)
             
+            obj.dispFig.UserData = filedir; % for later use, e.g., to save stimulus, notes, exact this path info. Previously used pwd, but there were errors. 
+            
             [~, fileName] = fileparts(filedir);
             obj.openStates.image.fileName=fileName;
             set(obj.infoTxt,'String', sprintf('Opening %s\n',fileName));
@@ -2178,7 +2180,7 @@ classdef brightnessOverTime < handle
             nROIs  =length(d); %only save ROI info, no fluo intensity.
             for i=1:nROIs
                 if isfield(d{i},'intensity')
-                    d{i}=rmfield(d,'intensity');                   
+                    d{i}=rmfield(d{i},'intensity');                   
                 end
                 
                 if isfield(d{i},'linehandles')
@@ -3599,7 +3601,7 @@ ax1 = subplot(1,2,1); % top subplot
 ax2 = subplot(1,2,2);
 % ax = axes('position',[0,0,1,1],'visible','on');
                
-                baseline=zeros(1,traceLength+round(2/frameRate));
+                baseline=zeros(1,traceLength+round(1/frameRate));
                 
                 for j=1:nROIs
                     intensityAve=[];
