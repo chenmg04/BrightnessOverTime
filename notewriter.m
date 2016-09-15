@@ -16,8 +16,14 @@ classdef notewriter< handle
                 'ToolBar','none',...
                 'NumberTitle','off',...
                 'Resize','off',...
-                'Position',[200 200 300 300],...
                 'CloseRequestFcn',@obj.closeMainFcn);
+            
+            try
+                dispfig=findobj('Tag','dispfig');
+                set(obj.h.fig,'Position',[dispfig.Position(1) dispfig.Position(2)-370 300 300]);
+            catch
+                set(obj.h.fig,'Position', [200 200 300 300]);
+            end
             
             % creat pushtools
             ht=uitoolbar(obj.h.fig);

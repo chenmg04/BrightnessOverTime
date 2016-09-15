@@ -202,10 +202,10 @@ classdef brightnessOverTime < handle
                 'Label','Save Imagedata...',...
                 'Separator','off',...
                 'Callback',@obj.saveImagedata);
-            uimenu(fileMenu,...
-                'Label','Save Stimulus...',...
-                'Separator','off',...
-                'Callback',@obj.saveStimulus);
+%             uimenu(fileMenu,...
+%                 'Label','Save Stimulus...',...
+%                 'Separator','off',...
+%                 'Callback',@obj.saveStimulus);
             
             uimenu(fileMenu,...
                 'Label','Export Stack',...
@@ -377,15 +377,15 @@ classdef brightnessOverTime < handle
             
             if ~isempty (obj.roiTool)&&~isempty(get(obj.roiTool.roiList,'String'))
                 
-                selection=questdlg('Save the ROIs?',...
-                    'ROI ToolBox',...
-                    'Yes','No','Yes');
-                switch selection
-                    case'Yes'
-                        saveRoi(obj);
-                    case'No'
-                        
-                end
+%                 selection=questdlg('Save the ROIs?',...
+%                     'ROI ToolBox',...
+%                     'Yes','No','Yes');
+%                 switch selection
+%                     case'Yes'
+%                         saveRoi(obj);
+%                     case'No'
+%                         
+%                 end
                 
                 set(obj.roiTool.roiList,'String',[]);
                 set(obj.roiTool.roiList,'Value',1);
@@ -527,25 +527,25 @@ classdef brightnessOverTime < handle
              set(obj.infoTxt,'String','Imagedata Was Saved!');
          end
          % Function to save stimulus in the metadata
-        function saveStimulus(obj,~,~)
-            
-            if isempty(obj.stiTool) | isempty (obj.stiTool.patternInfo)
-                return;
-            end
-            
-            obj.data.metadata.stiInfo.data=obj.stiTool.data;
-            obj.data.metadata.stiInfo.baselineLength=obj.stiTool.baselineLength;
-            obj.data.metadata.stiInfo.threshold=obj.stiTool.threshold;
-            obj.data.metadata.stiInfo.avenum=obj.stiTool.avenum;
-            obj.data.metadata.stiInfo.nSti=obj.stiTool.nSti;
-            obj.data.metadata.stiInfo.startFrameN=obj.stiTool.startFrameN;
-            obj.data.metadata.stiInfo.endFrameN=obj.stiTool.endFrameN;
-            obj.data.metadata.stiInfo.trailInfo=obj.stiTool.trailInfo;
-            obj.data.metadata.stiInfo.patternInfo=obj.stiTool.patternInfo;
-            metadata=obj.data.metadata;
-            save(obj.data.info.metamat.name,'metadata');
-            set(obj.infoTxt,'String','Stimulus Was Saved!');
-        end
+%         function saveStimulus(obj,~,~)
+%             
+%             if isempty(obj.stiTool) | isempty (obj.stiTool.patternInfo)
+%                 return;
+%             end
+%             
+%             obj.data.metadata.stiInfo.data=obj.stiTool.data;
+%             obj.data.metadata.stiInfo.baselineLength=obj.stiTool.baselineLength;
+%             obj.data.metadata.stiInfo.threshold=obj.stiTool.threshold;
+%             obj.data.metadata.stiInfo.avenum=obj.stiTool.avenum;
+%             obj.data.metadata.stiInfo.nSti=obj.stiTool.nSti;
+%             obj.data.metadata.stiInfo.startFrameN=obj.stiTool.startFrameN;
+%             obj.data.metadata.stiInfo.endFrameN=obj.stiTool.endFrameN;
+%             obj.data.metadata.stiInfo.trailInfo=obj.stiTool.trailInfo;
+%             obj.data.metadata.stiInfo.patternInfo=obj.stiTool.patternInfo;
+%             metadata=obj.data.metadata;
+%             save(obj.data.info.metamat.name,'metadata');
+%             set(obj.infoTxt,'String','Stimulus Was Saved!');
+%         end
         
         function exportStack (obj,~,~)
             
@@ -1020,59 +1020,15 @@ classdef brightnessOverTime < handle
         
         % Function to open multiple files from folder
         function openBatchFromFolder (obj,~,~)
-            
-%             filedir=uigetdir;
-%             
-%             if ~filedir
-%                 set(obj.infoTxt,'String','No folder selected!');
-%                 return;
-%             end
-%             
-%             cd(filedir);
-%             newFiles=dir(filedir);
-%             batchdir=filedir;
-%             
-%             for i=1:length(newFiles)
-%                 newFilesName{i}=newFiles(i).name;
-%             end
-%             
-%             
-%             mainFigPos=get(obj.hMain,'Position');
-%             selectFileFig       =figure   ('Name','Multiple Select','NumberTitle','off',...
-%                                              'MenuBar','none','Position',[mainFigPos(1) mainFigPos(2)-45-500 270 500],...
-%                                              'Resize','off','Color','white' );
-%            selectFileList   =uicontrol('Style','listbox','Value',1,'BackgroundColor','white',...
-%                                              'Parent', selectFileFig,...
-%                                              'Min',1, 'Max', 10,...
-%                                              'Position',[2 50 266 450],...
-%                                              'HorizontalAlignment','left','FontSize',10);
-%              set(selectFileList,'String', newFilesName); 
-%              openBatchFiles=uicontrol('Parent', selectFileFig,...
-%                                                     'Style', 'pushbutton',...
-%                                                     'String','Select',...
-%                                                     'Position',[150 10 80 30],'FontSize',10,...
-%                                                     'Callback',@selectFiles);
                                                    
-           appPos=get(obj.hMain,'Position');  
-           selectFileNames=selectBatchFromFolder (appPos);
+           selectFileNames = selectBatchFromFolder (obj.hMain.Position);
+           
            if ~isempty(selectFileNames)
                for i=1:length(selectFileNames)
                    processImage(obj,selectFileNames{i});
                end
            end
            
-%            curFileN=1; 
-%             while curFileN<=length(newFiles)
-%                 if newFiles(curFileN).isdir==1 % is folder
-%                     if ~isempty(strfind(newFiles(curFileN).name,'BrightnessOverTime')) || ~isempty(strfind(newFiles(curFileN).name,'TSeries')) %only look for BOT file folders
-%                         singleFiledir=newFiles(curFileN).name;
-%                         fullFileName=fullfile(batchdir,singleFiledir);
-% %                         processImage(obj,fullFileName);
-%                     end
-%                 end
-%                 
-%                 curFileN=curFileN+1;
-%             end
         end
         
         function openCell (obj,~,~)
@@ -2118,8 +2074,9 @@ classdef brightnessOverTime < handle
                 
                 filedir=uigetdir;
                 cd(filedir);
-                metadata=fullfile(filedir, sprintf('meta_%s.mat',shortfile(filedir)));
-                load(metadata);
+                [~, filename] = fileparts(filedir);
+                metafilename=fullfile(filedir, ['meta_' filename '.mat']);
+                load(metafilename);
                 
                 axes(obj.axes1);
                 hold on;
