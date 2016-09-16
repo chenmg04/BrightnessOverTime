@@ -368,14 +368,9 @@ classdef brightnessOverTime < handle
             if ~isempty(findobj('Name','Stimulus'))
                 close('Stimulus');
             end
-            
-            %
-            if ~isempty (obj.cell)
-                delete(obj.cell.h.fig)
-                obj.cell = [];
-            end
-            
             % To add more
+            
+            if ~isempty (obj.cel
             delete(hObject);
         end
         
