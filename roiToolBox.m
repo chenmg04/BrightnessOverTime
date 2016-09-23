@@ -1,4 +1,4 @@
-function data=roiToolBox(varargin)
+function data = roiToolBox(varargin)
 
 %READING ARGUMENTS
 if nargin==0

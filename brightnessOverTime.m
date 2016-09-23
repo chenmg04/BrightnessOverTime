@@ -20,7 +20,7 @@ classdef brightnessOverTime < handle
         roiTool
         stiTool
         autoFluoDetector
-        fluoAnalyzer
+        fp
         nf % notes figure
 %         hgendatabase
         cell
@@ -328,7 +328,7 @@ classdef brightnessOverTime < handle
             % Measure
             uimenu(analyzeMenu,...
                 'Label','Measure',...
-                'Callback',@obj.fluoChangeProcessor);
+                'Callback',@obj.openFluoProcessor);
             % Auto Fluorescence Detection
             uimenu(analyzeMenu,...
                 'Label','Auto Fluorescence Detection',...
@@ -354,9 +354,9 @@ classdef brightnessOverTime < handle
             end
             
             % if auto fluorescence detetor is open, close it
-            if ~isempty(obj.fluoAnalyzer)
-                delete(obj.fluoAnalyzer.fig);
-                obj.fluoAnalyzer=[];
+            if ~isempty(obj.fp)
+                delete(obj.fp.fig);
+                obj.fp=[];
             end
             
 %             if ~isempty(obj.stiTool)
@@ -370,11 +370,11 @@ classdef brightnessOverTime < handle
             end
             
             %
-            if ~isempty (obj.cell)
-                delete(obj.cell.h.fig)
-                obj.cell = [];
-            end
-            
+%             if ~isempty (obj.cell)
+%                 delete(obj.cell.h.fig)
+%                 obj.cell = [];
+%             end
+%             
             % To add more
             delete(hObject);
         end
@@ -1209,16 +1209,22 @@ classdef brightnessOverTime < handle
                         end
                     end
                     
-                if ~isempty(obj.fluoAnalyzer)
-                    if isfield(obj.data.metadata,'processPara')
-                        set(obj.fluoAnalyzer.filterEdit, 'String', obj.data.metadata.processPara.filter);
-                        set( obj.fluoAnalyzer.baselineEdit , 'String', obj.data.metadata.processPara.baselineLength);
-                        set(obj.fluoAnalyzer.traceLengthEdit, 'String', obj.data.metadata.processPara.traceLength);
-                        set(obj.fluoAnalyzer.yminEdit , 'String', obj.data.metadata.processPara.ymin);
-                        set(obj.fluoAnalyzer.ymaxEdit , 'String', obj.data.metadata.processPara.ymax);
+                    if ~isempty(obj.fp)
+                        if isfield(obj.data.metadata,'processPara')
+                            obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
+                            obj.fp.tvblEdit.String             = obj.data.metadata.processPara.baselineLength;
+                            obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
+                            obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
+                            obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
+                            
+                            try
+                                obj.fp.fdEdit.String           = obj.data.metadata.processPara.fixedLength;
+                                obj.fp.fvEdit.String           = obj.data.metadata.processPara.fixedValue;
+                                obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
+                            catch
+                            end
+                        end
                     end
-                end
-%                 end
                 
                 if ~isempty (obj.stiTool) 
                     
@@ -2760,959 +2766,281 @@ classdef brightnessOverTime < handle
            
         end
         
-        % brightnessOverTime figure
-        function fluoChangeProcessor (obj, ~, ~)
+        %% Tool- Measure 
+        function openFluoProcessor (obj, ~, ~)
             
-            if isempty(obj.fluoAnalyzer)
-                initFluoChangeProcessor (obj)
+            if isempty(obj.fp)
+                initFluoProcessor (obj)
             end
         end
         
-        % initialize gui for brightnessOverTime figure
-        function initFluoChangeProcessor (obj)
+        % Load GUI for Measure and initiation
+        function initFluoProcessor (obj)
             
-            roiFigPos=get(obj.roiTool.fig,'Position');
-               
-            obj.fluoAnalyzer.fig  =figure   ('Name','Measure','NumberTitle','off',...
-                                             'MenuBar','none','Position',[roiFigPos(1)+roiFigPos(3)+20 roiFigPos(2)+roiFigPos(4)-400 200 400],...
-                                             'Resize','off','Color','white',...
-                                             'CloseRequestFcn',@obj.fluoChangeProcessorClose);
-           %Creat uicontrol
-           obj.fluoAnalyzer.roi                      =uibuttongroup('Units','pixels',...
-               'BorderType','none',...
-               'BackgroundColor','white',...
-               'Position',[10 370 190 25],...
-               'Parent',obj.fluoAnalyzer.fig);
-        
-           obj.fluoAnalyzer.curRoi                =uicontrol('Style','radiobutton',...
-               'String','CurROI',...
-               'Value',1,...
-               'BackgroundColor','white',...
-               'Position',[5 5 70 20],...
-               'Parent', obj.fluoAnalyzer.roi,...
-               'Callback',@obj.curRoi);
-           obj.fluoAnalyzer.allRois               =uicontrol('Style','radiobutton',...
-               'String','ChROIs',...
-               'BackgroundColor','white',...
-               'Position',[75 5 70 20],...
-               'Parent', obj.fluoAnalyzer.roi,...
-                'TooltipString','Choose ROI number, either single or multhiple. e.g., 85; 1:10; 1,3,5,7',...
-               'Callback',@obj.chooseRois);
-             obj.fluoAnalyzer.sumRoi                =uicontrol('Style','radiobutton',...
-               'String','Sum',...
-               'BackgroundColor','white',...
-               'Position',[145 5 70 20],...
-               'Parent', obj.fluoAnalyzer.roi,...
-               'Callback',@obj.sumRoi);
-           
-           % Response parameter panel
-            obj.fluoAnalyzer.responsePara          =uipanel('Title','Response',...
-               'FontSize',10,...
-               'BackgroundColor','white',...
-               'Units','pixels',...
-               'Position',[10 265 180 110],...
-               'Parent',  obj.fluoAnalyzer.fig);
-            obj.fluoAnalyzer.filterTxt             =uicontrol('Style','text',...
-               'String','Filter:',...
-               'BackgroundColor','white',...
-               'Position',[46 70 35 20],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-            obj.fluoAnalyzer.filterEdit            =uicontrol('Style','Edit',...
-               'String','2',...
-               'BackgroundColor','white',...
-               'Position',[100 74 60 16],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-            obj.fluoAnalyzer.baselineTxt           =uicontrol('Style','text',...
-               'String','Baseline:',...
-               'BackgroundColor','white',...
-               'Position',[23 50 60 20],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-            obj.fluoAnalyzer.baselineEdit          =uicontrol('Style','Edit',...
-               'String','2',...
-               'BackgroundColor','white',...
-               'Position',[100 54 60 16],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-            obj.fluoAnalyzer.traceLengthTxt        =uicontrol('Style','text',...
-               'String','TraceLength:',...
-               'BackgroundColor','white',...
-               'Position',[1 30 85 20],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-           obj.fluoAnalyzer.traceLengthEdit       =uicontrol('Style','Edit',...
-               'String','10',...
-               'BackgroundColor','white',...
-               'Position',[100 34 60 16],...
-               'Parent', obj.fluoAnalyzer.responsePara);
-           %Trail radio group
-           obj.fluoAnalyzer.trail                      =uibuttongroup('Units','pixels',...
-               'BorderType','none',...
-               'BackgroundColor','white',...
-               'Position',[0 5 190 25],...
-               'Parent',obj.fluoAnalyzer.responsePara);
-            obj.fluoAnalyzer.wholeTrail          =uicontrol('Style','radiobutton',...
-               'String','Raw',...
-               'BackgroundColor','white',...
-               'Position',[5 5 90 20],...
-               'Parent',  obj.fluoAnalyzer.trail,...
-               'Callback',@obj.wholeTrail);
-           obj.fluoAnalyzer.trailByTrail          =uicontrol('Style','radiobutton',...
-               'String','Trail',...
-               'BackgroundColor','white',...
-               'Position',[55 5 90 20],...
-               'Parent',  obj.fluoAnalyzer.trail,...
-               'Callback',@obj.trailByTrail); 
-            obj.fluoAnalyzer.average               =uicontrol('Style','radiobutton',...
-               'String','Ave',...
-               'Value',1,...
-               'BackgroundColor','white',...
-               'Position',[110 5 70 20],...
-               'Parent',  obj.fluoAnalyzer.trail,...
-               'Callback',@obj.averageTrail);
-           
-           % Axis parameter panel
-           obj.fluoAnalyzer.axisPara              =uipanel('Title','Axis',...
-               'FontSize',10,...
-               'BackgroundColor','white',...
-               'Units','pixels',...
-               'Position',[10 145 180 120],...
-               'Parent', obj.fluoAnalyzer.fig);
-           obj.fluoAnalyzer.xminTxt               =uicontrol('Style','text',...
-               'String','Xmin:',...
-               'BackgroundColor','white',...
-               'Position',[42 80 40 20],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.xminEdit              =uicontrol('Style','Edit',...
-               'String','-2',...
-               'BackgroundColor','white',...
-               'Position',[100 84 60 16],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.xmaxTxt               =uicontrol('Style','text',...
-               'String','Xmax:',...
-               'BackgroundColor','white',...
-               'Position',[41 60 40 20],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.xmaxEdit              =uicontrol('Style','Edit',...
-               'String','35',...
-               'BackgroundColor','white',...
-               'Position',[100 64 60 16],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.yminTxt               =uicontrol('Style','text',...
-               'String','Ymin:',...
-               'BackgroundColor','white',...
-               'Position',[42 40 40 20],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.yminEdit              =uicontrol('Style','Edit',...
-               'String','-50',...
-               'BackgroundColor','white',...
-               'Position',[100 44 60 16],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.ymaxTxt               =uicontrol('Style','text',...
-               'String','Ymax:',...
-               'BackgroundColor','white',...
-               'Position',[41 20 40 20],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.ymaxEdit              =uicontrol('Style','Edit',...
-               'String','100',...
-               'BackgroundColor','white',...
-               'Position',[100 24 60 16],...
-               'Parent',obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.showAxis              =uicontrol('Style','radiobutton',...
-               'String','Axis',...
-               'Value',1,...
-               'BackgroundColor','white',...
-               'Position',[5 3 80 20],...
-               'Parent', obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.expData              =uicontrol('Style','radiobutton',...
-               'String','expData',...
-               'BackgroundColor','white',...
-               'Position',[55 3 80 20],...
-               'Parent', obj.fluoAnalyzer.axisPara);
-           obj.fluoAnalyzer.ds              =uicontrol('Style','radiobutton',...
-               'String','DS',...
-               'BackgroundColor','white',...
-               'Position',[125 3 80 20],...
-               'Parent', obj.fluoAnalyzer.axisPara);
-           % Layout parameter panel
-           obj.fluoAnalyzer.layoutPara            =uipanel('Title','Layout',...
-               'FontSize',10,...
-               'BackgroundColor','white',...
-               'Units','pixels',...
-               'Position',[10 35 180 110],...
-               'Parent', obj.fluoAnalyzer.fig);
-           obj.fluoAnalyzer.rowTxt                =uicontrol('Style','text',...
-               'String','Row:',...
-               'BackgroundColor','white',...
-               'Position',[45 70 40 20],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.rowEdit               =uicontrol('Style','Edit',...
-               'String','1',...
-               'BackgroundColor','white',...
-               'Position',[100 74 60 16],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.colTxt                =uicontrol('Style','text',...
-               'String','Col:',...
-               'BackgroundColor','white',...
-               'Position',[48 50 40 20],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.colEdit               =uicontrol('Style','Edit',...
-               'String','1',...
-               'BackgroundColor','white',...
-               'Position',[100 54 60 16],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.intervalTxt           =uicontrol('Style','text',...
-               'String','Interval:',...
-               'BackgroundColor','white',...
-               'Position',[27 30 60 20],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.intervalEdit          =uicontrol('Style','Edit',...
-               'String','1',...
-               'BackgroundColor','white',...
-               'Position',[100 34 60 16],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.color                  =uicontrol('Style','text',...
-               'String','Color:',...
-               'BackgroundColor','white',...
-               'Position',[5 5 40 20],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-            %Color radio group
-           obj.fluoAnalyzer.colorRadios                      =uibuttongroup('Units','pixels',...
-               'BorderType','none',...
-               'BackgroundColor','white',...
-               'Position',[55 5 200 25],...
-               'Parent',obj.fluoAnalyzer.layoutPara);
-           obj.fluoAnalyzer.blackColor          =uicontrol('Style','radiobutton',...
-               'String','B',...
-               'Value',1,...
-               'BackgroundColor','white',...
-               'Position',[0 3 45 20],...
-               'Parent',  obj.fluoAnalyzer.colorRadios);
-           obj.fluoAnalyzer.redColor          =uicontrol('Style','radiobutton',...
-               'String','R',...
-               'BackgroundColor','white',...
-               'Position',[40 3 40 20],...
-               'Parent',  obj.fluoAnalyzer.colorRadios);
-            obj.fluoAnalyzer.blueColor               =uicontrol('Style','radiobutton',...
-               'String','B',...
-               'BackgroundColor','white',...
-               'Position',[75 3 40 20],...
-               'Parent', obj.fluoAnalyzer.colorRadios);
-           
-           % Buttons
-           
-           obj.fluoAnalyzer.saveProcessPara       =uicontrol('Style','pushbutton',...
-               'String','Save',...
-               'BackgroundColor','white',...
-               'Position',[30 10 60 25],...
-               'Parent',obj.fluoAnalyzer.fig,...
-               'Callback',@obj.saveProcessPara);
-           obj.fluoAnalyzer.processROI            =uicontrol('Style','pushbutton',...
-               'String','Process',...
-               'BackgroundColor','white',...
-               'Position',[95 10 60 25],...
-               'Parent',obj.fluoAnalyzer.fig,...
-               'Callback',@obj.processROI);
-           
-           % Initiazing
-           if isfield(obj.data.metadata,'processPara')
-               set(obj.fluoAnalyzer.filterEdit, 'String', obj.data.metadata.processPara.filter);
-               set( obj.fluoAnalyzer.baselineEdit , 'String', obj.data.metadata.processPara.baselineLength);
-               set(obj.fluoAnalyzer.traceLengthEdit, 'String', obj.data.metadata.processPara.traceLength);
-               set(obj.fluoAnalyzer.yminEdit , 'String', obj.data.metadata.processPara.ymin);
-               set(obj.fluoAnalyzer.ymaxEdit , 'String', obj.data.metadata.processPara.ymax);
-           end
-               
-               
+            % Build GUI
+            refPos = obj.roiTool.fig.Position;
+            obj.fp = UIfluoProcessor(refPos);
+            
+            % Build Callback functions
+            obj.fp.fig.CloseRequestFcn        = @obj.closeFluoProcessor;
+            obj.fp.irRb.Callback              = @obj.showIndividualROI;
+            obj.fp.rtRb.Callback              = @obj.showRaw;
+            obj.fp.tbtRb.Callback             = @obj.showTraceByTrace;
+            obj.fp.atRb.Callback              = @obj.showAverageTrace;
+            obj.fp.saveProcessParaPb.Callback = @obj.saveProcessPara;
+            obj.fp.processROIPb.Callback      = @obj.processROI;
+            
+            % Initiazing
+            if isfield(obj.data.metadata,'processPara')
+                obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
+                obj.fp.tvblEdit.String             = obj.data.metadata.processPara.baselineLength;
+                obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
+                obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
+                obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
+                
+                try
+                    obj.fp.fdEdit.String           = obj.data.metadata.processPara.fixedLength;
+                    obj.fp.fvEdit.String           = obj.data.metadata.processPara.fixedValue;
+                    obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
+                catch
+                end
+                
+                try
+                    nROI = length(obj.data.metadata.ROIdata);
+                    obj.fp.srEdit.String = ['1:' num2str(nROI)];
+                catch
+                end
+            end
+
+            
         end
         
-        function fluoChangeProcessorClose (obj,hObject, ~)
+        % Function to close fluoProcessor
+        function closeFluoProcessor (obj,hObject, ~)
             
             delete(hObject);
-            obj.fluoAnalyzer=[];
+            obj.fp=[];
         end
         
-        % Function to select current ROI
-        function curRoi(obj, ~, ~)      
-            set(obj.fluoAnalyzer.rowEdit,'String',1);
-            set(obj.fluoAnalyzer.colEdit,'String',1);
+        % When Select Individual after ChROIs chosen, Set subplot Row & Col
+        % based on ROI number
+        
+        function showIndividualROI (obj, ~, ~)
+            
+            nROI = length (str2num(obj.fp.srEdit.String));
+            obj.fp.rowEdit.String = ceil(sqrt(nROI));
+            obj.fp.colEdit.String = ceil(nROI/(ceil(sqrt(nROI))));
         end
         
-        % Function to select current all ROIs
-        function chooseRois(obj, ~, ~)
-            nROIs=length(obj.data.metadata.ROIdata);
+        % Automatically update xmax value When Select Row 
+        function showRaw (obj, ~, ~)
+            
+            frameNumber = obj.data.metadata.iminfo.framenumber;
+            framePeriod = obj.data.metadata.iminfo.framePeriod;
+            obj.fp.xmaxEdit.String = frameNumber * framePeriod + 2;
+        end
+        
+        % Automatically update xmax value When Select Trace
+        function showTraceByTrace (obj, ~, ~)
+            
+            try
+                nSti = length(obj.stiTool.trailInfo);
+            catch
+                obj.infoTxt.String = 'No stimulus data available!';
+                return;
+            end
+            
+            traceLength = str2double(obj.fp.traceLengthEdit.String);
+            obj.fp.xmaxEdit.String = (traceLength + 1) * nSti + 1;
+        end
+        
+        % Automatically update xmax value When Select Average
+        function showAverageTrace (obj, ~, ~)
+            
+            try
+                nPat = length(obj.stiTool.patternInfo);
+            catch
+                obj.infoTxt.String = 'No stimulus data available!';
+                return;
+            end
+            
+            traceLength = str2double(obj.fp.traceLengthEdit.String);
+            obj.fp.xmaxEdit.String = (traceLength + 1) * nPat + 1;
+        end
 
-            prompt={'Choose ROIs'};
-            dlg_title='Choose ROIs';
-            num_lines=1;
-            
-            def={['1:' num2str(nROIs)]};
-%             p=str2double(inputdlg(prompt,dlg_title,num_lines,def));
-            o=inputdlg(prompt,dlg_title,num_lines,def);
-            p=str2num(o{1});
-            setappdata(obj.fluoAnalyzer.allRois,'ROIs',p);
-            
-            if get(obj.fluoAnalyzer.wholeTrail,'Value')&& nROIs<=5
-                iniColValue=1;
-                iniRowValue=nROIs;
-            else
-                 iniColValue=ceil(sqrt(length(p)));
-                iniRowValue=ceil(length(p)/iniColValue);
-            end
-            
-            set(obj.fluoAnalyzer.rowEdit,'String',iniRowValue);
-            set(obj.fluoAnalyzer.colEdit,'String',iniColValue);
-            
-%             set(obj.roiTool.roiList,'Value',1); 
-%             obj.openStates.roi.curRoiN=[];
-%             obj.openStates.roi.curRoih=[];
-
-        end
-        
-        function sumRoi(obj,~,~)
-            set(obj.fluoAnalyzer.average,'Value',1);
-            set(obj.fluoAnalyzer.expData,'Value',0);
-            set(obj.fluoAnalyzer.ds,'Value',0);
-        end
-        
-        % Function to show the whole recording by deltaF/F
-        function wholeTrail(obj, ~, ~)
-            
-            nFrames  =obj.data.metadata.iminfo.framenumber;
-            frameRate=obj.data.metadata.iminfo.framePeriod;
-            
-            iniXmax=nFrames*frameRate+2;
-            set(obj.fluoAnalyzer.xmaxEdit,'String',iniXmax);
-        end
-        
-        % Function to show trail by trail with deltaF/F
-        function trailByTrail(obj, ~, ~)
-           
-            trailInterval=str2double(get(obj.fluoAnalyzer.intervalEdit ,'String'));
-            trace=str2double(get(obj.fluoAnalyzer.traceLengthEdit,'string'));
-            
-            try
-                nSti =length(obj.stiTool.trailInfo);
-            catch
-                try
-                    nSti =length(obj.data.metadata.stiInfo.trailInfo);
-                catch
-                    stimulus(obj);
-                    waitfor(obj.stiTool.hfig);
-                    nSti=length(obj.stiTool.trailInfo);
-                end
-            end
-            
-            iniXmax=(trace+1+trailInterval)*nSti-trailInterval+2;
-            set(obj.fluoAnalyzer.xmaxEdit,'String',iniXmax);
-            
-        end
-        
-        % Function to show averaged trail with deltaF/F
-        function averageTrail(obj, ~, ~)
-            
-            trailInterval=str2double(get(obj.fluoAnalyzer.intervalEdit ,'String'));
-            trace=str2double(get(obj.fluoAnalyzer.traceLengthEdit,'string'));
-            
-            try
-                patN=length(obj.stiTool.patternInfo);
-            catch
-                try
-                    patN =length(obj.data.metadata.stiInfo.patternInfo);
-                catch
-%                     stimulus(obj);
-                         stim(obj);
-                    return;
-                end
-            end
-            iniXmax=(trace+1+trailInterval)*patN-trailInterval+2;
-            set(obj.fluoAnalyzer.xmaxEdit,'String',iniXmax);
-            
-             prompt={'Enter # of first trace','Enter # of first trace'};
-            dlg_title='Choose Traces';
-            num_lines=1;
-            
-            try
-                rep=length(obj.stiTool.trailInfo)/length(obj.stiTool.patternInfo);
-            catch
-                rep=1;
-            end
-            
-            def={'1',num2str(rep)};
-            p=str2double(inputdlg(prompt,dlg_title,num_lines,def));
-            setappdata(obj.fluoAnalyzer.average,'Traces',p);
-        end
-        
         % Function to save process parameters
         function saveProcessPara (obj, ~, ~)
             
             load(obj.data.info.metamat.name); 
-            metadata.processPara=obj.data.metadata.processPara;
+            metadata.processPara = obj.data.metadata.processPara;
             save(obj.data.info.metamat.name, 'metadata');
-            set(obj.infoTxt,'string','Processing Parameters Saved!');
+            obj.infoTxt.String = 'Processing Parameters Saved!';
         end
         
-        % Function to process Roi
+        % Function to process ROI
         function processROI (obj, ~, ~)
             
-            set(obj.infoTxt,'string','Processing...'); 
-%%    Reading image, roi, stimulus info            
-            % image info
-            nFrames   =obj.data.metadata.iminfo.framenumber;
-            frameRate =obj.data.metadata.iminfo.framePeriod;
-            fluoTime   =frameRate*(1:1:nFrames);
+            obj.infoTxt.String = 'Processing...';
             
-            % channel info
+            % Reading image, roi, stimulus info
+            
+            % image info
+            framePeriod = obj.data.metadata.iminfo.framePeriod;
+            
+            %channel info
             if obj.data.metadata.iminfo.channel==1
-                chN=1;
+                chN = 1;
             else
-                chN=get(obj.chSlider,'Value');
+                chN = obj.chSlider.Value;
             end
             
             % roi info
             try
-                nROIs=length(obj.data.metadata.ROIdata);
+                nROIs = length(obj.data.metadata.ROIdata);
             catch
-                set(obj.infoTxt,'string','Error! No ROIs!');
+                obj.infoTxt.String = 'Error! No ROIs!';
                 return;
             end
-            selectIndex=obj.openStates.roi.curRoiN;
-            curROI=obj.openStates.roi.curRoih;
-            
-            % reading from the panel
-            avenum         =str2double(get(obj.fluoAnalyzer.filterEdit,'String')); obj.data.metadata.processPara.filter=avenum;
-            baselineLength =round(str2double(get(obj.fluoAnalyzer.baselineEdit,'String'))/frameRate); obj.data.metadata.processPara.baselineLength=str2double(get(obj.fluoAnalyzer.baselineEdit,'String'));
-            traceLength    =round(str2double(get(obj.fluoAnalyzer.traceLengthEdit,'String'))/frameRate); obj.data.metadata.processPara.traceLength=str2double(get(obj.fluoAnalyzer.traceLengthEdit,'String'));
-             
-            xmin=str2double(get(obj.fluoAnalyzer.xminEdit,'String')); 
-            xmax=str2double(get(obj.fluoAnalyzer.xmaxEdit,'String'));
-            ymin=str2double(get(obj.fluoAnalyzer.yminEdit,'String')); obj.data.metadata.processPara.ymin=ymin;
-            ymax=str2double(get(obj.fluoAnalyzer.ymaxEdit,'String')); obj.data.metadata.processPara.ymax=ymax;
-            
-            row=str2double(get(obj.fluoAnalyzer.rowEdit,'String'));
-            col=str2double(get(obj.fluoAnalyzer.colEdit,'String'));
-            trailInterval=round(str2double(get(obj.fluoAnalyzer.intervalEdit,'String'))/frameRate);
-            
-           % stimulus information, do not read stimulus if raw
-%            if ~get(obj.fluoAnalyzer.wholeTrail,'Value')
-%                if chN~=1
-               try
-                   stidata=obj.stiTool.data(:,3);
-                   trailInfo= obj.stiTool.trailInfo;
-                   patternInfo1=obj.stiTool.patternInfo;
-               catch
-                   stidata=obj.data.metadata.stiInfo.data(:,3);
-                   trailInfo= obj.data.metadata.stiInfo.trailInfo;
-                   patternInfo1=obj.data.metadata.stiInfo.patternInfo;
-               end
-               
-               try
-                   s=obj.stiTool.startFrameN;
-               catch
-                   try
-                       s=obj.data.metadata.stiInfo.startFrameN;
-                   catch
-                       s=cell2mat({trailInfo.startFrameN});  % for new stimulus tool (stim)
-                       e=cell2mat({trailInfo.endFrameN});
-                   end
-               end
-               
-               
-               nSti=length(trailInfo);
-               nPat=length(patternInfo1);
-               stidata(stidata>0)=max(stidata)*( ymax/max(stidata)/4)+ymin;
-               stidata(stidata<0)=min(stidata)*( ymin/min(stidata)/2)+ymin/3;
-%                if max(stidata)>0
-%                stidata=stidata*( ymax/max(stidata)/2)+ymin;
-%                else
-%                    stidata=stidata*( ymin/min(stidata)/2)+ymin/3;
-%                end
-               
-               if ~iscell(patternInfo1)
-                   for i=1:nPat
-                       patternInfo{i}.trailN=patternInfo1(i).trailN;
-                   end
-               else
-                   patternInfo=patternInfo1;
-               end
-               
-%                %check baseline length
-%                if baselineLength > s(1) || baselineLength > s(2)-s(1)
-%                    set(obj.infoTxt,'string','Error! BaseLine value is too big!');
-%                    return;
-%                end
-%                %check trace length
-%                if traceLength > s(2)-s(1)
-%                    set(obj.infoTxt,'string','Error! TraceLength value is too big!');
-%                    return;
-%                end
-               
-               % needs improvements
-               startFrame        = s-1; % s number represents light on Frame#
-               pre=round(1/frameRate);onFrame=min(e-s);
-               prestartFrame   = startFrame-pre;
-               baselineFrame   = startFrame-baselineLength;
-               traceFrame       = startFrame + traceLength-1;
-               responseLength = traceLength+pre;
-%            end
-           
-%%    Analyze
+            selectIndex = obj.openStates.roi.curRoiN;
+            curROI      = obj.openStates.roi.curRoih;
 
-            %Current ROI (by choosing in roiToolBox)
-            if get(obj.fluoAnalyzer.curRoi,'Value')
-                [intensityAve]=getintensity(obj,selectIndex,chN);
-                f=moving_average(intensityAve,avenum);
-%                   f = fil(intensityAve);
-                %analyze raw
-                if get(obj.fluoAnalyzer.wholeTrail,'Value')
-%                     F0            =mode(f);
-                    F0              = mean(f(startFrame(1)-baselineLength:startFrame(1)));
-%                     F0            = mean(f(1:baselineLength));
-                    RelativeF  = (f-F0)/F0*100;
-                    %plot
-                    fg=figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Raw'],'NumberTitle','off');
-                    set(fg,'color',[0.729 0.831 0.957])
-                    baseline=zeros(nFrames,1);
-%                     plot(fluoTime,RelativeF, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
-                    plot(fluoTime,f, fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);
-%                     axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
-                    end
-                 %analyze trail
-                elseif get(obj.fluoAnalyzer.trailByTrail,'Value')
-                    fg=figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Trails'],'NumberTitle','off');
-                    set(fg,'color',[0.729 0.831 0.957])
-                    for k=1:nSti
-                        F(:,k)           = f(prestartFrame(k):traceFrame(k));
-                        F0(k)            = mean(f(baselineFrame(k):startFrame(k)));
-                        RelativeF(:,k)   = ( F(:,k)-F0(k))/F0(k)*100;
-                        %plot
-                        t=frameRate*((responseLength+trailInterval)*(k-1)+1:1:k*(responseLength+trailInterval)-trailInterval);
-                        st= stidata(prestartFrame(k):traceFrame(k));
-                        baseline=zeros(1,traceLength+round(1/frameRate));
-                        plot(t,RelativeF(:,k),t,st,t,baseline,'--k','LineWidth',1);hold on;
-                    end
-                    axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
-                    end
-                    %analyze average
-                else
-%                    figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Average'],'NumberTitle','off');
-%                     set(fg,'color',[0.729 0.831 0.957])
-                    figure(558);
-                    for k=1:nSti
-                        F(:,k)           = f(prestartFrame(k):traceFrame(k));
-                        F0(k)              = mean(f(startFrame(1)-baselineLength:startFrame(1)));
-%                         F0(k)            = mean(f(1:baselineLength));
-%                         F0(k)            = mean(f(baselineFrame(k):startFrame(k)));
-                        RelativeF(:,k)   = ( F(:,k)-F0(k))/F0(k)*100;
-                    end
-                    
-                    for i=1:nPat
-                        t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
-                        nTrail=length(patternInfo{i}.trailN);
-                        total=[];
-%                                                 nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
-%                         for m=nTrail(1):nTrail(2)
-                        for m=1:nTrail
-                            trailN=patternInfo{i}.trailN(m);
-                            total(:,m)=RelativeF(:,trailN);
-                            h=plot(t,RelativeF(:,trailN),'k','LineWidth',1);
-                            set(h,'color',[0.827 0.827 0.827]);
-                            hold on;
-                        end
-%                         traceAve(:,i)=sum(total(:,:),2)/(nTrail(2)-nTrail(1)+1);
-                        traceAve(:,i)=sum(total(:,:),2)/nTrail;
-                        firstTrail=patternInfo{i}.trailN(1);
-                        st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));% needs attention!
-                        baseline=zeros(1,traceLength+round(1/frameRate));
-                        if get(obj.fluoAnalyzer.blueColor,'Value')
-                            plot(t,traceAve(:,i),'b',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
-                        elseif get(obj.fluoAnalyzer.redColor,'Value')
-                            plot(t,traceAve(:,i),'r',t,st(:,i),'y',t,baseline,'--r','LineWidth',1.5);
-                        else
-                            plot(t,traceAve(:,i),'k',t,st(:,i),'yellow',t,baseline,'--r','LineWidth',1.5);
-                        end  
-                    end
-                    axis([xmin xmax ymin ymax])
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
-                    end
-                    % ANALYSIS MODULE FOR DS
-                    if get(obj.fluoAnalyzer.ds,'Value')
-                        %first, get peak value for ON and OFF response,
-                        %regardness of ON, OFF, ON-OFF cells (need
-                        %improvements
-                        
-                        %Define ON, OFF based on stimulus
-                        stiDuration=trailInfo(1).endFrameN-trailInfo(1).startFrameN+1;
-                        stiOn=round(1/frameRate); stiEnd=stiOn+stiDuration-1;
-                        for i=1:nPat %nPat here equals to n of directions
-                            onPeak(i) =max(traceAve(stiOn:stiEnd,i));
-                            offPeak(i)=max(traceAve(stiEnd+1:end,i));
-                        end
-                        
-                        onds=ds(onPeak); offds=ds(offPeak);
-                        dsindex(1)=onds.pd;dsindex(2)=onds.vpd;dsindex(3)=offds.pd;dsindex(4)=offds.vpd;dsindex(5)=onds.dsi;dsindex(6)=offds.dsi;
-                        disp(dsindex);
-                        
-                        %Plot
-                        figure ('name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-Polar Plot'],'NumberTitle','off');
-                        polar([onds.data(:,1);2*pi],[onds.data(:,2);onds.data(1,2)],'r'); hold on;
-                        polar([0 onds.pd/360*2*pi],[0 onds.vpd],'r');hold on;
-                        polar([offds.data(:,1);2*pi],[offds.data(:,2);offds.data(1,2)],'g'); hold on;
-                        polar([0 offds.pd/360*2*pi],[0 offds.vpd],'g');
-                    end
-                    
-                end
-               
+            % reading from the panel
+            
+            % boxcar filter window width
+            ftnum          =str2double(obj.fp.bcftEdit.String); 
+            
+            % baseline values
+            baselineLength = str2double(obj.fp.tvblEdit.String); 
+            fixedLength    = str2double(obj.fp.fdEdit.String); 
+            fixedValue     = str2double(obj.fp.fvEdit.String); 
+            
+            % trace properties
+            preStmLength   = str2double(obj.fp.preStmLengthEdit.String);  
+            traceLength    = str2double(obj.fp.traceLengthEdit.String); 
+            
+            % display modes
+            dm            = {'Raw','TrailByTrail','Average'};
+            selectedValue = [1,2,3] * [obj.fp.rtRb.Value;obj.fp.tbtRb.Value;obj.fp.atRb.Value]; 
+            selectedDm    = char(dm(selectedValue));
+            
+            % axis
+            xmin = str2double(obj.fp.xminEdit.String); 
+            xmax = str2double(obj.fp.xmaxEdit.String);
+            ymin = str2double(obj.fp.yminEdit.String); 
+            ymax = str2double(obj.fp.ymaxEdit.String); 
+            row  = str2double(obj.fp.rowEdit.String);
+            col  = str2double(obj.fp.colEdit.String);
+            
+            % color 
+            c    = [obj.fp.redRb.Value 0 obj.fp.blueRb.Value];
+            
+            % stimulus
+            try
+                stidata = obj.stiTool;
+            catch
+                obj.infoTxt.String = 'No stimulus data available!';
+                return;
+            end
+            
+            % write parameters to obj.metadata
+            obj.data.metadata.processPara.filter         = ftnum;
+            obj.data.metadata.processPara.baselineLength = baselineLength;
+            obj.data.metadata.processPara.fixedLength    = fixedLength;
+            obj.data.metadata.processPara.fixedValue     = fixedValue;
+            obj.data.metadata.processPara.preStmLength   = preStmLength;
+            obj.data.metadata.processPara.traceLength    = traceLength;
+            obj.data.metadata.processPara.ymin           = ymin;
+            obj.data.metadata.processPara.ymax           = ymax;
+            
+            % Analyze using tswls class ( new updated) % Current ROI
+            if obj.fp.crRb.Value
                 
+                inten = getintensity (obj, selectIndex, chN);
+                % create a tswls object, filter, and extract traces
+                tso = createAndProcessTswlsObject (inten, stidata, ftnum, framePeriod, traceLength,...
+                                                   preStmLength, baselineLength, fixedLength,fixedValue);
                 
-            %Choose ROIs
-            elseif get(obj.fluoAnalyzer.allRois,'Value')
+                % display in differnt modes with color option
+                h = figure ('Name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-' selectedDm],'NumberTitle','off');
+                tso.showTraces(selectedDm,h,c);
+ 
+            else % Multiple ROIs
                 
-                 if ~isempty(curROI)
-                    delete(curROI); 
-                    lineh=plot(obj.data.metadata.ROIdata{selectIndex}.pos(:,1),obj.data.metadata.ROIdata{selectIndex}.pos(:,2),'white', 'LineWidth',2,'Parent', obj.axes1);
-                    obj.data.metadata.ROIdata{selectIndex}.linehandles=lineh;
+                if ~isempty(curROI)
+                    delete(curROI);
+                    lineh = plot(obj.data.metadata.ROIdata{selectIndex}.pos(:,1),obj.data.metadata.ROIdata{selectIndex}.pos(:,2),'white', 'LineWidth',2,'Parent', obj.axes1);
+                    obj.data.metadata.ROIdata{selectIndex}.linehandles = lineh;
                     obj.openStates.roi.curRoiN=1;
                     obj.openStates.roi.curRoih=[];
-                 end
+                end
                 
-                p=getappdata(obj.fluoAnalyzer.allRois,'ROIs');
-                nroi=length(p);
+                ROIs = str2num(obj.fp.srEdit.String);
+                nROI = length (ROIs);
                 
-                for j=1:nroi
-                    intensityAve=[];
-                    [intensityAve]=getintensity(obj,p(j),chN);
-                    f(:,j)=moving_average(intensityAve,avenum);
-                end  
-                %analyze raw
-                if get(obj.fluoAnalyzer.wholeTrail,'Value')
-                    baseline=zeros(nFrames,1);
-                    figure ('name',[obj.openStates.image.fileName(end-3:end) '-Raw'],'NumberTitle','off');
-                    for j=1:nroi
-                        F0(j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
-                        RelativeF(:,j)     = (f(:,j)-F0(j))/F0(j)*100;
-                        FS(j) = std(RelativeF(startFrame(1)-round(5/frameRate):startFrame(1),j));
-                        %plot
-%                         subplot(row,col,j);plot(fluoTime,RelativeF(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
-                        subplot(row,col,j);plot(fluoTime,f(:,j), fluoTime, stidata,fluoTime,baseline,'--k','LineWidth',1);title(p(j));hold on;
-%                         axis([xmin xmax ymin ymax])
-                        if ~get(obj.fluoAnalyzer.showAxis,'value')
+                for i = 1:nROI
+                    inten(:,i) = getintensity (obj, ROIs(i), chN);
+                end
+                
+                if obj.fp.irRb.Value
+                    figure ('Name',[obj.openStates.image.fileName(end-3:end) '-' selectedDm],'NumberTitle','off');
+                    for i = 1:nROI
+                        tso{i} = createAndProcessTswlsObject (inten(:,i), stidata, ftnum, framePeriod, traceLength,...
+                            preStmLength, baselineLength, fixedLength,fixedValue);
+                        
+                        % display in differnt modes with color option
+                        h = subplot(row,col,i);
+                        tso{i}.showTraces(selectedDm,h,c);
+                        
+                        % axis
+                        axis([xmin xmax ymin ymax]);
+                        if ~obj.fp.axisRb.Value
                             axis off;
                         end
                     end
-                    display(FS);
-                 %analyze trail
-                elseif get(obj.fluoAnalyzer.trailByTrail,'Value') 
-                    baseline=zeros(1,traceLength+round(1/frameRate));
-                    figure ('name',[obj.openStates.image.fileName(end-3:end) '-Trails'],'NumberTitle','off');
-                    for j=1:nroi
-                        for k=1:nSti
-                            F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
-                            F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
-                            RelativeF(:,k,j)   = ( F(:,k,j)-F0(k,j))/F0(k,j)*100;
-                        end
-                        for k=1:nSti
-                            t=frameRate*((responseLength+trailInterval)*(k-1)+1:1:k*(responseLength+trailInterval)-trailInterval);
-                            st= stidata(prestartFrame(k):traceFrame(k));
-                            subplot(row,col,j);plot(t,RelativeF(:,k,j),t,st,t,baseline,'--k','LineWidth',1);title(p(j));hold on;
-                        end
-                        axis([xmin xmax ymin ymax])
-                        if ~get(obj.fluoAnalyzer.showAxis,'value')
-                            axis off;
-                        end
-                    end
-                    %analyze average
                 else
-%                     figure ('name',[obj.openStates.image.fileName(end-3:end) '-Average'],'NumberTitle','off');
-                    figure(568);
-                    baseline=zeros(1,traceLength+round(1/frameRate));
-                    for j=1:nroi
-                        
-                        % get baseline sd value, using the datapoints
-                        % before stimulus onset
-%                         nrepeat = nSti / nPat;
-%                         sp = round((5:5:5+5*(nrepeat-1))/frameRate);
-%                         ep = sp + round(4/frameRate);
-%                         bs = sp -baselineLength;
-%                         
-%                         for re = 1:nrepeat
-%                             bf(:,re,j) = f(sp(re):ep(re),j);
-%                             f0bf(re,j) = mean(f(bs(re):sp(re)-1,j));
-%                             relativebf (:,re,j) = (bf(:,re,j) - f0bf(re,j))/ f0bf(re,j) *100;
-%                         end
-%                         stdbf(j) = std (mean (relativebf (:,:,j),2));
-%                         
-                        for k=1:nSti
-                            F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
-                            F0(k,j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
-%                             F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
-                            RelativeF(:,k,j)   = ( F(:,k,j)-F0(k,j))/F0(k,j)*100;
-                        end
-                        
-                        for i=1:nPat
-                            t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
-                            nTrail=length(patternInfo{i}.trailN);
-                            totalAll=[];
-%                             nTrail=getappdata(obj.fluoAnalyzer.average,'Traces');
-%                             for m=nTrail(1):nTrail(2)
-                            for m=1:nTrail
-                                trailN=patternInfo{i}.trailN(m);
-                                totalAll(:,m,j)=RelativeF(:,trailN,j);
-                                subplot(row,col,j);h=plot(t,RelativeF(:,trailN,j),'k','LineWidth',0.5);hold on;
-                                set(h,'color',[0.827 0.827 0.827]);   
-
-                                
-                            end
-%                              traceAve(:,i,j)=sum(totalAll(:,:,j),2)/(nTrail(2)-nTrail(1)+1);
-                            traceAve(:,i,j)=sum(totalAll(:,:,j),2)/nTrail;
-                            stdtA(i,j) = std(traceAve(:,i,j));med(i,j) = median(traceAve(:,i,j));
-                            peakAve(1,i,j)=max(traceAve(pre:pre+onFrame,i,j));stdAve(1,i,j)= std(traceAve(pre:pre+onFrame,i,j));
-                            peakAve(2,i,j)=max(traceAve(pre+onFrame:end,i,j));stdAve(2,i,j)= std(traceAve(pre+onFrame:end,i,j));
-                            firstTrail=patternInfo{i}.trailN(1);
-                            st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));
-                            subplot(row,col,j);title(p(j));
-                            if get(obj.fluoAnalyzer.blueColor,'Value')
-                                plot(t,traceAve(:,i,j),'b',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                                 plot(t,traceAve(:,i,j),'b',t,baseline,'--k','LineWidth',2);
-                            elseif get(obj.fluoAnalyzer.redColor,'Value')
-                                plot(t,traceAve(:,i,j),'r',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                                  plot(t,traceAve(:,i,j),'r',t,baseline,'--k','LineWidth',1);
-                            else
-                                plot(t,traceAve(:,i,j),'k',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                                 plot(t,traceAve(:,i,j),'k',t,baseline,'--k','LineWidth',1);
-                            end
-                            hold on;
-                        end
-                        axis([xmin xmax ymin ymax])
-                        if ~get(obj.fluoAnalyzer.showAxis,'value')
-                            axis off;
-                        end
-                    end
+                    h = figure ('Name',[obj.openStates.image.fileName(end-3:end) '-Sum-' selectedDm],'NumberTitle','off');
+                    tso = createAndProcessTswlsObject (mean(inten,2), stidata, ftnum, framePeriod, traceLength,...
+                        preStmLength, baselineLength, fixedLength,fixedValue);
                     
-                    if get(obj.fluoAnalyzer.expData,'Value')
-                    peakAA = mean(peakAve,3); peakAS = std(peakAve,0,3);
-                    asyInd = (peakAve(1,:,:) - peakAve(2,:,:)) ./ (peakAve(1,:,:) + peakAve(2,:,:));
-                    asyIndAve = mean(asyInd,3); asyIndStd = std(asyInd,0,3);
-                    peakAve = squeeze(peakAve); asyInd = squeeze(asyInd);
-                    peakAA = squeeze(peakAA); peakAS = squeeze(peakAS);
-                    asyIndAve = squeeze(asyIndAve); asyIndStd = squeeze(asyIndStd);
-                    
-                    out.stdtA = stdtA;
-                    out.med = med;
-%                     out.stdbf = stdbf;
-                    out.peakAve = peakAve;
-                    out.stdAve =stdAve;
-                    out.peakAA = peakAA;
-                    out.peakAs = peakAS;
-                    out.asyInd = asyInd;
-                    out.asyIndAve = asyIndAve;
-                    out.asyIndStd = asyIndStd;
-                    
-                    save('out.mat','out');
-                    end
-%                     xlswrite('data.xls',peakAve,'peakAve');
-%                     xlswrite('data.xls',peakAA, 'peakAA');
-%                     xlswrite('data.xls',peakAA, 'peakAS');
-%                     xlswrite('data.xls',asyInd, 'Asymmetry Index');
-%                     xlswrite('data.xls',asyIndAve, 'asyIndAve');
-%                     xlswrite('data.xls',asyIndStd, 'asyIndStd');
-%                     disp(peakAve);disp(asyInd);
-%                     disp(asyIndAve);disp(asyIndStd);
-%                     disp(peakAA); disp(peakAS)
-                    
-                    % ANALYSIS MODULE FOR DS
-                    if get(obj.fluoAnalyzer.ds,'Value')
-                        %first, get peak value for ON and OFF response,
-                        %regardness of ON, OFF, ON-OFF cells (need
-                        %improvements
-                        
-                        %Define ON, OFF based on stimulus
-                        stiDuration=trailInfo(1).endFrameN-trailInfo(1).startFrameN+1;
-                        stiOn=round(1/frameRate); stiEnd=stiOn+stiDuration-1;
-                        figure ('name',[obj.openStates.image.fileName(end-3:end)  '-Polar Plot'],'NumberTitle','off');
-                        for j=1:nroi
-                            for i=1:nPat %nPat here equals to n of directions
-                                onPeak(j,i) =max(traceAve(stiOn:stiEnd,i,j));
-                                offPeak(j,i)=max(traceAve(stiEnd+1:end,i,j));
-                            end
-                            
-                            onds=ds(onPeak(j,:)); offds=ds(offPeak(j,:));
-                            dsindex(1)=onds.pd;dsindex(2)=onds.vpd;dsindex(3)=offds.pd;dsindex(4)=offds.vpd;dsindex(5)=onds.dsi;dsindex(6)=offds.dsi;
-                            disp(dsindex);
-                            
-                            %Plot
-                            subplot(row,col,j);
-                            polar([onds.data(:,1);2*pi],[onds.data(:,2);onds.data(1,2)],'r');hold on;
-                            polar([0 onds.pd/360*2*pi],[0 onds.vpd],'r'); hold on;
-                            polar([offds.data(:,1);2*pi],[offds.data(:,2);offds.data(1,2)],'g');hold on;
-                            polar([0 offds.pd/360*2*pi],[0 offds.vpd],'g');
-                        end
-                    end
-                end
-           % average all the rois     
-            else
-                 figure ('name',obj.openStates.image.fileName,'NumberTitle','off');
-                 ax = axes('position',[0,0,1,1],'visible','on');
-                 tx = text(0.4,0.95,obj.openStates.image.fileName,'Parent',ax);
-
-ax1 = subplot(1,2,1); % top subplot
-ax2 = subplot(1,2,2);
-% ax = axes('position',[0,0,1,1],'visible','on');
-               
-                baseline=zeros(1,traceLength+round(1/frameRate));
-                
-                for j=1:nROIs
-                    intensityAve=[];
-                    [intensityAve]=getintensity(obj,j,chN);
-                    f(:,j)=moving_average(intensityAve,avenum);
-                    
-                    for k=1:nSti
-                        F(:,k,j)               = f(prestartFrame(k):traceFrame(k),j);
-                        F0(k,j)              = mean(f(startFrame(1)-baselineLength:startFrame(1),j));
-%                         F0(k,j)               = mean(f(baselineFrame(k):startFrame(k),j));
-                        RelativeF(:,k,j)   = ( F(:,k,j)-F0(k,j))/F0(k,j)*100;
-                    end
-                    
-                    for i=1:nPat
-                        t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
-                        nTrail=length(patternInfo{i}.trailN);
-                        totalAll=[];
-                        for m=1:nTrail
-                            trailN=patternInfo{i}.trailN(m);
-                            totalAll(:,m)=RelativeF(:,trailN,j);
-                        end
-                        traceAve(:,i,j)=sum(totalAll,2)/nTrail;
-                        peakAve(1,i,j)=max(traceAve(pre:pre+onFrame,i,j));
-                        peakAve(2,i,j)=max(traceAve(pre+onFrame:end,i,j));
-                        axes(ax1);
-                        plot([2,3]+(i-1)*3, peakAve(:,i,j),'-ks','LineWidth',1);hold on; 
-                        axis([0 nPat*3+1 ymin ymax]);
-                         axes(ax2);
-                        h=plot(t,traceAve(:,i,j),'k','LineWidth',0.5);hold on;
-                        set(h,'color',[0.827 0.827 0.827]);
-                    end
-                end
-                    mtraceAve=mean(traceAve,3);
-%                     peakAA=mean(peakAve,3);
-                    for i=1:nPat
-                        t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
-                        firstTrail=patternInfo{i}.trailN(1);
-                        st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));
-                        
-                        if get(obj.fluoAnalyzer.blueColor,'Value')
-                            plot(ax2,t,mtraceAve(:,i),'b',t, st(:,i),t,baseline,'--k','LineWidth',1);
-                        elseif get(obj.fluoAnalyzer.redColor,'Value')
-                            plot(ax2,t,mtraceAve(:,i),'r',t, st(:,i),t,baseline,'--k','LineWidth',1);
-                        else
-                            plot(ax2,t,mtraceAve(:,i),'k',t, st(:,i),t,baseline,'--k','LineWidth',1);
-                        end
-                        hold on;
-                        axis([xmin xmax ymin ymax])
-                        peakAA(1,i)=max(mtraceAve(pre:pre+onFrame,i));
-                        peakAA(2,i)=max(mtraceAve(pre+onFrame:end,i));
-                        a=round(min(peakAA(1,i)/peakAA(2,i), peakAA(2,i)/peakAA(1,i)),4);
-                        axes(ax1);
-                        plot([2,3]+(i-1)*3, peakAA(:,i),'-rs','LineWidth',2);text(1+(i-1)*3, peakAA(1,i),num2str(a*100),'Color','red');hold on; 
-                        axis([0 nPat*3+1 ymin ymax]);
-                    end
-                     title(ax2,obj.openStates.image.fileName,'Color','black');
-                    if ~get(obj.fluoAnalyzer.showAxis,'value')
-                        axis off;
-                    end
+                    % display in differnt modes with color option
+                    tso.showTraces(selectedDm,h,c);
                 end
                 
-                
-%                 mRelativeF=mean(RelativeF,3);
-%                 figure(755);
-%                     baseline=zeros(1,traceLength+round(1/frameRate));
-%                 for i=1:nPat
-%                     t=frameRate*((responseLength+trailInterval)*(i-1)+1:1:i*(responseLength+trailInterval)-trailInterval);
-%                     nTrail=length(patternInfo{i}.trailN);
-%                     totalAll=[];
-%                     for m=1:nTrail
-%                         trailN=patternInfo{i}.trailN(m);
-%                         totalAll(:,m)=mRelativeF(:,trailN);
-%                         h=plot(t,mRelativeF(:,trailN),'k','LineWidth',0.5);hold on;
-%                         set(h,'color',[0.827 0.827 0.827]);                        
-%                     end
-%                     traceAve(:,i)=sum(totalAll,2)/nTrail;
-%                     firstTrail=patternInfo{i}.trailN(1);
-%                     st(:,i)=stidata(prestartFrame(firstTrail):traceFrame(firstTrail));
-%                     
-%                     if get(obj.fluoAnalyzer.blueColor,'Value')
-%                         plot(t,traceAve(:,i),'b',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                     elseif get(obj.fluoAnalyzer.redColor,'Value')
-%                         plot(t,traceAve(:,i),'r',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                     else
-%                         plot(t,traceAve(:,i),'k',t, st(:,i),t,baseline,'--k','LineWidth',1);
-%                     end
-%                     hold on;
-%                 end
-%                 axis([xmin xmax ymin ymax])
-%                 if ~get(obj.fluoAnalyzer.showAxis,'value')
-%                     axis off;
-%                 end
-                
-%             end
- 
-            set(obj.infoTxt,'string','Process done!');
+            end
             
-%             if get(obj.fluoAnalyzer.expData,'Value')
-%                 
-%                 outdata.t=frameRate*(1:1:responseLength);
-%                 outdata.t=outdata.t';
-%                 outdata.baseline=zeros(responseLength,1);
-%                 outdata.peakAve = squeeze(peakAve);
-%                 try
-%                     outdata.sti=st;
-%                 catch
-%                     outdat.sti=stidata;
-%                 end
-%                 
-%                 L=size(RelativeF);
-%                 if length(L)~=3
-%                 outdata.relativeF=RelativeF;
-%                 outdata.ave=traceAve;
-%                 
-%                 else
-%                     for i=1:L(3)
-%                         outdata.roi{i}.relativeF=RelativeF(:,:,i);
-%                         outdata.roi{i}.ave=traceAve(:,:,i);
-%                         
-%                     end
-%                 end
-%                 
-%                 save('output.mat','outdata');
-%                                 
-%             end
-
-%               load('output.mat');
-%             if get(obj.fluoAnalyzer.expData,'Value')
-%                 L=size(RelativeF);
-%                 if length(L)~=3
-%                     xlswrite('FileName.xlsx',RelativeF,1,'A1');
-%                     try
-%                         xlswrite('FileName.xlsx',traceAve,1,'F1');
-%                     catch
-%                     end
-%                 else
-%                     for i=1:L(3)
-%                         xlswrite('FileName.xlsx',RelativeF(:,:,i),i,'A1');
-%                         try
-%                             xlswrite('FileName.xlsx',traceAve(:,:,i),i,'F1');
-%                         catch
-%                         end
-%                     end
-%                 end
-%                 set(obj.infoTxt,'string','data was exported into excel!');
-%             end
+            axis([xmin xmax ymin ymax]);
+            if ~obj.fp.axisRb.Value
+                axis off;
+            end
             
-            %set(handles.ROIList,'Value',1);
-%             clear all;
-
+            %
+            if obj.fp.edRb.Value
+                onLength = 1.5;
+                offLength= 1.5;
+                stLength = 4;
+                
+                nROI = length(tso);
+                if nROI == 1
+                    if isempty(tso.stadata)
+                        tso.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
+                        out = tso.stadata;
+                    end
+                else
+                    for i = 1:nROI
+                        if isempty(tso{i}.stadata)
+                            tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
+                            out{i} = tso{i}.stadata;
+                        end
+                    end
+                end 
+                
+                fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
+                save (fullfilename,'out');
+            end
+            
         end
+           
+
     end
 end
 

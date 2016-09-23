@@ -9,7 +9,7 @@ classdef ds < handle
     end
     
     methods
-        function obj=ds(dp)
+        function obj = ds(dp)
             
             if length(dp)<4 || rem(length(dp),2)==1
                 sprintf('Please use correct data');

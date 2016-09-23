@@ -1,6 +1,6 @@
 function selectFileNames = selectBatchFromFolder (varargin)
 
-if nargin && iscell(varargin{1})
+if nargin && iscell(varargin{1}) %listdlg
     fullFilesName = varargin{1};
     fileN = length (fullFilesName);
     newFilesName = cell(1,fileN);
