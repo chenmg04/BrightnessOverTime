@@ -2891,7 +2891,7 @@ classdef brightnessOverTime < handle
             % boxcar filter window width
             ftnum          =str2double(obj.fp.bcftEdit.String); 
             % filter data
-            inten          = moving_average(inten,ftnum);
+           
             % create a dialog
             hFig = dialog ( 'windowstyle', 'normal','Resize','on');
             % create an axes
