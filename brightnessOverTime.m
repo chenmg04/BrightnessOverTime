@@ -223,10 +223,18 @@ classdef brightnessOverTime < handle
                 'Accelerator','I',...
                 'Separator','off',...
                 'Callback',@obj.showImageInfo);
+            %Stack
+            stackMenu = uimenu(imageMenu,...
+                'Label', 'Stack',...
+                'Separator','on');
+             uimenu(stackMenu,...
+                'Label','Make Substack',...
+                'Separator','off',...
+                'Callback',@obj.makeSubstack);  
             %View
             viewMenu=uimenu(imageMenu,...
                 'Label', 'View',...
-                 'Separator','on');
+                 'Separator','off');
            uimenu(viewMenu,...
                 'Label','Original Stack',...
                 'Separator','off',...
@@ -1552,7 +1560,46 @@ classdef brightnessOverTime < handle
                 return;
             end
         end
-        
+        %
+        function makeSubstack (obj, ~, ~)
+            
+            [filename, pathname] = uiputfile ('*.*','Save Substack as',obj.openStates.image.fileName);
+            if isequal(filename,0) || isequal(pathname,0)
+                return;
+            end
+            
+            prompt   = {'Slices:'};
+            dlg_title= 'Substack Maker';
+            num_lines= 1;
+            def      = {''};
+            p        = inputdlg(prompt,dlg_title,num_lines,def); 
+            slices   = str2num(p{1});
+            
+            if ~obj.data.info.immat.loaded
+                if exist(obj.data.info.immat.name,'file')
+                    obj.data.imagedata=getfield(load(obj.data.info.immat.name),'imagedata');
+                    obj.data.info.immat.loaded=1;
+                end
+            end
+            
+            imagedata                      = obj.data.imagedata(:,:,:,slices);
+            metadata.iminfo             = obj.data.metadata.iminfo;
+            metadata.iminfo.framenumber = length(slices);
+            metadata.previewFrame{1}    = mean(imagedata(:,:,1,:),4);
+            metadata.previewFrame{2}    = mean(imagedata(:,:,2,:),4);
+            
+            % generate folder for substack
+            cd (pathname);
+            mkdir(filename);
+            fullfilename = fullfile(pathname,filename);
+            cd(fullfilename);
+            save(['meta_' filename '.mat'],'metadata');
+            save(['im_' filename '.mat'],'imagedata');
+            
+            % generate preview
+            obj.data=[];
+            processImage(obj, fullfilename);
+        end
         %
         function viewOriginalStack (obj,hObject, ~)
             
@@ -3073,6 +3120,8 @@ classdef brightnessOverTime < handle
                 fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
                 save (fullfilename,'out');
             end
+            %
+            obj.infoTxt.String = 'Process done!';
             
         end
            
