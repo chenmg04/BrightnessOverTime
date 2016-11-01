@@ -391,7 +391,7 @@ f.processROIPb            =uicontrol(f.fig,...
 % When click selectPath button, choose a path and put the pathname into pathEdit
     function selectPath (varargin)
         
-        [filename, pathname] = uiputfile;
+        [filename, pathname] = uiputfile('.xlsx');
         f.nameEdit.String    = filename;
         f.pathEdit.String    = pathname;
     end

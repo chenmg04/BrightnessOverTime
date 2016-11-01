@@ -93,9 +93,14 @@ classdef tswls < handle
                     obj.IndTrace(:,i) = (obj.IndTrace(:,i) -baselineValue) / baselineValue * 100;
                 end
             else
-                baselineStartFrame = stStartFrame (1) - round(average2 / framePeriod);
-                baselineValue      = mean(obj.imdata(baselineStartFrame:stStartFrame(1)));
-                obj.IndTrace       = (obj.IndTrace - baselineValue) / baselineValue * 100;
+                if length(average2) == 1 % single number indicates fixed distance
+                    baselineStartFrame = stStartFrame (1) - round(average2 / framePeriod);
+                    baselineValue      = mean(obj.imdata(baselineStartFrame:stStartFrame(1)));
+                    
+                else
+                    baselineValue      = mean(obj.imdata(average2));
+                end
+                obj.IndTrace           = (obj.IndTrace - baselineValue) / baselineValue * 100;
             end
             
             % average traces for each stimulus pattern
@@ -117,8 +122,8 @@ classdef tswls < handle
             offLength    = round(offLength    / framePeriod);
             
             % on/off frames to get on/off peak
-            onFrame      = preStmLength : preStmLength + onLength;
-            offFrame     = preStmLength + stLength : preStmLength + stLength + offLength;
+            onFrame      = preStmLength + 1 : preStmLength + onLength;
+            offFrame     = preStmLength + stLength + 1 : preStmLength + stLength + offLength;
             
             % get on/off peak from average traces
             obj.stadata.peakAveTrace(1,:) = max (obj.AveTrace(onFrame,:));

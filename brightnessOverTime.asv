@@ -2907,16 +2907,8 @@ classdef brightnessOverTime < handle
                 obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
                 obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                 
-                if isfield(obj.data.metadata.processPara, 'fixedLength')
-                    fl = obj.data.metadata.processPara.fixedLength;
-                    if length(obj.data.metadata.processPara.fixedLength) == 1
-                        obj.fp.fdEdit.String = fl;
-                    else
-                        obj.fp.fdEdit.String = [num2str(fl(1)) ':' num2str(fl(end))];
-                    end
-                end
-                
                 try
+                    obj.fp.fdEdit.String           = obj.data.metadata.processPara.fixedLength;
                     obj.fp.fvEdit.String           = obj.data.metadata.processPara.fixedValue;
                     obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
                 catch
@@ -3180,10 +3172,7 @@ classdef brightnessOverTime < handle
                 end 
                 
                 fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
-                v            = outToExcel(out);
-                xlswrite(fullfilename,v);
-                winopen(fullfilename);
-%                 save (fullfilename,'v','-ascii', '-tabs' );
+                save (fullfilename,'out');
             end
             %
             obj.infoTxt.String = 'Process done!';
