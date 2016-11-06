@@ -3098,9 +3098,9 @@ classdef brightnessOverTime < handle
             
             %
             if obj.fp.edRb.Value
-                onLength = 1.5;
-                offLength= 1.5;
-                stLength = 4;
+                onLength = 2 ;
+                offLength= 2;
+                stLength = 4;% arbitary defined.
                 
                 nROI = length(tso);
                 if nROI == 1
