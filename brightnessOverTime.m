@@ -1270,7 +1270,7 @@ classdef brightnessOverTime < handle
                             obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
                             obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                             
-                            if isfield(obj.data.metadata.processPara, 'fixedLength')
+                            if isfield(obj.data.metadata.processPara, 'fixedLength') && ~isempty(obj.data.metadata.processPara.fixedLength)
                                 fl = obj.data.metadata.processPara.fixedLength;
                                 if length(obj.data.metadata.processPara.fixedLength) == 1
                                     obj.fp.fdEdit.String = fl;
@@ -2873,7 +2873,7 @@ classdef brightnessOverTime < handle
            
         end
         
-        %% Tool- Measure 
+       %% Tool- Measure 
         function openFluoProcessor (obj, ~, ~)
             
             if isempty(obj.fp)
@@ -2907,7 +2907,7 @@ classdef brightnessOverTime < handle
                 obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
                 obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                 
-                if isfield(obj.data.metadata.processPara, 'fixedLength')
+                if isfield(obj.data.metadata.processPara, 'fixedLength') && ~isempty(obj.data.metadata.processPara.fixedLength)
                     fl = obj.data.metadata.processPara.fixedLength;
                     if length(obj.data.metadata.processPara.fixedLength) == 1
                         obj.fp.fdEdit.String = fl;
@@ -2990,8 +2990,9 @@ classdef brightnessOverTime < handle
             
             frameNumber = obj.data.metadata.iminfo.framenumber;
             selectIndex = obj.openStates.roi.curRoiN;
+            
             %channel info
-            if obj.data.metadata.iminfo.channel==1
+            if obj.data.metadata.iminfo.channel == 1
                 chN = 1;
             else
                 chN = obj.chSlider.Value;
@@ -3007,10 +3008,7 @@ classdef brightnessOverTime < handle
             ax = axes ( 'parent', hFig, 'position', [0.1 0.2 0.8 0.7], 'nextplot', 'add' );
             plot(ax, 1:frameNumber,inten,'k','LineWidth',1);
             % create the draggable horizontal line
-            movableHorizontalLine( hFig, ax );
-
-            
-            
+            movableHorizontalLine( hFig, ax);
         end
 
         % Function to save process parameters

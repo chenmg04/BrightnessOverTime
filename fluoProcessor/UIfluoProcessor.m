@@ -1,16 +1,14 @@
 
 function f = UIfluoProcessor (varargin)
 
-% roiFigPos=get(obj.roiTool.fig,'Position');
 set(0, 'defaultUicontrolBackgroundColor','White');
-
 f.fig      = figure   ('Name','Measure',...
     'NumberTitle','off',...
     'MenuBar','none',...
     'Resize','off',...
     'Color','white');
-    
 
+% Get reference figure position
 if nargin
     refPos         = varargin{1};
     f.fig.Position = [refPos(1)+refPos(3)+20 refPos(2)+refPos(4)-350 405 350];
