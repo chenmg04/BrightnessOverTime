@@ -366,7 +366,7 @@ f.processROIPb            =uicontrol(f.fig,...
         end
     end
 
-% When Trace-inariable selected, Fixed Duration and Fixed Value are allowed to choose
+% When Trace-invariable selected, Fixed Duration and Fixed Value are allowed to choose
     function selectInVariableBaseline (varargin)
         
         if strcmp(f.fdRb.Enable,'off')

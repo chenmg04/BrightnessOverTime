@@ -123,11 +123,10 @@ classdef tswls < handle
             
             % on/off frames to get on/off peak
             onFrame      = preStmLength + 1 : preStmLength + onLength;
-<<<<<<< HEAD
+
             offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
-=======
+
             offFrame     = preStmLength + stLength + 1 : preStmLength + stLength + offLength;
->>>>>>> origin/master
             
             % get on/off peak from average traces
             obj.stadata.peakAveTrace(1,:) = max (obj.AveTrace(onFrame,:));
