@@ -2736,7 +2736,8 @@ classdef brightnessOverTime < handle
                         trailN=stiInfo.patternInfo(pat(i)).trailN;
                         [fluoChangeData]=caculateFluoChange(obj,option,trailN);
                         filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-                        subplot(row,col,i),imshow(filteredFluoChangeData,[-3000 3000]);title(num2str(pat(i)));axis off;drawnow;colormap(jet);
+                        subplot(row,col,i),imshow(filteredFluoChangeData,[-3000 3000]);title(num2str(pat(i)));axis off;drawnow;colormap(jet);drawnow;
+                        
                         %                   imagesc(filteredFluoChangeData)
                     end
                 end
@@ -3171,12 +3172,24 @@ classdef brightnessOverTime < handle
             
             %
             if obj.fp.edRb.Value
+<<<<<<< HEAD
                 onLength = 2 ;
                 offLength= 2;
                 stLength = 4;% arbitary defined.
                 onLength = 2;
                 offLength= 2;
                 stLength = 4;
+=======
+
+                onLength = 2 ;
+                offLength= 2;
+                stLength = 4;% arbitary defined.
+
+                onLength = 2;
+                offLength= 2;
+                stLength = 4;
+
+>>>>>>> origin/master
                 
                 nROI = length(tso);
                 if nROI == 1
