@@ -324,7 +324,7 @@ f.processROIPb            =uicontrol(f.fig,...
 % Functions to control GUI componets, no data transfer
 
 % When curROI selected, Individual and Sum are not allowed to choose
-% And no subplot, 1 Row & 1 Col
+% And no subplot, 1 Row & 1 Col  
     function curROI (varargin)
         
         if strcmp(f.irRb.Enable,'on')

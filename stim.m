@@ -70,6 +70,11 @@ classdef stim < handle
                 'Accelerator','P',...
                 'Separator','off',...
                 'Callback',@obj.setPattern);
+            uimenu(editMenu,...
+                'Label','Set Drug condition',...
+                'Accelerator','P',...
+                'Separator','off',...
+                'Callback',@obj.setDrugCond);
             % View Menu
             viewMenu = uimenu(obj.h.fig,...
                 'Label','View',...
@@ -388,6 +393,14 @@ classdef stim < handle
             plot(obj.data(:,3),'color','r');
             
         end
+        
+        
+         % function to set stimulus pattern
+        function setDrugCond (obj,~, ~)
+            
+        end
+        
+        
         
         % function to set stimulus pattern
         function setPattern (obj,~, ~)

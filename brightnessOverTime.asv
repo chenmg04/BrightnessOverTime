@@ -480,15 +480,15 @@ classdef brightnessOverTime < handle
             
              if ~isempty (obj.roiTool)&&~isempty(get(obj.roiTool.roiList,'String'))
                 
-%                 selection=questdlg('Save the ROIs?',...
-%                     'ROI ToolBox',...
-%                     'Yes','No','Yes');
-%                 switch selection
-%                     case'Yes'
-%                         saveRoi(obj);
-%                     case'No'
-%                         
-%                 end
+                selection=questdlg('Save the ROIs?',...
+                    'ROI ToolBox',...
+                    'Yes','No','Yes');
+                switch selection
+                    case'Yes'
+                        saveRoi(obj);
+                    case'No'
+                        
+                end
                 
                 set(obj.roiTool.roiList,'String',[]);
                 set(obj.roiTool.roiList,'Value',1);
@@ -512,9 +512,6 @@ classdef brightnessOverTime < handle
                 set(obj.infoTxt,'String','No Image Open!');
             end
             obj.fileInfo=fileList;
-            
-            % delete related cell info
-            obj.cell = [];
         end
         
         % Function to save single image in the original folder 
@@ -2397,20 +2394,16 @@ classdef brightnessOverTime < handle
             
             if ~isempty(get(obj.roiTool.roiList,'String'))
                 
-%                 load(obj.data.info.metamat.name); 
-%                 if ~isequal(metadata.ROIdata, obj.data.metadata.ROIdata)
-%                     
-%                     selection=questdlg('ROIs were changed. Save the changes?',...
-%                         'ROI ToolBox',...
-%                         'Yes','No','Yes');
-%                     switch selection
-%                         case'Yes'
-%                             saveRoi(obj);
-%                             
-%                         case'No'
-%                             
-%                     end
-%                 end
+                selection=questdlg('Save the ROIs?',...
+                    'ROI ToolBox',...
+                    'Yes','No','Yes');
+                switch selection
+                    case'Yes'
+                        saveRoi(obj);
+                        
+                    case'No'
+                        
+                end
                 
                 axes(obj.axes1);
                  hAxes1 = get(obj.axes1,'Children');
@@ -3096,7 +3089,7 @@ classdef brightnessOverTime < handle
                 obj.infoTxt.String = 'No stimulus data available!';
                 return;
             end
-            stidata.data(:,3) = stidata.data(:,3) * (0.15 * ymax) / max(stidata.data(:,3));
+            stidata.data(:,3) = stidata.data(:,3) * (0.15 
             
             % write parameters to obj.metadata
             obj.data.metadata.processPara.filter         = ftnum;
