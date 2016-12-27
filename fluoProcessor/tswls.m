@@ -62,7 +62,7 @@ classdef tswls < handle
            
              % extract time and stimulus trace for full data
             frameNumber           = length (obj.imdata);
-            stTrace               = obj.stidata.data(:,3)*200;
+            stTrace               = obj.stidata.data(:,3);
             obj.plotdata.raw(:,1) = framePeriod * (1:1:frameNumber);
             obj.plotdata.raw(:,2) = stTrace;
             

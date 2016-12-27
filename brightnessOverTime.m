@@ -3074,7 +3074,7 @@ classdef brightnessOverTime < handle
             ymax = str2double(obj.fp.ymaxEdit.String); 
             row  = str2double(obj.fp.rowEdit.String);
             col  = str2double(obj.fp.colEdit.String);
-            
+             
             % color 
             c    = [obj.fp.redRb.Value 0 obj.fp.blueRb.Value];
             
@@ -3085,6 +3085,7 @@ classdef brightnessOverTime < handle
                 obj.infoTxt.String = 'No stimulus data available!';
                 return;
             end
+            stidata.data(:,3) = stidata.data(:,3) * (0.15 * ymax) / max(stidata.data(:,3));
             
             % write parameters to obj.metadata
             obj.data.metadata.processPara.filter         = ftnum;
