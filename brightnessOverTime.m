@@ -52,6 +52,7 @@ classdef brightnessOverTime < handle
                 defaultsize=9;
             end
             set(0,'defaultUicontrolFontSize',defaultsize);
+%             cd('C:\Users\ZhouLab\Documents\MATLAB\brightnessOverTime');
             
             obj.hMain    =figure('Name','BrightnessOverTime',...
                 'MenuBar','none',...
@@ -160,6 +161,11 @@ classdef brightnessOverTime < handle
                 'Accelerator','O',...
                 'Separator','off',...
                 'Callback',@obj.openFromFolder);
+             % Open sample
+            uimenu(fileMenu,...
+                'Label','Open Sample',...
+                'Separator','off',...
+                'Callback',@obj.openSample);
             uimenu(fileMenu,...
                 'Label','Open Batch',...
                 'Separator','off',...
@@ -332,6 +338,9 @@ classdef brightnessOverTime < handle
             uimenu(toolMenu,...
                 'Label','Cell',...
                 'Callback',@obj.generateCell);
+            uimenu(toolMenu,...
+                'Label','Wave_PIP2',...
+                'Callback',@obj.wavePIP);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Analyze menu
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1080,6 +1089,14 @@ classdef brightnessOverTime < handle
             
         end
         
+        % Function to open sample files (only 1 now)
+        function openSample (obj, ~, ~)
+            path=fileparts(which('brightnessOverTime'));
+            filedir = [path '\samples\BrightnessOverTime-01222014-1409-2198'];
+            cd(filedir);
+            obj.data=[];
+            processImage(obj, filedir);
+        end
         % Function to open multiple files from folder
         function openBatchFromFolder (obj,~,~)
                                                    
@@ -2447,7 +2464,7 @@ classdef brightnessOverTime < handle
             y=str2double(regexp(obj.data.metadata.iminfo.date,'.*/.*/(\d*)','tokens','once'));
             m=str2double(regexp(obj.data.metadata.iminfo.date,'(\d)*/.*','tokens','once'));
             d=str2double(regexp(obj.data.metadata.iminfo.date,'.*/(\d)*/.*','tokens','once'));
-            a=datecmp(y,m,d,2016,12,31);
+            a=datecmp(y,m,d,2017,12,31);
             
             if a>=0 % version before 12/31/2016
             %Image open, did not open stiTool for this image
@@ -2582,6 +2599,67 @@ classdef brightnessOverTime < handle
                     return;
                 end
             end
+            
+        end
+        
+        % An add-in function to analyze wave-PIP2 corrlation
+        function wavePIP(obj, ~,~)
+            
+            frameNumber = obj.data.metadata.iminfo.framenumber;
+            selectIndex = obj.openStates.roi.curRoiN;
+            % get raw intensity for current ROI
+            inten = getintensity (obj, selectIndex, 2);
+            % filter data
+            inten          = moving_average(inten,4);
+            % create a dialog
+            hFig = dialog ( 'windowstyle', 'normal','Resize','on');
+            % create an axes
+            ax = axes ( 'parent', hFig, 'position', [0.1 0.2 0.8 0.7], 'nextplot', 'add' );
+            plot(ax, 1:frameNumber,inten,'k','LineWidth',1);
+            % create the draggable horizontal line
+            threshold = movableHorizontalLine( hFig, ax);
+            
+            % detect the waves based on the threshold
+            s=zeros(); i=1;
+            for n=1:frameNumber;
+                if inten(n) >= threshold
+                    s(i)= n;
+                    i=i+1;
+                end
+            end
+            imdata = obj.data.imagedata;
+%             ss = setdiff(1:frameNumber, s);
+            ss = 1:1000;
+            red.control = mean(imdata(:,:,1,ss),4);
+            red.wave    = mean(imdata(:,:,1,s),4);
+            green.control = mean(imdata(:,:,2,ss),4);
+            green.wave    = mean(imdata(:,:,2,s),4);
+            
+            figure(100);
+            subplot(1,2,1);
+            imshow(red.control,[350 450]);axis off;drawnow;colorSelection('Red');     
+            subplot(1,2,2);
+            imshow(red.wave,[350 450]);axis off;drawnow;colorSelection('Red');
+            figure(200);
+            subplot(1,2,1);
+            imshow(green.control,[300 1500]);axis off;drawnow;colorSelection('Green');
+            subplot(1,2,2);
+            imshow(green.wave,[300 1500]);axis off;drawnow;colorSelection('Green');
+            
+            figure(300);
+            baseline = mean(inten(ss));
+            deltaF   = (inten - baseline) / baseline *100;
+            plot(1:frameNumber,deltaF,'k','LineWidth',1);
+           
+%             d=find(diff(s)~=1);
+%             nSti=length(d)+1;
+%             
+%             startFrameN=[];
+%             endFrameN=[];
+%             startFrameN(1)=s(1)+filtern;
+%             startFrameN(2:nSti)=s(d+1)+filtern;
+%             endFrameN(1:nSti-1)=s(d)-filtern;
+%             endFrameN(nSti)=s(end)-filtern;
             
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3172,14 +3250,12 @@ classdef brightnessOverTime < handle
             
             %
             if obj.fp.edRb.Value
-<<<<<<< HEAD
                 onLength = 2 ;
                 offLength= 2;
                 stLength = 4;% arbitary defined.
                 onLength = 2;
                 offLength= 2;
                 stLength = 4;
-=======
 
                 onLength = 2 ;
                 offLength= 2;
@@ -3188,8 +3264,6 @@ classdef brightnessOverTime < handle
                 onLength = 2;
                 offLength= 2;
                 stLength = 4;
-
->>>>>>> origin/master
                 
                 nROI = length(tso);
                 if nROI == 1

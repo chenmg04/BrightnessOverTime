@@ -107,7 +107,12 @@ classdef tswls < handle
             npat = length (obj.stidata.patternInfo);
             for i = 1:npat
                 traceN = obj.stidata.patternInfo(i).trailN;
+                if size (traceN,1) == 1  % no drug
                 obj.AveTrace(:,i) = mean(obj.IndTrace(:,traceN),2);
+                else
+                    obj.AveTrace(:,1,i) = mean(obj.IndTrace(:,traceN(1,:)),2);
+                    obj.AveTrace(:,2,i) = mean(obj.IndTrace(:,traceN(2,:)),2);
+                end
             end
             
             
@@ -123,13 +128,8 @@ classdef tswls < handle
             
             % on/off frames to get on/off peak
             onFrame      = preStmLength + 1 : preStmLength + onLength;
-<<<<<<< HEAD
             offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
-=======
-
             offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
-
->>>>>>> origin/master
             offFrame     = preStmLength + stLength + 1 : preStmLength + stLength + offLength;
             
             % get on/off peak from average traces
@@ -175,6 +175,8 @@ classdef tswls < handle
                 case 'Average'
                     npat = length (obj.stidata.patternInfo);
                     baseline    = zeros (1, length (obj.IndTrace));
+                    % Test whether drug experiments performed
+                    if size (obj.stidata.patternInfo(1).trailN, 1) == 1 % no drug
                     for i = 1:npat
                         nTrace = length (obj.stidata.patternInfo(i).trailN);
                         t       = obj.plotdata.time(:,i);
@@ -188,6 +190,31 @@ classdef tswls < handle
                         plot(t,avedata,'Color',c,'LineWidth',1);hold on;
                         plot(t,stTrace,'k','LineWidth',1);hold on;
                         plot(t,baseline,'--k','LineWidth',1);
+                    end
+                    else
+                        for i = 1:npat
+                        nTracec = length (obj.stidata.patternInfo(i).trailN(1,:));
+                        nTraced = length (obj.stidata.patternInfo(i).trailN(2,:));
+                        t       = obj.plotdata.time(:,i);
+                        stTrace = obj.plotdata.st(:,i);
+                        for j = 1:nTracec
+                            data    = obj.IndTrace (:,obj.stidata.patternInfo(i).trailN(1,j));
+                            plot(t,data,'Color',[0.827 0.827 0.827],'LineWidth',1);
+                            hold on;
+                        end
+                        
+                        for j = 1:nTraced
+                            data    = obj.IndTrace (:,obj.stidata.patternInfo(i).trailN(2,j));
+                            plot(t,data,'Color',[0.827 0.827 0.827],'LineWidth',1);
+                            hold on;
+                        end
+                        avedatac = obj.AveTrace (:,1,i);
+                        avedatad = obj.AveTrace (:,2,i);
+                        plot(t,avedatac,'Color','k','LineWidth',1);hold on;
+                        plot(t,avedatad,'Color','r','LineWidth',1);hold on;
+                        plot(t,stTrace,'k','LineWidth',1);hold on;
+                        plot(t,baseline,'--k','LineWidth',1);
+                        end
                     end
                     
             end

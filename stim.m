@@ -405,23 +405,37 @@ classdef stim < handle
         % function to set stimulus pattern
         function setPattern (obj,~, ~)
             
-            prompt={'Enter:'};
+            prompt={'Pattern:', 'Drug'};
             dlg_title='Set Stimulus Pattern';
             num_lines=1;
-            def={'0'};
+            def={'0', ''};
             p=inputdlg(prompt,dlg_title,num_lines,def);
             
             q=strsplit(p{1},';');
             % single scalar, e.g., 8, indicates 8 patterns, and the repeat
             % of patterns is 1-2-3-...1-2-3-...
+            dc = str2double(p{2});
             obj.patternInfo=[];
+            
+            
             if length(q)==1
                 patN=str2double(p{1});
-                nSti=1:length(obj.trailInfo);
-                for i=1:patN-1
-                    obj.patternInfo(i).trailN=nSti(find(mod(nSti, patN)==i));
+                if isnan(dc) % no drugs performed
+                    nSti=1:length(obj.trailInfo);
+                    for i=1:patN-1
+                        obj.patternInfo(i).trailN=nSti(find(mod(nSti, patN)==i));
+                    end
+                    obj.patternInfo(patN).trailN=nSti(find(mod(nSti, patN)==0));
+                else
+                    nStic = 1: dc -1; % with drugs, control
+                    nStid = dc: length(obj.trailInfo); % drug
+                    for i=1:patN-1
+                        obj.patternInfo(i).trailN(1,:)=nStic(find(mod(nStic, patN)==i));
+                        obj.patternInfo(i).trailN(2,:)=nStid(find(mod(nStid, patN)==i));
+                    end
+                    obj.patternInfo(patN).trailN(1,:)=nStic(find(mod(nStic, patN)==0));
+                    obj.patternInfo(patN).trailN(2,:)=nStid(find(mod(nStid, patN)==0));
                 end
-                obj.patternInfo(patN).trailN=nSti(find(mod(nSti, patN)==0));
             else
                 patN=length(q);
                 for i=1:patN
