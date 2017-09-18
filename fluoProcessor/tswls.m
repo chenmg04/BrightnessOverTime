@@ -130,6 +130,7 @@ classdef tswls < handle
             onFrame      = preStmLength + 1 : preStmLength + onLength;
             offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
             offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
+            offFrame     = preStmLength + stLength +1 : preStmLength + stLength + offLength;
             offFrame     = preStmLength + stLength + 1 : preStmLength + stLength + offLength;
             
             % get on/off peak from average traces

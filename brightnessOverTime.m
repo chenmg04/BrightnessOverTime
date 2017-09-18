@@ -863,7 +863,8 @@ classdef brightnessOverTime < handle
 %                 delete(obj.chSlider);
                 set(obj.chSlider, 'Visible','off');
                 set(obj.axes1,'Position',[axesPosition(1) axesPosition(2)-15 axesPosition(3) axesPosition(4)+15]);drawnow;   
-                obj.data.fluoImageHandles=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;colorSelection('Green');
+                obj.data.fluoImageHandles=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;
+                colorSelection('Green');
                 obj.openStates.image.color='Green';
             else
                 set(obj.chSlider, 'Visible','on');
@@ -916,9 +917,9 @@ classdef brightnessOverTime < handle
                         
                         if obj.openStates.image.viewMode==1 % view Average Frame
 %                             hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
-                             hAxes1(nhAxes1+1)=imshow(obj.data.metadata.previewFrame{chSliderValue},[], 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                             hAxes1(nhAxes1+1) = imshow(obj.data.metadata.previewFrame{chSliderValue},[],'Parent',obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});drawnow;axis off;drawnow;
                         else % view Original Stacks
-                            hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                            hAxes1(nhAxes1+1)  = imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue));axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
                         end
                         set(obj.chSlider, 'Enable', 'off');
                         figure(obj.dispFig);
@@ -1282,38 +1283,48 @@ classdef brightnessOverTime < handle
                         end
                     end
                     
+                    % if the fluoProcessor is open, read parameters from
+                    % metadata
                     if ~isempty(obj.fp)
                         if isfield(obj.data.metadata,'processPara')
                             obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
-                            obj.fp.tvblEdit.String             = obj.data.metadata.processPara.baselineLength;
                             obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
                             obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
                             obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                             
-                            if isfield(obj.data.metadata.processPara, 'fixedLength') && ~isempty(obj.data.metadata.processPara.fixedLength)
-                                fl = obj.data.metadata.processPara.fixedLength;
-                                if length(obj.data.metadata.processPara.fixedLength) == 1
-                                    obj.fp.fdEdit.String = fl;
+                            % read baseline parameters
+                            baselineLength  = obj.data.metadata.processPara.baselineLength;
+                            if ~isempty(baselineLength) && ~unique(isnan(baselineLength))
+                                obj.fp.tivblRb.Value   = 1;
+                                obj.fp.tvblEdit.String = baselineLength;
+                            else
+                                % previous version only has baselineLength
+                                
+                                fixedLength     = obj.data.metadata.processPara.fixedLength;
+                                if ~isempty(fixedLength) && ~unique(isnan(fixedLength))
+                                    obj.fp.fdRb.Value    = 1;
+                                    obj.fp.fdEdit.String = fixedLength;
                                 else
-%                                     obj.fp.fdEdit.String = [num2str(fl(1)) ':' num2str(fl(end))];
-                                      obj.fp.fdEdit.String = fl;
+                                    fixedValue      = obj.data.metadata.processPara.fixedValue;
+                                    obj.fp.fvRb.Value    = 1;
+                                    obj.fp.fvEdit.String = fixedValue;
                                 end
                             end
-                                
+                            % read prestimulus length, earlier version doesn't have
+                            % this parameter
                             try
-                                obj.fp.fvEdit.String           = obj.data.metadata.processPara.fixedValue;
                                 obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
                             catch
                             end
-                            
-                            try
-                                nROI = length(obj.data.metadata.ROIdata);
-                                obj.fp.srEdit.String = ['1:' num2str(nROI)];
-                            catch
-                            end
+                        end
+                        
+                        try
+                            nROI = length(obj.data.metadata.ROIdata);
+                            obj.fp.srEdit.String = ['1:' num2str(nROI)];
+                        catch
                         end
                     end
-                
+ 
                 if ~isempty (obj.stiTool) 
                     
 %                     if ~isempty(obj.stiTool.hfig)
@@ -2814,7 +2825,7 @@ classdef brightnessOverTime < handle
                         trailN=stiInfo.patternInfo(pat(i)).trailN;
                         [fluoChangeData]=caculateFluoChange(obj,option,trailN);
                         filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-                        subplot(row,col,i),imshow(filteredFluoChangeData,[-3000 3000]);title(num2str(pat(i)));axis off;drawnow;colormap(jet);drawnow;
+                        subplot(row,col,i),imagesc(filteredFluoChangeData,[-3000 3000]);title(num2str(pat(i)));axis off;drawnow;colormap(jet);drawnow;
                         
                         %                   imagesc(filteredFluoChangeData)
                     end
@@ -2941,7 +2952,8 @@ classdef brightnessOverTime < handle
             hAxes1(end)=[];
             nhAxes1=length(hAxes1);
             
-            hAxes1(nhAxes1+1)=imshow(fluoChangeData,[-3000 3000 ], 'Parent',obj.axes1);axis off;drawnow;colormap(jet);
+%             hAxes1(nhAxes1+1) = imshow(fluoChangeData,[-3000 3000]);axis off;drawnow;colormap(jet);drawnow;
+            hAxes1(nhAxes1+1) = imagesc(fluoChangeData,[-3000 3000]);colormap(jet);drawnow;axis off;drawnow;
             obj.openStates.curImage=fluoChangeData;
             
             if ~isfield(obj.openStates,'roi')
@@ -2992,22 +3004,31 @@ classdef brightnessOverTime < handle
             % Initiazing
             if isfield(obj.data.metadata,'processPara')
                 obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
-                obj.fp.tvblEdit.String             = obj.data.metadata.processPara.baselineLength;
                 obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
                 obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
                 obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                 
-                if isfield(obj.data.metadata.processPara, 'fixedLength') && ~isempty(obj.data.metadata.processPara.fixedLength)
-                    fl = obj.data.metadata.processPara.fixedLength;
-                    if length(obj.data.metadata.processPara.fixedLength) == 1
-                        obj.fp.fdEdit.String = fl;
+                % read baseline parameters
+                baselineLength  = obj.data.metadata.processPara.baselineLength; 
+                if ~isempty(baselineLength) && ~unique(isnan(baselineLength))
+                    obj.fp.tivblRb.Value   = 1;
+                    obj.fp.tvblEdit.String = baselineLength;
+                else
+                    % previous version only has baselineLength
+                    
+                    fixedLength     = obj.data.metadata.processPara.fixedLength;
+                    if ~isempty(fixedLength) && ~unique(isnan(fixedLength))
+                        obj.fp.fdRb.Value    = 1;
+                        obj.fp.fdEdit.String = fixedLength;
                     else
-                        obj.fp.fdEdit.String = [num2str(fl(1)) ':' num2str(fl(end))];
+                        fixedValue      = obj.data.metadata.processPara.fixedValue;
+                        obj.fp.fvRb.Value    = 1;
+                        obj.fp.fvEdit.String = fixedValue;
                     end
                 end
-                
+                % read prestimulus length, earlier version doesn't have
+                % this parameter
                 try
-                    obj.fp.fvEdit.String           = obj.data.metadata.processPara.fixedValue;
                     obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
                 catch
                 end
@@ -3179,9 +3200,9 @@ classdef brightnessOverTime < handle
             
             % write parameters to obj.metadata
             obj.data.metadata.processPara.filter         = ftnum;
-            obj.data.metadata.processPara.baselineLength = baselineLength;
-            obj.data.metadata.processPara.fixedLength    = fixedLength;
-            obj.data.metadata.processPara.fixedValue     = fixedValue;
+            obj.data.metadata.processPara.baselineLength = obj.fp.tvblEdit.String;
+            obj.data.metadata.processPara.fixedLength    = obj.fp.fdEdit.String; % use string
+            obj.data.metadata.processPara.fixedValue     = obj.fp.fvEdit.String;
             obj.data.metadata.processPara.preStmLength   = preStmLength;
             obj.data.metadata.processPara.traceLength    = traceLength;
             obj.data.metadata.processPara.ymin           = ymin;
@@ -3256,6 +3277,8 @@ classdef brightnessOverTime < handle
                 onLength = 2;
                 offLength= 2;
                 stLength = 4;
+                stLength = 4;
+
 
                 onLength = 2 ;
                 offLength= 2;

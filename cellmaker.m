@@ -23,7 +23,7 @@ classdef cellmaker < handle
             % set figure Position
             try
                 dispfig=findobj('Tag','dispfig');
-                obj.h.fig.Position = [dispfig.Position(1) dispfig.Position(2)-650 512 400];
+                obj.h.fig.Position = [dispfig.Position(1) dispfig.Position(2)-500 512 400];
             catch
                 obj.h.fig.Position = [200 200 512 400];
             end
