@@ -27,7 +27,7 @@ fig = figure('Name','Stimulus Pattern',...
 
 % creat pushtools
 ht=uitoolbar(fig);
-path=fileparts(which('addnotes'));
+path=fileparts(which('notewriter'));
 
 [X,map] = imread([path '\icons\file_open.gif']);
 icon = ind2rgb(X,map);

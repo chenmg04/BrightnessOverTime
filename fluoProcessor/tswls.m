@@ -16,8 +16,8 @@ classdef tswls < handle
         
         function obj = tswls (d1, d2)
             
-            obj.imdata  = d1;
-            obj.stidata = d2;
+            obj.imdata(:,1)  = d1;
+            obj.stidata      = d2;
         end
     end
     
@@ -26,7 +26,7 @@ classdef tswls < handle
         % Boxcar filter
         function bcfilt (obj, num)
             
-            obj.imdata = moving_average(obj.imdata,num);
+            obj.imdata(:,2) = moving_average(obj.imdata(:,1),num);
         end
         
         % Extract individual traces and average traces
@@ -61,7 +61,7 @@ classdef tswls < handle
             
            
              % extract time and stimulus trace for full data
-            frameNumber           = length (obj.imdata);
+            frameNumber           = length (obj.imdata(:,1));
             stTrace               = obj.stidata.data(:,3);
             obj.plotdata.raw(:,1) = framePeriod * (1:1:frameNumber);
             obj.plotdata.raw(:,2) = stTrace;
@@ -77,7 +77,7 @@ classdef tswls < handle
                 stStartFrame(i)            = obj.stidata.trailInfo(i).startFrameN;
                 traceStartFrame            = stStartFrame(i) - preStmLength;
                 traceEndFrame              = traceStartFrame + traceLength - 1;
-                obj.IndTrace(:,i)          = obj.imdata(traceStartFrame : traceEndFrame);
+                obj.IndTrace(:,i)          = obj.imdata(traceStartFrame : traceEndFrame,2);
                 obj.plotdata.time(:,i)     = framePeriod * ( (traceLength + intervalLength) * (i-1) +1 : 1 : (traceLength + intervalLength) * i - intervalLength);                                              
                 obj.plotdata.st(:,i)       = stTrace(traceStartFrame:traceEndFrame);
                 
@@ -85,22 +85,28 @@ classdef tswls < handle
             
             % deltaF / F
             if ~isnan(fixedValue)
-                obj.IndTrace = (obj.IndTrace - fixedValue) / fixedValue * 100;
+                obj.IndTrace    = (obj.IndTrace - fixedValue) / fixedValue * 100;
+                % deltaF / F for whole trace, for visualization of
+                % spontaneous activity or retinal waves/ added 11/28/2017 
+                obj.imdata(:,3) = (obj.imdata(:,2) - fixedValue) / fixedValue * 100;
             elseif ~isnan(average1)
                 baselineStartFrame = stStartFrame - round(average1 / framePeriod);
                 for i = 1:nsti
-                    baselineValue  = mean(obj.imdata(baselineStartFrame(i):stStartFrame(i)));
+                    baselineValue  = mean(obj.imdata(baselineStartFrame(i):stStartFrame(i),2));
                     obj.IndTrace(:,i) = (obj.IndTrace(:,i) -baselineValue) / baselineValue * 100;
                 end
             else
                 if length(average2) == 1 % single number indicates fixed distance
                     baselineStartFrame = stStartFrame (1) - round(average2 / framePeriod);
-                    baselineValue      = mean(obj.imdata(baselineStartFrame:stStartFrame(1)));
+                    baselineValue      = mean(obj.imdata(baselineStartFrame:stStartFrame(1),2));
                     
                 else
-                    baselineValue      = mean(obj.imdata(average2));
+                    baselineValue      = mean(obj.imdata(average2, 2));
                 end
                 obj.IndTrace           = (obj.IndTrace - baselineValue) / baselineValue * 100;
+                % deltaF / F for whole trace, for visualization of
+                % spontaneous activity or retinal waves/ added 11/28/2017 
+                obj.imdata(:,3)        = (obj.imdata(:,2) - baselineValue) / baselineValue * 100;
             end
             
             % average traces for each stimulus pattern
@@ -154,13 +160,20 @@ classdef tswls < handle
             
             axes(haxes);
             switch option
-                case 'Raw'
-                    t           = obj.plotdata.raw(:,1);
-                    stTrace     = obj.plotdata.raw(:,2);
-                    plot(t,obj.imdata,'Color',c,'LineWidth',1);hold on;
-                    plot(t,stTrace,'k','LineWidth',1);
+%                 case 'Raw'
+%                     t           = obj.plotdata.raw(:,1);
+%                     stTrace     = obj.plotdata.raw(:,2);
+%                     plot(t,obj.imdata(:,2),'Color',c,'LineWidth',1);hold on;
+%                     plot(t,stTrace,'k','LineWidth',1);
                     % The following command can not work. Why?
 %                     plot(t,obj.imdata,'Color',c,t,stTrace,'k','LineWidth',1);
+                case 'Raw'  % Raw data with delta F/F
+                    t           = obj.plotdata.raw(:,1);
+                    stTrace     = obj.plotdata.raw(:,2);
+                    baseline    = zeros (1, length (obj.imdata(:,3)));
+                    plot(t,obj.imdata(:,3),'Color',c,'LineWidth',1);hold on;
+                    plot(t,baseline,'--k','LineWidth',1);
+                    plot(t,stTrace,'k','LineWidth',1);
                 case 'TrailByTrail'
                     nsti        = length (obj.stidata.trailInfo);
                     baseline    = zeros (1, length (obj.IndTrace));

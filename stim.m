@@ -70,11 +70,7 @@ classdef stim < handle
                 'Accelerator','P',...
                 'Separator','off',...
                 'Callback',@obj.setPattern);
-            uimenu(editMenu,...
-                'Label','Set Drug condition',...
-                'Accelerator','P',...
-                'Separator','off',...
-                'Callback',@obj.setDrugCond);
+ 
             % View Menu
             viewMenu = uimenu(obj.h.fig,...
                 'Label','View',...
@@ -132,7 +128,7 @@ classdef stim < handle
                     'Import Stimulus File',...
                     'No', 'Yes', 'Yes');
                 switch choice
-                    case 'Yes',
+                    case 'Yes'
                         openStimulus(obj);
                     case 'No'
                         return;
@@ -287,7 +283,7 @@ classdef stim < handle
             nFrames=length(dataRange);
             s=zeros(); i=1;
             %             if p(3)~=0
-            for n=1:nFrames;
+            for n=1:nFrames
                 %                     if abs(norSti(dataRange(n)))>str2double(p{2})
                 if norSti(dataRange(n))>str2double(p{2})
                     s(i)= n;
@@ -370,12 +366,16 @@ classdef stim < handle
             for i=1:length(s)
                 obj.trailInfo(nSti+i).startFrameN=s(i);
                 obj.trailInfo(nSti+i).endFrameN=n(i);
-                amplitude=mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
-                if amplitude<0
-                    obj.trailInfo(nSti+i). amplitude=yLimits(1)/2;
-                else
-                    obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
-                end
+%                 amplitude=mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
+%                 if amplitude<0
+%                     obj.trailInfo(nSti+i). amplitude=yLimits(1)/2;
+%                 else
+%                     obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
+%                 end
+                % Make all amplitude as positive, and half of the
+                % yLimit(1/25/2018)
+                obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
+                
                 obj.data(s(i):n(i),3)=obj.trailInfo(nSti+i).amplitude;
             end
             %sortrows
@@ -391,12 +391,6 @@ classdef stim < handle
             axes(obj.h.axes);  cla;
             plot(obj.data(:,2)); hold on;
             plot(obj.data(:,3),'color','r');
-            
-        end
-        
-        
-         % function to set stimulus pattern
-        function setDrugCond (obj,~, ~)
             
         end
         
@@ -528,8 +522,10 @@ classdef stim < handle
                 firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
                 lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
                 
-                % Manually defined length
-                preStartFrame=20;
+                % Manually defined length, be cautious about this number,
+                % some stimulus interval might be shorter than this number,
+                % then there will be problem. 
+                preStartFrame=10;
                 
                 curLength=length(patternTrace);
                 s=curLength+1;

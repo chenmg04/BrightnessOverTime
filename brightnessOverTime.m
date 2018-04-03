@@ -715,16 +715,20 @@ classdef brightnessOverTime < handle
             obj.openStates.image.magN = magN;
             obj.openStates.image.zoomFactor =zoomFactor; 
             
+            dispFigPos               = obj.dispFig.Position;
             % update position of ROI box if it is open
-            if ~isempty(obj.roiTool)
-                dispFigPos               = obj.dispFig.Position;
+            if ~isempty(obj.roiTool) 
                 obj.roiTool.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250];
             end
             
+            % update position of auto detection box if it is open
+            if ~isempty(obj.autoFluoDetector)    
+                obj.autoFluoDetector.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-400 160 110];
+            end
+                       
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
-                roiFigPos                = obj.roiTool.fig.Position;
-                obj.fp.fig.Position = [roiFigPos(1)+roiFigPos(3)+20 roiFigPos(2)+roiFigPos(4)-350 405 350];
+                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-350 405 350];
             end
             
         end
@@ -801,16 +805,20 @@ classdef brightnessOverTime < handle
             obj.openStates.image.magN = magN;
             obj.openStates.image.zoomFactor =zoomFactor; 
             
+            dispFigPos               = obj.dispFig.Position;
             % update position of ROI box if it is open
-            if ~isempty(obj.roiTool)
-                dispFigPos               = obj.dispFig.Position;
+            if ~isempty(obj.roiTool) 
                 obj.roiTool.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250];
             end
             
+            % update position of auto detection box if it is open
+            if ~isempty(obj.autoFluoDetector)    
+                obj.autoFluoDetector.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-400 160 110];
+            end
+                       
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
-                roiFigPos                = obj.roiTool.fig.Position;
-                obj.fp.fig.Position = [roiFigPos(1)+roiFigPos(3)+20 roiFigPos(2)+roiFigPos(4)-350 405 350];
+                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-350 405 350];
             end
         end
         
@@ -917,16 +925,19 @@ classdef brightnessOverTime < handle
                         
                         if obj.openStates.image.viewMode==1 % view Average Frame
 %                             hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
-                             hAxes1(nhAxes1+1) = imshow(obj.data.metadata.previewFrame{chSliderValue},[],'Parent',obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});drawnow;axis off;drawnow;
+                             hAxes1(nhAxes1+1) = imshow(obj.data.metadata.previewFrame{chSliderValue},[],'Parent',obj.axes1);
+                             axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});drawnow;axis off;drawnow;
                         else % view Original Stacks
-                            hAxes1(nhAxes1+1)  = imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue));axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                            hAxes1(nhAxes1+1)  = imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue));axis off;drawnow;
+                             axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
                         end
                         set(obj.chSlider, 'Enable', 'off');
                         figure(obj.dispFig);
                         drawnow;
                         set(obj.chSlider, 'Enable', 'on');
                     else
-                        hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color);
+                        hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;
+                         axes(obj.axes1);colorSelection(obj.openStates.image.color);
                     end
                     
                 case  2 % for frameSlider
@@ -939,9 +950,11 @@ classdef brightnessOverTime < handle
                         end
                     end
                     if obj.data.metadata.iminfo.channel==1
-                         hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,1, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color);
+                         hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,1, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;
+                          axes(obj.axes1);colorSelection(obj.openStates.image.color);
                     else
-                        hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                        hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;
+                         axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
                     end
                         set(obj.frameSlider, 'Enable', 'off');
                         figure(obj.dispFig);
@@ -1462,69 +1475,96 @@ classdef brightnessOverTime < handle
             % Read in metadata from xml file
             text = fileread([img_full_path '/' img_name '.xml']);
             
-            date = regexp ( text, 'date="(.*?")', 'tokens', 'once');
-                                             
-            % Find dimensions of 5D image %
+            date = regexp ( text, 'date="(.*?)"', 'tokens', 'once');
             
-            % XY dimensions: Entries assumed to be the same for pixel dimensions
-            xdim = str2double(regexp(text, ...
-                'Key key="pixelsPerLine".*?value="(\d*)"', 'tokens','once'));
-            ydim = str2double(regexp(text, ...
-                'Key key="linesPerFrame".*?value="(\d*)"', 'tokens','once'));
-            
-            % Z axis dimension
-            z_cell =  regexp(text, 'Frame relative.*?index="(\d*)"', 'tokens');
-            zslice = cellfun(@(x) str2double(x{1}),z_cell);
-            
-            
-            % T axis dimension
-            t_cell =  regexp(text, 'Sequence type=.*?cycle="(\d*)"', 'tokens');
-            tpoints = cellfun(@(x) str2double(x{1}),t_cell);
-            if tpoints == 0; tpoints=1; end
-            framenumber =length (z_cell)/length(t_cell);
-            
-            % Channel dimension (img names found on same line, parsed also)
-            ch_img_names_cell =  regexp(text, ...
-                'File channel="(\d*)".*?filename="(.*?)"', 'tokens');
-            ch = cellfun(@(x) str2double(x{1}),ch_img_names_cell);
-            img_names = cellfun(@(x) x{2},ch_img_names_cell, 'UniformOutput', 0);
-            ch_n   = unique (ch);
-            nCh    = numel(ch_n);   
-            
-            % Bit depth of img in filesystem
-            tif_bit_depth = str2double(regexp(text, ...
-                '<Key key="bitDepth".*?value="(\d*)"', 'tokens','once'));
-                        
-            % Parse  metadata
-            set(obj.infoTxt,'string', 'Parsing Metadata');
-            drawnow;
-            
-            frameText  = regexp (text, '<Frame .*?</Frame>', 'match', 'once');
-            parNames  = regexp ( frameText, '<Key key="(\w+)".*?', 'tokens');
-            parValues  = regexp ( frameText, '<Key .*?value="(.*?)"', 'tokens');
-            parValues  = [parValues{:}]; parValues = [num2cell(str2double(parValues(1:2))) parValues(3) num2cell(str2double(parValues(4:end)))];
-            parNames = [{'date'} {'channel'} {'framenumber'} parNames{:}];
-            parValues  = [date {nCh} {framenumber} parValues{:}];
-            metadata.iminfo = cell2struct(parValues, parNames, 2);
-            
-            
-            
-%             info=regexp(text, '<Key key="(\w+)".*?value="(-*\d.*?)"', 'tokens');
-%             info=vertcat(info{:});
-%             
-%             [~, idx]=unique(strcat(info(:,1),info(:,1),'rows'));
-%             imInfo=info(sort(idx),:);
-%             
-%             imInfoParameterNames=(imInfo(:,1))';
-%             imInfoParameterValues=([imInfo(1,2);num2cell(str2double(imInfo(2:end,2)))])';
-%             
-%             metadata.iminfo=cell2struct(imInfoParameterValues,imInfoParameterNames,2);
-%             
-%             metadata.iminfo.date                     = text (strfind(text,'date')+6:strfind(text,'date')+25);
-%             metadata.iminfo.channel                  = nCh;
-%             metadata.iminfo.framenumber              = max(size(regexp(text,'<Frame.*?index="([-\d\.]*?)"', 'tokens')));
-                    
-            % Create 1x1 mapping between img_name, channel, z slice, timepoint
+            % Check software version, added 1/18/2018
+            ver  = regexp (text, 'PVScan.*?version="(.*?)"', 'tokens', 'once');
+            % For latestest version, the xml file was changed
+            if ver{1} == '5.4.64.100'
+                
+                % Find dimensions of 5D image
+                
+                % XY dimensions:
+                xdim = str2double(regexp(text, ...
+                    'PVStateValue key="pixelsPerLine" value="(\d*)"', 'tokens','once'));
+                ydim = str2double(regexp(text, ...
+                    'PVStateValue key="linesPerFrame" value="(\d*)"', 'tokens','once'));
+                
+                % Channel dimension
+                ch_img_names_cell =  regexp(text, ...
+                    'File channel="(\d*)".*?filename="(.*?)"', 'tokens');
+                ch = cellfun(@(x) str2double(x{1}),ch_img_names_cell);
+                img_names = cellfun(@(x) x{2},ch_img_names_cell, 'UniformOutput', 0);
+                ch_n   = unique (ch);
+                nCh    = numel(ch_n);
+                
+                % Z or framenumber for timeseries
+                framenumber = length(ch)/nCh;
+                zslice = 1: framenumber;
+                
+                % T dimension
+                tpoints = 1;
+                
+                % Bit depth of img in filesystem
+                tif_bit_depth = str2double(regexp(text, ...
+                    'PVStateValue key="bitDepth" value="(\d*)"', 'tokens','once'));
+                
+                % Parse  metadata, HERE ONLY KEEP date, channel,
+                % framenumber, frameperiod, pixelsPerLine, linesPerFrame
+                set(obj.infoTxt,'string', 'Parsing Metadata');
+                drawnow;
+                
+                framePeriod = str2double(regexp(text, ...
+                    'PVStateValue key="framePeriod" value="(0.\d*)"', 'tokens','once'));
+                parNames = [{'date'} {'channel'} {'framenumber'} {'framePeriod'} {'pixelsPerLine'} {'linesPerFrame'}];
+                parValues  = [date {nCh} {framenumber} {framePeriod} {xdim} {ydim}];
+                metadata.iminfo = cell2struct(parValues, parNames, 2);
+                
+            else
+                % Find dimensions of 5D image %
+                
+                % XY dimensions: Entries assumed to be the same for pixel dimensions
+                xdim = str2double(regexp(text, ...
+                    'Key key="pixelsPerLine".*?value="(\d*)"', 'tokens','once'));
+                ydim = str2double(regexp(text, ...
+                    'Key key="linesPerFrame".*?value="(\d*)"', 'tokens','once'));
+                
+                % Z axis dimension
+                z_cell =  regexp(text, 'Frame relative.*?index="(\d*)"', 'tokens');
+                zslice = cellfun(@(x) str2double(x{1}),z_cell);
+                
+                
+                % T axis dimension
+                t_cell =  regexp(text, 'Sequence type=.*?cycle="(\d*)"', 'tokens');
+                tpoints = cellfun(@(x) str2double(x{1}),t_cell);
+                if tpoints == 0; tpoints=1; end
+                framenumber =length (z_cell)/length(t_cell);
+                
+                % Channel dimension (img names found on same line, parsed also)
+                ch_img_names_cell =  regexp(text, ...
+                    'File channel="(\d*)".*?filename="(.*?)"', 'tokens');
+                ch = cellfun(@(x) str2double(x{1}),ch_img_names_cell);
+                img_names = cellfun(@(x) x{2},ch_img_names_cell, 'UniformOutput', 0);
+                ch_n   = unique (ch);
+                nCh    = numel(ch_n);
+                
+                % Bit depth of img in filesystem
+                tif_bit_depth = str2double(regexp(text, ...
+                    '<Key key="bitDepth".*?value="(\d*)"', 'tokens','once'));
+                
+                % Parse  metadata
+                set(obj.infoTxt,'string', 'Parsing Metadata');
+                drawnow;
+                
+                frameText  = regexp (text, '<Frame .*?</Frame>', 'match', 'once');
+                parNames  = regexp ( frameText, '<Key key="(\w+)".*?', 'tokens');
+                parValues  = regexp ( frameText, '<Key .*?value="(.*?)"', 'tokens');
+                parValues  = [parValues{:}]; parValues = [num2cell(str2double(parValues(1:2))) parValues(3) num2cell(str2double(parValues(4:end)))];
+                parNames = [{'date'} {'channel'} {'framenumber'} parNames{:}];
+                parValues  = [date {nCh} {framenumber} parValues{:}];
+                metadata.iminfo = cell2struct(parValues, parNames, 2);
+                
+            end
             
             % Channel index
             ch_ind = ch;
@@ -1635,9 +1675,9 @@ classdef brightnessOverTime < handle
                 dispFigPos            =get(obj.dispFig,'Position');
                 
                 figure   ('Name',figName(1,end-8:end),'NumberTitle','off','color','white',...
-                                   'MenuBar','none','position',[dispFigPos(1)-240 dispFigPos(2) 220 dispFigPos(4)],'Resize','off');
+                                   'MenuBar','none','position',[dispFigPos(1)-240 100 220 780],'Resize','off');
                 infoList=uicontrol('Style','listbox','Value',1,'BackgroundColor','white',...
-                                   'Position',[1 1 219 dispFigPos(4)-1],'HorizontalAlignment','left','FontSize',10);
+                                   'Position',[1 1 219 780],'HorizontalAlignment','left','FontSize',10);
                 set(infoList,'String',info);
                 set(infoList,'Value',1);
             else
@@ -2475,7 +2515,7 @@ classdef brightnessOverTime < handle
             y=str2double(regexp(obj.data.metadata.iminfo.date,'.*/.*/(\d*)','tokens','once'));
             m=str2double(regexp(obj.data.metadata.iminfo.date,'(\d)*/.*','tokens','once'));
             d=str2double(regexp(obj.data.metadata.iminfo.date,'.*/(\d)*/.*','tokens','once'));
-            a=datecmp(y,m,d,2017,12,31);
+            a=datecmp(y,m,d,2018,12,31);
             
             if a>=0 % version before 12/31/2016
             %Image open, did not open stiTool for this image
@@ -2953,7 +2993,7 @@ classdef brightnessOverTime < handle
             nhAxes1=length(hAxes1);
             
 %             hAxes1(nhAxes1+1) = imshow(fluoChangeData,[-3000 3000]);axis off;drawnow;colormap(jet);drawnow;
-            hAxes1(nhAxes1+1) = imagesc(fluoChangeData,[-3000 3000]);colormap(jet);drawnow;axis off;drawnow;
+            hAxes1(nhAxes1+1) = imagesc(fluoChangeData,[-3000 3000]);colormap(gca,jet);drawnow;axis off;drawnow;
             obj.openStates.curImage=fluoChangeData;
             
             if ~isfield(obj.openStates,'roi')
@@ -2994,6 +3034,7 @@ classdef brightnessOverTime < handle
             obj.fp.fig.CloseRequestFcn        = @obj.closeFluoProcessor;
             obj.fp.irRb.Callback              = @obj.showIndividualROI;
             obj.fp.rtRb.Callback              = @obj.showRaw;
+            obj.fp.rtRb1.Callback             = @obj.showRaw;
             obj.fp.tbtRb.Callback             = @obj.showTraceByTrace;
             obj.fp.atRb.Callback              = @obj.showAverageTrace;
             obj.fp.manSelectBlPb.Callback     = @obj.manuallySelectBaselineValue;
@@ -3067,6 +3108,16 @@ classdef brightnessOverTime < handle
             frameNumber = obj.data.metadata.iminfo.framenumber;
             framePeriod = obj.data.metadata.iminfo.framePeriod;
             obj.fp.xmaxEdit.String = frameNumber * framePeriod + 2;
+            
+            % Baseline not regarding the stimulus, set fixed value as the
+            % defaut method of setting baseline
+            obj.fp.fvRb.Value = 1;
+            
+            % Empty other methods
+            obj.fp.tvblEdit.String = '';
+            obj.fp.fdEdit.String   = '';
+            
+            
         end
         
         % Automatically update xmax value When Select Trace
@@ -3166,7 +3217,8 @@ classdef brightnessOverTime < handle
             
             % baseline values
             baselineLength = str2double(obj.fp.tvblEdit.String); 
-            fixedLength    = str2num(obj.fp.fdEdit.String); 
+%             fixedLength    = str2num(obj.fp.fdEdit.String); 
+            fixedLength    = str2double(obj.fp.fdEdit.String);
             fixedValue     = str2double(obj.fp.fvEdit.String); 
             
             % trace properties
@@ -3175,7 +3227,7 @@ classdef brightnessOverTime < handle
             
             % display modes
             dm            = {'Raw','TrailByTrail','Average'};
-            selectedValue = [1,2,3] * [obj.fp.rtRb.Value;obj.fp.tbtRb.Value;obj.fp.atRb.Value]; 
+            selectedValue = [1,2,3,] * [obj.fp.rtRb.Value;obj.fp.tbtRb.Value;obj.fp.atRb.Value]; 
             selectedDm    = char(dm(selectedValue));
             
             % axis
@@ -3196,7 +3248,7 @@ classdef brightnessOverTime < handle
                 obj.infoTxt.String = 'No stimulus data available!';
                 return;
             end
-            stidata.data(:,3) = stidata.data(:,3) * (0.15 * ymax) / max(stidata.data(:,3));
+            stidata.data(:,3) = abs(stidata.data(:,3)) * (0.15 * ymax) / max(abs(stidata.data(:,3)));
             
             % write parameters to obj.metadata
             obj.data.metadata.processPara.filter         = ftnum;
@@ -3269,7 +3321,7 @@ classdef brightnessOverTime < handle
                 axis off;
             end
             
-            %
+            % Export data
             if obj.fp.edRb.Value
                 onLength = 2 ;
                 offLength= 2;
@@ -3350,15 +3402,15 @@ function colorSelection(selected_color)
 
 switch selected_color
     case 'Green'
-        cmap=zeros(256,3);cmap(:,2)=0:1/255:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,2)=0:1/255:1;colormap(gca,cmap);
     case 'Red'
-        cmap=zeros(256,3);cmap(:,1)=0:1/255:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,1)=0:1/255:1;colormap(gca,cmap);
     case 'Blue'
-        cmap=zeros(256,3);cmap(:,3)=0:1/255:1;colormap(cmap);
+        cmap=zeros(256,3);cmap(:,3)=0:1/255:1;colormap(gca,cmap);
     case 'Gray'
-        colormap(gray);
+        colormap(gca,gray);
     case 'Jet'
-        colormap(jet);
+        colormap(gca,jet);
 end
         
 
