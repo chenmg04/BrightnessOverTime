@@ -1090,9 +1090,9 @@ classdef brightnessOverTime < handle
             if ~filedir
                 set(obj.infoTxt,'String','No folder selected!');
                 return;
-            elseif isempty(strfind(filedir,'BrightnessOverTime'))&& isempty(strfind(filedir,'ZSeries'))&& isempty(strfind(filedir,'TSeries'))
-                set(obj.infoTxt,'String','Not Support!');
-                return;
+%             elseif isempty(strfind(filedir,'BrightnessOverTime'))&& isempty(strfind(filedir,'ZSeries'))&& isempty(strfind(filedir,'TSeries'))
+%                 set(obj.infoTxt,'String','Not Support!');
+%                 return;
             end
             cd(filedir);
             obj.data=[];
@@ -1464,7 +1464,7 @@ classdef brightnessOverTime < handle
 
             % If image folder or tif or XML files DNE, return empty
             if isempty(dir(img_full_path)) || numel(dir([img_full_path '/*.tif']))==0 ...
-                    || numel(dir([img_full_path '/*.xml']))==0;
+                    || numel(dir([img_full_path '/*.xml']))==0
                 imagedata = []; return;
             end
             
@@ -2936,13 +2936,13 @@ classdef brightnessOverTime < handle
             onStart  =stiInfo.trailInfo(trailN(i)).startFrameN;
             onEnd   =stiInfo.trailInfo(trailN(i)).endFrameN;
             offStart =stiInfo.trailInfo(trailN(i)).endFrameN+1;
-            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(2/frameRate);
+            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(10/frameRate);
             BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(1/frameRate):onStart),4);
             sum1   =sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:onEnd),4))-BL;
              sum2  =sum2+squeeze(mean(obj.data.imagedata(:,:,chN,offStart:offEnd),4))-BL;
             end
 %             sum1=sum1/nSti; sum2=sum2/nSti;
-            sum3=sum1-sum2;
+            sum3=sum1+sum2;
             fluoCh={sum1 sum2 sum3};
             fluoChangeData=fluoCh{option};
 %             fluoChangeData=fluoCh{2}-fluoCh{1};
@@ -3321,45 +3321,128 @@ classdef brightnessOverTime < handle
                 axis off;
             end
             
-            % Export data
-            if obj.fp.edRb.Value
-                onLength = 2 ;
-                offLength= 2;
-                stLength = 4;% arbitary defined.
+            
+            % OS module
+            if obj.fp.osRb.Value
                 onLength = 2;
                 offLength= 2;
-                stLength = 4;
-                stLength = 4;
-
-
-                onLength = 2 ;
-                offLength= 2;
-                stLength = 4;% arbitary defined.
-
-                onLength = 2;
-                offLength= 2;
-                stLength = 4;
+                stLength = 8;
                 
                 nROI = length(tso);
                 if nROI == 1
                     if isempty(tso.stadata)
                         tso.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-                        out = tso.stadata;
+                        
                     end
-                else
-                    for i = 1:nROI
-                        if isempty(tso{i}.stadata)
-                            tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-                            out{i} = tso{i}.stadata;
-                        end
-                    end
+                    
+                    os = [-90,-60,-30,0,30,60,90];
+                    
+                    % peak response
+                    onPeak = tso.stadata.peakAveTrace(1,:);
+                    offPeak= tso.stadata.peakAveTrace(2,:);
+                    totalPeak = onPeak + offPeak;
+                    
+                    figure;
+                    plot(os,onPeak,'-r');hold on;
+                    plot(os,offPeak,'-b'); hold on;
+                    plot(os,totalPeak,'-k');
+                    xticks(-90:30:90); 
+%                     yticks(0:20:100);
+                    
+                    % fit with von Mises distribution
+                    [X,y] = align_os(totalPeak);
+                    von_Mises_fit(X,y);
+                    
+                    % area
+                    onArea = tso.stadata.area(1,:);
+                    offArea= tso.stadata.area(2,:);
+                    totalArea = onArea + offArea;
+                    
+                    figure;
+                    plot(os,onArea,'-r');hold on;
+                    plot(os,offArea,'-b'); hold on;
+                    plot(os,totalArea,'-k');
+                    xticks(-90:30:90);       
+%                     yticks(0:20:100);
+                    
+                    % fit with von Mises distribution
+                    [X1,y1] = align_os(totalArea);
+                    von_Mises_fit(X1,y1);
+                    
+%                 else
+%                     for i = 1:nROI
+%                         if isempty(tso{i}.stadata)
+%                             tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
+%                             out{i} = tso{i}.stadata;
+%                         end
+%                     end
                 end 
+            end
+                
+            % Export data
+            if obj.fp.edRb.Value
+%                 onLength = 2 ;
+%                 offLength= 2;
+%                 stLength = 4;% arbitary defined.
+%                 onLength = 2;
+%                 offLength= 2;
+%                 stLength = 4;
+%                 stLength = 4;
+% 
+% 
+%                 onLength = 2 ;
+%                 offLength= 2;
+%                 stLength = 4;% arbitary defined.
+% 
+%                 onLength = 2;
+%                 offLength= 2;
+%                 stLength = 4;
+%                 
+%                 nROI = length(tso);
+%                 if nROI == 1
+%                     if isempty(tso.stadata)
+%                         tso.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
+%                         out = tso.stadata;
+%                     end
+%                 else
+%                     for i = 1:nROI
+%                         if isempty(tso{i}.stadata)
+%                             tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
+%                             out{i} = tso{i}.stadata;
+%                         end
+%                     end
+%                 end 
+                if isempty(tso.stadata)
+                    return;
+                end
                 
                 fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
-                v            = outToExcel(out);
-                xlswrite(fullfilename,v);
-                winopen(fullfilename);
-%                 save (fullfilename,'v','-ascii', '-tabs' );
+                
+                % 
+                if exist(fullfilename,'file')
+                    temp = load(fullfilename);
+                    ncell= length(temp.db);
+                    for i = 1:ncell
+                        if strcmp(temp.db{i}.name,obj.openStates.image.fileName)
+                            return;
+                        end
+                    end
+                    temp.db{ncell+1}.name = obj.openStates.image.fileName;
+                    temp.db{ncell+1}.peak = tso.stadata.peakAveTrace;
+                    temp.db{ncell+1}.area = tso.stadata.area;
+                    db = temp.db;
+                    save(fullfilename,'db');
+                else
+                    db{1}.name = obj.openStates.image.fileName;
+                    db{1}.peak = tso.stadata.peakAveTrace;
+                    db{1}.area = tso.stadata.area;
+                    save(fullfilename,'db');
+                end
+                    
+%                 v            = outToExcel(out);
+%                 xlswrite(fullfilename,v);
+%                 winopen(fullfilename);
+% %                 save (fullfilename,'v','-ascii', '-tabs' );
             end
             %
             obj.infoTxt.String = 'Process done!';
