@@ -140,9 +140,15 @@ classdef tswls < handle
             obj.stadata.peakAveTrace(1,:) = max (obj.AveTrace(onFrame,:));
             obj.stadata.peakAveTrace(2,:) = max (obj.AveTrace(offFrame,:));
             
+            % get on/off areas
+            onFrame1 = preStmLength + 1 : preStmLength + stLength;
+            offFrame1= preStmLength + stLength + 1 : preStmLength + 2*stLength;
+            
+            obj.stadata.area(1,:) = trapz(onFrame1,obj.AveTrace(onFrame1,:));
+            obj.stadata.area(2,:) = trapz(offFrame1,obj.AveTrace(offFrame1,:));
             % get on/off asymmetric index
-            obj.stadata.asyInd            = (obj.stadata.peakAveTrace(1,:) - obj.stadata.peakAveTrace(2,:))...
-                                            ./ (obj.stadata.peakAveTrace(1,:) + obj.stadata.peakAveTrace(2,:));
+%             obj.stadata.asyInd            = (obj.stadata.peakAveTrace(1,:) - obj.stadata.peakAveTrace(2,:))...
+%                                             ./ (obj.stadata.peakAveTrace(1,:) + obj.stadata.peakAveTrace(2,:));
             
         end
         
@@ -191,7 +197,7 @@ classdef tswls < handle
                     for i = 1:npat
                         nTrace = length (obj.stidata.patternInfo(i).trailN);
                         t       = obj.plotdata.time(:,i);
-                        stTrace = obj.plotdata.st(:,i);
+                        stTrace = obj.plotdata.st(:,obj.stidata.patternInfo(i).trailN(1));
                         for j = 1:nTrace
                             data    = obj.IndTrace (:,obj.stidata.patternInfo(i).trailN(j));
                             plot(t,data,'Color',[0.827 0.827 0.827],'LineWidth',1);

@@ -183,15 +183,15 @@ classdef stim < handle
                 try
                     obj.data=b.stidata;
                 catch
-                    obj.data=(b.data)'; % labchart files saved as .mat file
+                    obj.data=b.data; % labchart files saved as .mat file
                 end
             end
             
             if size(obj.data,2)==1
-                baseline=mean(obj.data(1:50,1));
-                obj.data(:,2)=(obj.data(:,1)-baseline)/baseline;
+%                 baseline=mean(obj.data(1:50,1));
+                obj.data(:,2)=obj.data(:,1);
             end
-            
+            plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
         end
         
         function saveStimulus(obj,~,~)
@@ -312,15 +312,15 @@ classdef stim < handle
             endFrameN=endFrameN+dataRange(1)-1;
             
             % make more accurate startFrameN and endFrameN
-            for i = 1:nSti
-                amplitude=mean(obj.data(startFrameN(i) :endFrameN(i),2));
-                
-                if obj.data(startFrameN(i),2) > amplitude * 0.6
-                    startFrameN(i) = startFrameN(i) - 1;
-                end
-                
-                
-            end
+%             for i = 1:nSti
+%                 amplitude=mean(obj.data(startFrameN(i) :endFrameN(i),2));
+%                 
+%                 if obj.data(startFrameN(i),2) > amplitude * 0.6
+%                     startFrameN(i) = startFrameN(i) - 1;
+%                 end
+%                 
+%                 
+%             end
             
             obj.trailInfo=[];  obj.data(:,3)=0;
             yLimits=get(obj.h.axes,'YLim');
@@ -337,12 +337,12 @@ classdef stim < handle
                 obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
             end
             
-            chkerr=zeros(22,nSti);
-            for i=1:nSti
-                chkerr (1:11,i)=obj.data(obj.trailInfo(i).startFrameN-5:obj.trailInfo(i).startFrameN+5,2);
-                chkerr (12:22,i)=obj.data(obj.trailInfo(i).endFrameN-5: obj.trailInfo(i).endFrameN+5,2);
-            end
-            disp(chkerr);
+%             chkerr=zeros(22,nSti);
+%             for i=1:nSti
+%                 chkerr (1:11,i)=obj.data(obj.trailInfo(i).startFrameN-5:obj.trailInfo(i).startFrameN+5,2);
+%                 chkerr (12:22,i)=obj.data(obj.trailInfo(i).endFrameN-5: obj.trailInfo(i).endFrameN+5,2);
+%             end
+%             disp(chkerr);
             disp(startFrameN);disp(endFrameN);
             axes(obj.h.axes); hold on;
             plot(obj.data(:,3),'color','r'); title('Fitted');
