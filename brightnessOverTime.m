@@ -3217,8 +3217,8 @@ classdef brightnessOverTime < handle
             
             % baseline values
             baselineLength = str2double(obj.fp.tvblEdit.String); 
-%             fixedLength    = str2num(obj.fp.fdEdit.String); 
-            fixedLength    = str2double(obj.fp.fdEdit.String);
+            fixedLength    = str2num(obj.fp.fdEdit.String); 
+%             fixedLength    = str2double(obj.fp.fdEdit.String);
             fixedValue     = str2double(obj.fp.fvEdit.String); 
             
             % trace properties
