@@ -3332,99 +3332,75 @@ classdef brightnessOverTime < handle
                 if nROI == 1
                     if isempty(tso.stadata)
                         tso.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-                        
                     end
                     
-                    os = [-90,-60,-30,0,30,60,90];
+                    % put all measure data by peak or area together for ON,OFF and ON+OFF
+                    d(1:2,:) = tso.stadata.peakAveTrace;
+                    d(3,:)   = sum(tso.stadata.peakAveTrace);
+                    d(4:5,:) = tso.stadata.area;
+                    d(6,:)   = sum(tso.stadata.area);
                     
-                    % peak response
-                    onPeak = tso.stadata.peakAveTrace(1,:);
-                    offPeak= tso.stadata.peakAveTrace(2,:);
-                    totalPeak = onPeak + offPeak;
-                    
+                    % display all original and fitted
                     figure;
-                    plot(os,onPeak,'-r');hold on;
-                    plot(os,offPeak,'-b'); hold on;
-                    plot(os,totalPeak,'-k');
-                    xticks(-90:30:90); 
-%                     yticks(0:20:100);
+                    for i = 1:6
+                        resp = d(i,:);
                     
-                    % fit with von Mises distribution
-                    [X,y] = align_os(totalPeak);
-                    von_Mises_fit(X,y);
+                    % tune the responses and fit with von mises model
+                    [X,y] = align_os(resp);
+                    [po,osi,mdl] = von_Mises_fit_os(X,y);                   
                     
-                    % area
-                    onArea = tso.stadata.area(1,:);
-                    offArea= tso.stadata.area(2,:);
-                    totalArea = onArea + offArea;
+                    % distinguish peak vs area
+                    f = ceil(i/3); ff = i - 3 * (f-1);
+                    l = {'Peak','Area'};
+                    c = [1 0 0; 0 0 1; 0 0 0];
                     
-                    figure;
-                    plot(os,onArea,'-r');hold on;
-                    plot(os,offArea,'-b'); hold on;
-                    plot(os,totalArea,'-k');
-                    xticks(-90:30:90);       
-%                     yticks(0:20:100);
+                    % plot original data points
+                    subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60,90],resp,'-','Color',c(ff,:));
+                    hold on;
+                    xticks(-90:30:90);
+                    xlabel('Bar angle');
+                    ylabel(l(f));
+                    title('original');
                     
-                    % fit with von Mises distribution
-                    [X1,y1] = align_os(totalArea);
-                    von_Mises_fit(X1,y1);
+                    % plot predicted line
+                    X1 = linspace(X(1),X(end)+30)';
+                    y1 = predict(mdl,linspace(-90,90)');
+                    subplot(2,4,i+f),plot(X,y,'*k');hold on;
+                    line(X1,y1,'linestyle','-','Color',c(ff,:));
+                    xticks(X(1):30:X(end)+30);
+                    xlabel('Bar angle');
+                    title(sprintf('OSD: %d, OSI: %.2f',round(po),osi));
                     
-%                 else
-%                     for i = 1:nROI
-%                         if isempty(tso{i}.stadata)
-%                             tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-%                             out{i} = tso{i}.stadata;
-%                         end
-%                     end
-                end 
+                    end
+                end
             end
                 
             % Export data
             if obj.fp.edRb.Value
-%                 onLength = 2 ;
-%                 offLength= 2;
-%                 stLength = 4;% arbitary defined.
-%                 onLength = 2;
-%                 offLength= 2;
-%                 stLength = 4;
-%                 stLength = 4;
-% 
-% 
-%                 onLength = 2 ;
-%                 offLength= 2;
-%                 stLength = 4;% arbitary defined.
-% 
-%                 onLength = 2;
-%                 offLength= 2;
-%                 stLength = 4;
-%                 
-%                 nROI = length(tso);
-%                 if nROI == 1
-%                     if isempty(tso.stadata)
-%                         tso.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-%                         out = tso.stadata;
-%                     end
-%                 else
-%                     for i = 1:nROI
-%                         if isempty(tso{i}.stadata)
-%                             tso{i}.getStatistics (preStmLength,stLength,framePeriod,onLength,offLength);
-%                             out{i} = tso{i}.stadata;
-%                         end
-%                     end
-%                 end 
+                
                 if isempty(tso.stadata)
                     return;
                 end
                 
                 fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
                 
-                % 
+                %
                 if exist(fullfilename,'file')
                     temp = load(fullfilename);
                     ncell= length(temp.db);
                     for i = 1:ncell
                         if strcmp(temp.db{i}.name,obj.openStates.image.fileName)
-                            return;
+                            ButtonName = questdlg('Found the same file name, your choice for the data ?', ...
+                                '', 'Discard', 'Replace', 'Append', 'Discard');                               
+                            switch ButtonName
+                                case 'Discard'
+                                    return;
+                                case 'Replace'
+                                    temp.db{i}.peak = tso.stadata.peakAveTrace;
+                                    temp.db{i}.area = tso.stadata.area;
+                                case 'Append'
+                                    continue;
+                            end 
                         end
                     end
                     temp.db{ncell+1}.name = obj.openStates.image.fileName;
@@ -3438,11 +3414,11 @@ classdef brightnessOverTime < handle
                     db{1}.area = tso.stadata.area;
                     save(fullfilename,'db');
                 end
-                    
-%                 v            = outToExcel(out);
-%                 xlswrite(fullfilename,v);
-%                 winopen(fullfilename);
-% %                 save (fullfilename,'v','-ascii', '-tabs' );
+                
+                %                 v            = outToExcel(out);
+                %                 xlswrite(fullfilename,v);
+                %                 winopen(fullfilename);
+                % %                 save (fullfilename,'v','-ascii', '-tabs' );
             end
             %
             obj.infoTxt.String = 'Process done!';
