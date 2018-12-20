@@ -3217,8 +3217,8 @@ classdef brightnessOverTime < handle
             
             % baseline values
             baselineLength = str2double(obj.fp.tvblEdit.String); 
-            fixedLength    = str2num(obj.fp.fdEdit.String); 
-%             fixedLength    = str2double(obj.fp.fdEdit.String);
+%             fixedLength    = str2num(obj.fp.fdEdit.String); 
+            fixedLength    = str2double(obj.fp.fdEdit.String);
             fixedValue     = str2double(obj.fp.fvEdit.String); 
             
             % trace properties
@@ -3390,17 +3390,17 @@ classdef brightnessOverTime < handle
                     ncell= length(temp.db);
                     for i = 1:ncell
                         if strcmp(temp.db{i}.name,obj.openStates.image.fileName)
-                            ButtonName = questdlg('Found the same file name, your choice for the data ?', ...
-                                '', 'Discard', 'Replace', 'Append', 'Discard');                               
-                            switch ButtonName
-                                case 'Discard'
-                                    return;
-                                case 'Replace'
-                                    temp.db{i}.peak = tso.stadata.peakAveTrace;
-                                    temp.db{i}.area = tso.stadata.area;
-                                case 'Append'
-                                    continue;
-                            end 
+                            ButtonName = questdlg('', ...
+                                '', ...
+                                'Red', 'Green', 'Blue', 'Green');
+                            switch ButtonName,
+                                case 'Red',
+                                    disp('Your favorite color is Red');
+                                case 'Blue',
+                                    disp('Your favorite color is Blue.')
+                                case 'Green',
+                                    disp('Your favorite color is Green.');
+                            end % switch;
                         end
                     end
                     temp.db{ncell+1}.name = obj.openStates.image.fileName;
