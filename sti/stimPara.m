@@ -31,7 +31,7 @@ classdef stimPara < handle
             
             ht=uitoolbar(obj.h.fig);
             
-            path=fileparts(which('stim'));
+            path=fileparts(which('brightnessOverTime'));
             
             [X,map] = imread([path '\icons\file_open.gif']);
             icon = ind2rgb(X,map);

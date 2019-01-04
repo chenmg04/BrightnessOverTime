@@ -10,8 +10,6 @@ classdef stim < handle
         patternInfo % pattern info
         paraInfo % stimulus parameters
         
-        
-        lastSti
     end
     
     methods
@@ -22,10 +20,10 @@ classdef stim < handle
             obj.h.fig = figure('Name','Stimulus',...
                 'NumberTitle','off',...
                 'MenuBar','none',...
-                'Toolbar','figure',...
+                'Toolbar','none',...
                 'Color','white',...
                 'Units','pixels',...
-                'Resize','off',...
+                'Resize','on',...
                 'CloseRequestFcn',@obj.closeMainFig);
             
             %align stimulus gui with the main figure
@@ -38,75 +36,51 @@ classdef stim < handle
             
             % File Menu
             fileMenu= uimenu(obj.h.fig,...
-                'Label','File',...
-                'Tag','file menu');
+                'Label','File');
             uimenu(fileMenu,...
-                'Label','Open...',...
-                'Separator','off',...
+                'Label','Open',...
                 'Callback',@obj.openStimulus);
             uimenu(fileMenu,...
                 'Label','Save',...
-                'Separator','off',...
                 'Callback',@obj.saveStimulus);
-            % Detect Menu
-            detectMenu = uimenu(obj.h.fig,...
-                'Label','Detect',...
-                'Tag','detect menu');
-            uimenu(detectMenu,...
-                'Label','Stimuli Onset',...
-                'Accelerator','S',...
-                'Separator','off',...
-                'Callback',@obj.detectStimulus);
+            
             % Edit Menu
             editMenu= uimenu(obj.h.fig,...
-                'Label','Edit',...
-                'Tag','detect menu');
+                'Label','Edit');
             uimenu(editMenu,...
-                'Label','Insert Stimulus',...
-                'Separator','off',...
+                'Label','Detect',...
+                'Callback',@obj.detectStimulus);
+            uimenu(editMenu,...
+                'Label','Insert',...
                 'Callback',@obj.insertStimulus);
             uimenu(editMenu,...
-                'Label','Set Pattern',...
-                'Accelerator','P',...
-                'Separator','off',...
+                'Label','Pattern',...
                 'Callback',@obj.setPattern);
- 
+            % Tools Menu
+            toolsMenu = uimenu(obj.h.fig,...
+                'Label','Tools');
+            uimenu(toolsMenu,...
+                'Label','Zoom In',...
+                'Callback',@(src,evt)zoom(obj.h.fig,'on'));
+             uimenu(toolsMenu,...
+                'Label','Data cursor',...
+                'Callback',@(src,evt)datacursormode(obj.h.fig,'on'));
             % View Menu
             viewMenu = uimenu(obj.h.fig,...
-                'Label','View',...
-                'Tag','view menu');
+                'Label','View');
             uimenu(viewMenu,...
-                'Label','Raw Trace',...
-                'Separator','off',...
+                'Label','Raw Trace',....
                 'Callback',@obj.showRawTrace);
             uimenu(viewMenu,...
                 'Label','Fitted Trace',...
-                'Separator','off',...
                 'Callback',@obj.showFitTrace);
             uimenu(viewMenu,...
                 'Label','Pattern Trace',...
-                'Separator','off',...
                 'Callback',@obj.showPatternTrace);
             uimenu(viewMenu,...
-                'Label','Pattern Parameter',...
-                'Separator','off',...
+                'Label','Pattern Parameters',...
                 'Callback',@obj.showPatternParameter);
-            
-            % delete uncessary Toolbar
-            set(0,'Showhidden','on');
-            ch = get(obj.h.fig,'children');
-            chatags=get(ch,'Tag');
-            ftb_ind=find(strcmp(chatags,'FigureToolBar'));
-            UT = get(ch(ftb_ind),'children');
-            delete(UT(1:6));delete(UT(8));
-            delete(UT((end-4):end));
-            
-            % add icons
-            path=fileparts(which('stim'));
-            [X,map] = imread([path '\icons\last_used.gif']);
-            icon = ind2rgb(X,map);
-            uipushtool(ch(ftb_ind),'CData',icon,'TooltipString','Use exact parameters from last opened stimulus','Separator','off','ClickedCallback',@obj.useLast);
-            
+ 
             %
             if nargin
                 try
@@ -119,9 +93,6 @@ classdef stim < handle
                     obj.data=varargin{1};
                 end
                 
-                if nargin==2
-                    obj.lastSti=varargin{2};
-                end
             else
                 obj.data=[];
                 choice=questdlg('No Stimulus File Found! Would you like to import stimulus file?',...
@@ -144,25 +115,17 @@ classdef stim < handle
                 plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
             catch
                 baseline=mean(obj.data(1:50,1));
+                if baseline == 0 
+                    obj.data(:,2) = obj.data(:,1);
+                else
                 obj.data(:,2)=(obj.data(:,1)-baseline)/obj.data(1,1);
-                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
-                xlabel('Frame #'); ylabel('delta F/F');title('Raw');
+                end
+                
+                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);   
             end
-            
+            xlabel('Frame #'); title('Raw');
         end
         
-        
-        function useLast(obj,~,~)
-            
-            if ~isempty(obj.lastSti)
-                obj.threshold=obj.lastSti.threshold;
-                obj.threshold{1}=['1:' num2str(length(obj.data))];
-                detectStiOnset(obj, obj.threshold);
-                obj.patternInfo=obj.lastSti.patternInfo;
-                obj.paraInfo=obj.lastSti.paraInfo;
-                plotPatternTrace(obj);
-            end
-        end
         
         function openStimulus(obj,~,~)
             
@@ -195,22 +158,13 @@ classdef stim < handle
         end
         
         function saveStimulus(obj,~,~)
-            
-            
-            
-            
+ 
             stidata.threshold=obj.threshold;
             stidata.data=obj.data;
             stidata.trailInfo=obj.trailInfo;
             stidata.patternInfo=obj.patternInfo;
             stidata.paraInfo=obj.paraInfo;
-            
-            %             [filename, pathname] = uiputfile('*.mat', 'Save as...');
-            %             if isequal(filename,0) || isequal(pathname,0)
-            %                 disp('User pressed cancel')
-            %             else
-            %                 disp(['User selected ', fullfile(pathname, filename)])
-            %             end
+ 
             imf = findobj('Tag', 'dispfig');
             filedir = imf.UserData;
             [~, filename]=fileparts(filedir);
@@ -243,88 +197,48 @@ classdef stim < handle
             
         end
         
-        %% function to detect stimulus
+        % function to detect stimulus
         function detectStimulus(obj, ~, ~)
             
             showRawTrace (obj);
-            
-            %             prompt={'Enter Baseline Length','Enter N Folds of SD','Enter Threshold Value', 'Enter Filter n'};
+            % 
             prompt={'Enter Data Range','Enter Threshold Value', 'Filter Data (Boxcar n)'};
             dlg_title='Threshold';
             num_lines=1;
-            
+            %
             try
-                %                 def={num2str(obj.threshold(1)),num2str(obj.threshold(2)),num2str(obj.threshold(3)), num2str(obj.threshold(4))};
                 def={obj.threshold{1},obj.threshold{2},obj.threshold{3}};
             catch
                 def={['1:' num2str(length(obj.data))],'0.02','0'};
             end
             p=inputdlg(prompt,dlg_title,num_lines,def);
-            
+            % 
             if isequal(obj.threshold,p)
                 axes(obj.h.axes);
                 hold on;
                 plot(obj.data(:,3),'color','r');
                 return;
+            else
+                obj.threshold = p;
             end
             
-            detectStiOnset(obj, p)
-        end
-        
-        function detectStiOnset(obj, p,~)
-            
-            obj.threshold=p;
+            % filter data and plot
             filtern=str2double(p{3});
             norSti=moving_average(obj.data(:,2),filtern);
             axes(obj.h.axes); cla; plot(norSti);
-            %             baselineAve=mean(norSti(1:p(1)));
-            %             sd= std(norSti(1:p(1)));
+            
+            % selected data range
             dataRange=str2num(p{1});
-            nFrames=length(dataRange);
-            s=zeros(); i=1;
-            %             if p(3)~=0
-            for n=1:nFrames
-                %                     if abs(norSti(dataRange(n)))>str2double(p{2})
-                if norSti(dataRange(n))>str2double(p{2})
-                    s(i)= n;
-                    i=i+1;
-                end
-            end
-            %             else
-            %                 for n=2:nFrames;
-            %                     if abs(norSti(n))>baselineAve+p(2)*sd
-            %                         s(i)= n;
-            %                         i=i+1;
-            %                     end
-            %                 end
-            %             end
-            d=find(diff(s)~=1);
-            nSti=length(d)+1;
+            [nsti, startFrameN, endFrameN] = detectEvent(obj.data(dataRange,2), str2double(p{2}), 'positive');
             
-            startFrameN=[];
-            endFrameN=[];
-            startFrameN(1)=s(1)+filtern;
-            startFrameN(2:nSti)=s(d+1)+filtern;
-            endFrameN(1:nSti-1)=s(d)-filtern;
-            endFrameN(nSti)=s(end)-filtern;
+            %
+            startFrameN=startFrameN+filtern+dataRange(1)-1;
+            endFrameN=endFrameN-filtern+dataRange(1)-1;
             
-            startFrameN=startFrameN+dataRange(1)-1;
-            endFrameN=endFrameN+dataRange(1)-1;
-            
-            % make more accurate startFrameN and endFrameN
-%             for i = 1:nSti
-%                 amplitude=mean(obj.data(startFrameN(i) :endFrameN(i),2));
-%                 
-%                 if obj.data(startFrameN(i),2) > amplitude * 0.6
-%                     startFrameN(i) = startFrameN(i) - 1;
-%                 end
-%                 
-%                 
-%             end
-            
+            % plot detected
             obj.trailInfo=[];  obj.data(:,3)=0;
             yLimits=get(obj.h.axes,'YLim');
-            for i=1: nSti
+            for i=1: nsti
                 obj.trailInfo(i). startFrameN=startFrameN(i);
                 obj.trailInfo(i). endFrameN=endFrameN(i);
                 
@@ -335,19 +249,13 @@ classdef stim < handle
                     obj.trailInfo(i). amplitude=yLimits(2)/2;
                 end
                 obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
+                text(startFrameN(i),amplitude,sprintf('%d',i));text(endFrameN(i),amplitude,sprintf('%d',i));
             end
-            
-%             chkerr=zeros(22,nSti);
-%             for i=1:nSti
-%                 chkerr (1:11,i)=obj.data(obj.trailInfo(i).startFrameN-5:obj.trailInfo(i).startFrameN+5,2);
-%                 chkerr (12:22,i)=obj.data(obj.trailInfo(i).endFrameN-5: obj.trailInfo(i).endFrameN+5,2);
-%             end
-%             disp(chkerr);
-            disp(startFrameN);disp(endFrameN);
             axes(obj.h.axes); hold on;
             plot(obj.data(:,3),'color','r'); title('Fitted');
             
         end
+        
         
         %
         function insertStimulus (obj,~, ~)
@@ -485,16 +393,19 @@ classdef stim < handle
             
             axes(obj.h.axes);cla;
             plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);
-            xlabel('Frame #'); ylabel('delta F/F');title('Raw');
+            xlabel('Frame #'); title('Raw');
         end
         
         %function to show fit trace
         function showFitTrace (obj, ~, ~)
             
-            axes(obj.h.axes);cla;
-            plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);hold on;
-            plot(obj.data(:,3),'Color','r');
-            xlabel('Frame #'); ylabel('delta F/F');title('Fitted');
+            try
+                axes(obj.h.axes);cla;
+                plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);hold on;
+                plot(obj.data(:,3),'Color','r');
+                xlabel('Frame #'); title('Fitted');
+            catch
+            end
         end
         
         %function to show pattern trace
@@ -503,11 +414,14 @@ classdef stim < handle
             if isempty(obj.patternInfo)
                 return;
             else
+                try
                 axes(obj.h.axes);cla;
                 patternTraceLength=obj.data(1,4);
                 plot(1:1:patternTraceLength,obj.data(2:patternTraceLength+1,4),'Color','g');
                 axis auto; 
-                xlabel('Frame #'); ylabel('delta F/F');title('Pattern');
+                xlabel('Frame #'); title('Pattern');
+                catch
+                end
             end
         end
         

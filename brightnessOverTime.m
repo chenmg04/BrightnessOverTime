@@ -2515,7 +2515,7 @@ classdef brightnessOverTime < handle
             y=str2double(regexp(obj.data.metadata.iminfo.date,'.*/.*/(\d*)','tokens','once'));
             m=str2double(regexp(obj.data.metadata.iminfo.date,'(\d)*/.*','tokens','once'));
             d=str2double(regexp(obj.data.metadata.iminfo.date,'.*/(\d)*/.*','tokens','once'));
-            a=datecmp(y,m,d,2018,12,31);
+            a=datecmp(y,m,d,2019,12,31);
             
             if a>=0 % version before 12/31/2016
             %Image open, did not open stiTool for this image
@@ -3033,6 +3033,7 @@ classdef brightnessOverTime < handle
             % Build Callback functions
             obj.fp.fig.CloseRequestFcn        = @obj.closeFluoProcessor;
             obj.fp.irRb.Callback              = @obj.showIndividualROI;
+            obj.fp.osRb.Callback              = @obj.analyzeOS;
             obj.fp.rtRb.Callback              = @obj.showRaw;
             obj.fp.rtRb1.Callback             = @obj.showRaw;
             obj.fp.tbtRb.Callback             = @obj.showTraceByTrace;
@@ -3102,6 +3103,11 @@ classdef brightnessOverTime < handle
             obj.fp.colEdit.String = ceil(nROI/(ceil(sqrt(nROI))));
         end
         
+        function analyzeOS (obj, ~, ~)
+            
+            obj.fp.pathEdit.String ='F:\current projects\th2-GCaMP6s\analysis\os\';
+            obj.fp.nameEdit.String ='OSPA.mat';
+        end
         % Automatically update xmax value When Select Row 
         function showRaw (obj, ~, ~)
             
