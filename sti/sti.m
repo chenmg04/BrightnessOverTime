@@ -1,15 +1,17 @@
 classdef sti < handle
-
+% A class to read stimulus data, detect stimulus onset/offset timing,
+% define stimulus pattern etc., so that this stimulus could be used to 
+% analyze stimulus-driven neuronal responses in electrophysiology or 
+% imaging experiments.
     properties
         data % traces for stimulus
         threshold      
-        trailInfo % trail info <startFrameN, endFrameN, stiAmp>
-        patternInfo % pattern info 
-        paraInfo % stimulus parameters
+        trail % trail info <startFrameN, endFrameN>
+        pattern % pattern info 
     end
     
     methods
-        function obj = sti (varargin)
+        function obj = sti (varargin)  
             if nargin
                 try
                     obj.threshold=varargin{1}.threshold;
@@ -30,8 +32,9 @@ classdef sti < handle
             end
         end
         
-        % function to load stimulus data
-        function loadData(obj,~,~)
+        
+        function load(obj,~,~)
+            % function to load stimulus data
             
             [filename, pathname] = uigetfile('*.mat', 'Pick a file');
             if isequal(filename,0) || isequal(pathname,0)
@@ -61,148 +64,107 @@ classdef sti < handle
 
         end
         
-%         function autoDetStiOnset(obj,~,~)
-%             
-%             % use first 50 data point to get sd
-%             % and use 3 times of sd as the threshold to detect stimulus
-%             
-%             stidata=obj.data(:,1);
-%             sd= std(stidata(1:50));
-%             p=10*sd;
-%             detectStiOnset(obj,p,stidata);
-%         end
-%         
-%         function manDetStiOnset(obj,p,~)
-%             
-%             % manually set a threshold p
-%             % and use delta F/F data to detect stimulus
-%             
-%             stidata=obj.data(:,2);
-%             detectStiOnset(obj,p,stidata);
-%             
-%         end
         
-        % function to detect stimulus onset time
-        function detectStiOnset(obj, p)            
+        function detect(obj, threshold)            
+            % function to detect stimulus timing
+            %
+            % threshold: threshold to detect the stimulus timing
+            % For example:
+            % t = sti(data)
+            % t.detect(1)
             
-            if isequal(obj.threshold, p)
+            if isempty(obj.data)
                 return;
             end
-            obj.threshold=p;
-            % check data range for detection
-            if isempty(p{1})
-                stidata=obj.data(:,2);
-                rs=1;rn=length(stidata);
-            else
-                rs=p{1}(1);rn=p{1}(2);
-                stidata=obj.data(rs:rn,2);
-            end
-            % filter, boxcar
-            stidata=moving_average(stidata,p{3});
-           
-            % thresholding
-            s=zeros(); i=1;
-            for n=rs:rn
-%                 if abs(stidata(n))>p{2}
-                 if stidata(n)>p{2}
-                    s(i)= n;
-                    i=i+1;
+            
+            obj.threshold = threshold;
+            
+            % use function detectEvent to detect the onset and offset
+            [~, startpoint, endpoint] = detectEvent(obj.stim.data(:,1), threshold, 'positive');
+            obj.trail(:,1) = startpoint;
+            obj.trail(:,2) = endpoint;
+            
+        end
+                
+        function obj = correct(obj,nsti,amplitude)
+            % function to correct stimulus timing due to software problem
+            %
+            % nsti: sti # for correction, e.g., [3,4]
+            % amplitude: sti amplitude for better visulization
+             
+            % define the right stimulus duration as the minimus duration
+            % among those stimuli
+            if ~isempty(nsti)
+                duration = min(obj.trail(:,2)-obj.trail(:,1));
+                % the software always have errors for the startpoints somehow
+                for i = 1: length(nsti)
+                    obj.obj.trail(nsti(i),1) = obj.obj.trail(nsti(i),2) - duration;
                 end
             end
-                
-            d=find(diff(s)~=1); 
-            nSti=length(d)+1;
-            startFrameN=[];
-            endFrameN=[];
-            startFrameN(1)=s(1)+p{3};
-            startFrameN(2:nSti)=s(d+1)+p{3};          
-            endFrameN(1:nSti-1)=s(d)-p{3};
-            endFrameN(nSti)=s(end)-p{3};
             
-            obj.trailInfo=[];  obj.data(:,3)=0;
-             for i=1: nSti
-                obj.trailInfo(i). startFrameN=startFrameN(i);
-                obj.trailInfo(i). endFrameN=endFrameN(i);
-                obj.trailInfo(i). amplitude=max(obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,2));
-                obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
-             end
-             
-             chkerr=zeros(22,nSti);
-             for i=1:nSti
-                 chkerr (1:11,i)  =obj.data(obj.trailInfo(i).startFrameN-5:obj.trailInfo(i).startFrameN+5,2);
-                 chkerr (12:22,i)=obj.data(obj.trailInfo(i).endFrameN-5: obj.trailInfo(i).endFrameN+5,2);
-             end
-             disp(startFrameN);
-             disp(chkerr);
+            % generate stimulus data with new amplitude
+            obj.data(:,2) = 0;
+            for n = 1: length(obj.trail)
+                obj.data(obj.trail(n,1):obj.trail(n,1),2)   = amplitude;
+            end 
+            
+            
+        end
+
+        function insert(obj, m)
+            % function to insert stimulus, for example, some stimulus are
+            % not detectable under imaging experiments, and for dual
+            % patch-imaging experiments, we also need mannually insert
+            % stimulus
+            %
+            % m, a matrix contains the onset and offset of
+            % stimulus, m = [onset,offset]
+            
+            % insert new stimulus into the end
+            nSti=size(obj.trail,1);
+            for i=1:size(m,1)
+                obj.trail(nSti+i,1)=m(i,1);
+                obj.trail(nSti+i,2)=m(i,2);
+                % set amplitude
+                if size(obj.data,2) == 2
+                    obj.data(m(i,1):m(i,1),2) = max(obj.data(:,2));
+                end
+                    
+            end
+            %sortrows
+             obj.trail = sortrows(obj.trail);
             
         end
         
-        % function to insert stimulus
-        function insertStimulus(obj, s, n)
-            % s, startFrameN; n, endFrameN. s, n must be in pairs
+        function setPattern(obj, pat)
+            % function to set pattern for stimulus. 
+            %
+            % for example, to test neurons' receptive field property,
+            % concentric spots with 8 different diameters were given 
+            % and repeat 3 times. we can define that there are 8 different
+            % stimulus patterns, and then we can easy average the responses
+            %
+            % pat: either a single number or a cell.
+            % for example, if pat = 8, it means there are 8 different
+            % stimulus and they were given in sequences; if pat =
+            % {[1,3,5];[2,4,6];[7,8]}, there are 3 different stimulus, 1st
+            % contains 1,3,5 stimulus, 2nd contains 2,4,6 etc.
             
-            % insert new stimulus into the end
-            nSti=length(obj.trailInfo);
-            for i=1:length(s)
-                obj.trailInfo(nSti+i).startFrameN=s(i);
-                obj.trailInfo(nSti+i).endFrameN =n(i);
-                obj.trailInfo(nSti+i).amplitude     =mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
-                obj.data(s(i):n(i),3)                     =obj.trailInfo(nSti+i).amplitude;
-            end
-            %sortrows
-             mtrail=(squeeze(cell2mat(struct2cell(obj.trailInfo))))';
-             if ~issorted(mtrail,'rows')
-                 sortedmtrail=sortrows(mtrail);
-                 for i=1:nSti+length(s)
-                     obj.trailInfo(i).startFrameN=sortedmtrail(i,1);
-                     obj.trailInfo(i).endFrameN =sortedmtrail(i,2);
-                     obj.trailInfo(i).amplitude     =sortedmtrail(i,3);
-                 end
-             end
-            
-        end
-        % function to set stimulus pattern
-        function setStiPattern(obj, q)
-            
-            if isempty(obj.trailInfo)
-                sprintf('Please detect stimulus first!');
+            if isempty(obj.trail)
+                   sprintf('Please detect stimulus first!');
                 return;
             end
             
-            obj.patternInfo=[];
-            if length(q)==1
-                 nSti=1:length(obj.trailInfo);
-                 for i=1:q-1
-                     obj.patternInfo(i).trailN=nSti(find(mod(nSti, q)==i));
-                 end
-                 obj.patternInfo(q).trailN=nSti(find(mod(nSti, q)==0));
-             else
-                 patN=length(q);
-                 for i=1:patN
-                 obj.patternInfo(i).trailN=q{i};
-                 end
+            obj.pattern=[];
+            if iscell(pat)
+                obj.pattern = pat;
+            else % single number
+                nsti = 1: length(obj.trail);
+                for i = 1:pat-1
+                    obj.pattern{i} = nsti(find(mod(nsti,pat) == i));
+                end
+                 obj.pattern{pat} = nsti(find(mod(nsti,pat) == 0));
             end
-            
-            % generate pattern traces, for later plots
-            patN=length(obj.patternInfo);
-            patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
-            for i=1:patN
-                
-                firstTrailN=obj.patternInfo(i).trailN(1);
-                firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
-                lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
-                
-                % Manually defined length
-                preStartFrame=20;
-                
-                curLength=length(patternTrace);
-                s=curLength+1;
-                e=s+lastFrameN(i)-firstFrameN(i)+2*preStartFrame;
-                patternTrace(curLength+1:e)=obj.data(firstFrameN(i)-preStartFrame:lastFrameN(i)+preStartFrame,3);
-            end
-            patternTraceLength=length(patternTrace);
-            obj.data(1,4)=patternTraceLength;
-            obj.data(2:patternTraceLength+1,4)=patternTrace;
             
         end
         

@@ -269,6 +269,7 @@ classdef brightnessOverTime < handle
                 'Callback',@obj.adjustImageSize);
             uimenu(adjustMenu,...
                 'Label','Contrast...',...
+                'Accelerator','A',...
                 'Separator','off',...
                 'Callback',@obj.adjustImageContrast);
             % Color
@@ -613,7 +614,8 @@ classdef brightnessOverTime < handle
 %             fullfilename= fullfile(pathname,filename);
 %             imgdata=squeeze(obj.data.imagedata(:,:,2,:));
          
-            imgdata=obj.data.imagedata; imgdata(:,:,3,:)=0;
+            imgdata=obj.data.imagedata; 
+            imgdata(:,:,3,:)=0;
             option.color=true;
                         saveastiff(imgdata,filename,option);
                         option.color=false;
@@ -1191,7 +1193,7 @@ classdef brightnessOverTime < handle
                         break;
                     end
                     
-                    if i==fileN+1;
+                    if i==fileN+1
                         fileList.fullFileName{fileN+1}=filedir;
                         obj.subList(fileN+1)=uimenu(obj.openList,'label',filedir,'position',1,'Callback',{@obj.openListFile,filedir});
                     end
@@ -1480,7 +1482,7 @@ classdef brightnessOverTime < handle
             % Check software version, added 1/18/2018
             ver  = regexp (text, 'PVScan.*?version="(.*?)"', 'tokens', 'once');
             % For latestest version, the xml file was changed
-            if ver{1} == '5.4.64.100'
+            if strcmp(ver{1}, '5.4.64.100')
                 
                 % Find dimensions of 5D image
                 
@@ -1936,14 +1938,8 @@ classdef brightnessOverTime < handle
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
         % slice Alignment
         function sliceAlignment (obj, ~, ~)
-        
-            set(obj.infoTxt,'String','Please select a rectangle region!');
-            axes(obj.axes1);
-            selectedRegion = imrect;
-            selectedRegionPosition = round(selectedRegion.getPosition);
             
-            chSliderValue=get(obj.chSlider,'Value');
-            frameSliderValue=round(get(obj.frameSlider,'Value'));
+            % use average from first 5s
             
             % load imagedata
             if ~obj.data.info.immat.loaded
@@ -1953,34 +1949,101 @@ classdef brightnessOverTime < handle
                 end
             end
             
-            template = obj.data.imagedata( selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
-                                                            selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3),...
-                                                            chSliderValue, frameSliderValue);
+            %
+            refImage= mean(obj.data.imagedata(:,:,2,1:200),4);
+            obj.data.metadata.previewFrame{2} = refImage;
+            
+            % open uncorrected averaged image in a new window
+            openImageInNewWindow(obj);
+            
+            % update image with new average
+            axes(obj.axes1);
+            cla reset;
+            updateDispFig(obj);
+
+            % choose a template from the reference image
+            set(obj.infoTxt,'String','Please select a rectangle region!');
+            axes(obj.axes1);
+            selectedRegion = drawrectangle;
+            selectedRegionPosition = round(selectedRegion.Position);
+            template = refImage(selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
+                                                            selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3));
+%             chSliderValue=get(obj.chSlider,'Value');
+%             frameSliderValue=round(get(obj.frameSlider,'Value'));
+%             
+            
+%             template = obj.data.imagedata( selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
+%                                                             selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3),...
+%                                                             chSliderValue, frameSliderValue);
              imsize = size(obj.data.imagedata);
              corImagedata= zeros( imsize(1), imsize(2),imsize(3),imsize(4), 'uint16');
              waitbar_init(obj.loadAxes);
              
-             for i=1:imsize(4)
-                 waitbar_fill(obj.loadAxes,i/imsize(4));
-                 set(obj.infoTxt,'String', sprintf('Correcting Image # %d / %d',i, imsize(4)));
-                 c=normxcorr2( template,obj.data.imagedata(:,:,chSliderValue, i));
+             % since motion is tiny between the next 2 frames, to make the
+             % correction faster, use average frame from a set of frames,
+             % e.g., 500 frames depends on the frame rate, instead of
+             % correct for every frame. Also, the averaged frame would have
+             % much better signal-to-noise for the cell, which will
+             % increase the accuracy. Afterward, make same x-y correction
+             % for the whole mini batches, for example, all the 500 frames
+             % will move 2 in x direction
+             
+             batchsize = 50;
+             nbatches  = ceil(obj.data.metadata.iminfo.framenumber / batchsize);
+             if obj.data.metadata.iminfo.framenumber - batchsize * (nbatches-1) < 0.7*batchsize
+                 nbatches = nbatches -1;
+             end
+             
+             for i = 1: nbatches
+                 waitbar_fill(obj.loadAxes,i/nbatches);
+                 set(obj.infoTxt,'String', sprintf('Correcting %d %',round(i/nbatches *100)));
+                 if i ==nbatches
+                     frames = (i-1)*batchsize+1:obj.data.metadata.iminfo.framenumber;
+                 else
+                 frames = (i-1)*batchsize+1:i*batchsize;
+                 end
+                 targetImage = mean(obj.data.imagedata(:,:,2,frames),4);
+                 c=normxcorr2(template,targetImage);
                  [ypeak, xpeak] = find (c==max(c(:)));
                  yoffSet = ypeak-size (template, 1);
                  xoffSet = xpeak-size (template, 2);
                  ycor = selectedRegionPosition(2)-yoffSet;
                  xcor = selectedRegionPosition(1)-xoffSet;
                  set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
-                 if ycor>0 && xcor>0
-                 corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, chSliderValue, i);
-                 elseif ycor<=0 &&xcor<=0
-                 corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), chSliderValue, i);
-                 elseif ycor>0 && xcor<=0
-                  corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), chSliderValue, i);
-                 else
-                  corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
-                 end
                  
-             end         
+                 % correct single frames
+                 if ycor>0 && xcor>0
+                 corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, 2, frames);
+                 elseif ycor<=0 &&xcor<=0
+                 corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), 2, frames);
+                 elseif ycor>0 && xcor<=0
+                  corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), 2, frames);
+                 else
+                  corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, 2, frames);  
+                 end
+             end
+                 
+%              for i=1:imsize(4)
+%                  waitbar_fill(obj.loadAxes,i/imsize(4));
+%                  set(obj.infoTxt,'String', sprintf('Correcting Image # %d / %d',i, imsize(4)));
+%                  c=normxcorr2( template,obj.data.imagedata(:,:,chSliderValue, i));
+%                  [ypeak, xpeak] = find (c==max(c(:)));
+%                  yoffSet = ypeak-size (template, 1);
+%                  xoffSet = xpeak-size (template, 2);
+%                  ycor = selectedRegionPosition(2)-yoffSet;
+%                  xcor = selectedRegionPosition(1)-xoffSet;
+%                  set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
+%                  if ycor>0 && xcor>0
+%                  corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, chSliderValue, i);
+%                  elseif ycor<=0 &&xcor<=0
+%                  corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), chSliderValue, i);
+%                  elseif ycor>0 && xcor<=0
+%                   corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), chSliderValue, i);
+%                  else
+%                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
+%                  end
+                 
+%              end         
             
             set(obj.loadTxt,'string',[]);
             
@@ -1991,9 +2054,14 @@ classdef brightnessOverTime < handle
             drawnow;
             
              selectedRegion.delete;
-             obj.data.imagedata=corImagedata;
+             obj.data.imagedata(:,:,2,:)=corImagedata(:,:,2,:);
              set(obj.infoTxt,'String','Correction was done!');
              
+            % update image
+            obj.data.metadata.previewFrame{2} = mean(corImagedata(:,:,2,:),4);
+            axes(obj.axes1);
+            cla reset;
+            updateDispFig(obj);
         end
         
         % roiToolBox
@@ -2936,7 +3004,7 @@ classdef brightnessOverTime < handle
             onStart  =stiInfo.trailInfo(trailN(i)).startFrameN;
             onEnd   =stiInfo.trailInfo(trailN(i)).endFrameN;
             offStart =stiInfo.trailInfo(trailN(i)).endFrameN+1;
-            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(10/frameRate);
+            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(5/frameRate);
             BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(1/frameRate):onStart),4);
             sum1   =sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:onEnd),4))-BL;
              sum2  =sum2+squeeze(mean(obj.data.imagedata(:,:,chN,offStart:offEnd),4))-BL;
@@ -3361,7 +3429,11 @@ classdef brightnessOverTime < handle
                     c = [1 0 0; 0 0 1; 0 0 0];
                     
                     % plot original data points
-                    subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60,90],resp,'-','Color',c(ff,:));
+                    if length(resp) == 7
+                        subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60,90],resp,'-','Color',c(ff,:));
+                    else
+                        subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60],resp,'-','Color',c(ff,:));
+                    end
                     hold on;
                     xticks(-90:30:90);
                     xlabel('Bar angle');

@@ -6,78 +6,72 @@ function stiobj=stiToolBox(varargin)
 fig = figure('Name','Stimulus',...
     'NumberTitle','off',...
     'MenuBar','none',...
-    'Toolbar','figure',...
+    'Toolbar','none',...
     'Color','white',...
     'Units','pixels',...
-    'Position',[426 20 512 250],...
-    'Resize','off');
-%                 'CloseRequestFcn',@closeMainFig);
+    'Resize','on');
+%     'CloseRequestFcn',@closeMainFig);
+
+% Align stimulus gui with the main figure
+try
+    dispfig=findobj('Tag','dispfig');
+    set(fig,'Position',[dispfig.Position(1) dispfig.Position(2)-350 512 250]);
+catch
+    set(fig,'Position', [300 40 512 250]);
+end
 
 % File Menu
 fileMenu= uimenu(fig,...
-    'Label','File',...
-    'Tag','file menu');
+    'Label','File');
 uimenu(fileMenu,...
-    'Label','Open...',...
-    'Separator','off',...
+    'Label','Open',...
     'Callback',@openStimulus);
 uimenu(fileMenu,...
     'Label','Save',...
-    'Separator','off',...
     'Callback',@saveStimulus);
-% Detect Menu
-detectMenu = uimenu(fig,...
-    'Label','Detect',...
-    'Tag','detect menu');
-
 
 % Edit Menu
 editMenu= uimenu(fig,...
-    'Label','Edit',...
-    'Tag','detect menu');
+    'Label','Edit');
 uimenu(editMenu,...
     'Label','Detect',...
-    'Separator','off',...
     'Callback',@detectStimulus);
 uimenu(editMenu,...
     'Label','Insert',...
-    'Separator','off',...
-    'Callback',@insertStimuli);
+    'Callback',@insertStimulus);
 uimenu(editMenu,...
     'Label','Pattern',...
-    'Separator','off',...
     'Callback',@setPattern);
+
+% Tools Menu
+toolsMenu = uimenu(fig,...
+    'Label','Tools');
+uimenu(toolsMenu,...
+    'Label','Zoom In',...
+    'Callback',@(src,evt)zoom(fig,'on'));
+uimenu(toolsMenu,...
+    'Label','Data cursor',...
+    'Callback',@(src,evt)datacursormode(fig,'on'));
 
 % View Menu
 viewMenu = uimenu(fig,...
-    'Label','View',...
-    'Tag','view menu');
+    'Label','View');
 uimenu(viewMenu,...
-    'Label','Raw Trace',...
-    'Separator','off',...
+    'Label','Raw Trace',....
     'Callback',@showRawTrace);
 uimenu(viewMenu,...
     'Label','Fitted Trace',...
-    'Separator','off',...
     'Callback',@showFitTrace);
-uimenu(viewMenu,...
-    'Label','Pattern Trace',...
-    'Separator','off',...
-    'Callback',@showPatternTrace);
-uimenu(viewMenu,...
-    'Label','Pattern Parameter',...
-    'Separator','off',...
-    'Callback',@showPatternParameter);
+% uimenu(viewMenu,...
+%     'Label','Pattern Trace',...
+%     'Callback',@showPatternTrace);
+% uimenu(viewMenu,...
+%     'Label','Pattern Parameters',...
+%     'Callback',@showPatternParameter);
 
-% % delete uncessary Toolbar
-set(0,'Showhidden','on');
-ch = get(fig,'children');
-chatags=get(ch,'Tag');
-ftb_ind=find(strcmp(chatags,'FigureToolBar'));
-UT = get(ch(ftb_ind),'children');
-delete(UT(1:8));delete(UT(8));
-delete(UT((end-4):end));
 
+
+% Initialization
 if nargin
     stiobj=varargin{1};
 else
@@ -97,16 +91,18 @@ if ~isempty(stiobj.data)
         stiobj.showTrace(haxes,'Raw');
     end
 end
-%
-    function []=openStimulus(varargin)
+
+
+%% Callback functions
+    function openStimulus(varargin)
         
-        stiobj.loadData;
+        stiobj.load;
         stiobj.showTrace(haxes,'Raw');
     end
 
-    function []=saveStimulus(varargin)
+    function saveStimulus(varargin)
         
-        % add into sti class methods (to do)
+        % add into sti class methods (to do)      
         stidata.threshold=stiobj.threshold;
         stidata.data=stiobj.data;
         stidata.trailInfo=stiobj.trailInfo;
@@ -121,7 +117,7 @@ end
     end
 
 % function to detect stimulus
-    function []=detectStimulus(varargin)
+    function detectStimulus(varargin)
         
         stiobj.showTrace(haxes,'Raw');
         
@@ -144,8 +140,8 @@ end
         stiobj.showTrace(haxes,'Fit');
     end
 
-    % function to set stimulus pattern
-    function []=setPattern(varargin)
+% function to set stimulus pattern
+    function setPattern(varargin)
         
         prompt={'Enter Stimulus Pattern n'};
         dlg_title='Set Stimulus Pattern';
@@ -159,9 +155,9 @@ end
         p=str2num(I{1});
         stiobj.setStiPattern(p);
         showPatternParameter();
-%         patN=length(stiobj.patternInfo);
-%         pos=get(fig,'Position');
-%         stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
+        %         patN=length(stiobj.patternInfo);
+        %         pos=get(fig,'Position');
+        %         stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
     end
 
 %function to show raw trace
@@ -177,23 +173,23 @@ end
     end
 
 %function to show pattern trace
-    function showPatternTrace (varargin)
-          
-        if isempty(stiobj.patternInfo)
-            return;
-        else
-            stiobj.showTrace(haxes,'Pattern');
-        end
-    end
+%     function showPatternTrace (varargin)
+%         
+%         if isempty(stiobj.patternInfo)
+%             return;
+%         else
+%             stiobj.showTrace(haxes,'Pattern');
+%         end
+%     end
 
 %function to show pattern parameter
-    function showPatternParameter(varargin)
-        if ~isempty(stiobj.patternInfo)
-            patN=length(stiobj.patternInfo);
-            pos=get(fig,'Position');
-            stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
-        end
-    end
+%     function showPatternParameter(varargin)
+%         if ~isempty(stiobj.patternInfo)
+%             patN=length(stiobj.patternInfo);
+%             pos=get(fig,'Position');
+%             stiobj.paraInfo=stiPatternPara(stiobj.paraInfo,patN,pos);
+%         end
+%     end
 
 
 end

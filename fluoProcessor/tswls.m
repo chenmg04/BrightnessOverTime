@@ -136,13 +136,15 @@ classdef tswls < handle
             onFrame      = preStmLength + 1 : preStmLength + onLength;
             offFrame     = preStmLength + stLength + 1 : preStmLength + stLength + offLength;
             
+            % for individual
+            nsti           = length (obj.stidata.trailInfo);
             % get on/off peak from average traces
             obj.stadata.peakAveTrace(1,:) = max (obj.AveTrace(onFrame,:));
             obj.stadata.peakAveTrace(2,:) = max (obj.AveTrace(offFrame,:));
             
             % get on/off areas
             onFrame1 = preStmLength + 1 : preStmLength + stLength;
-            offFrame1= preStmLength + stLength + 1 : preStmLength + 2*stLength;
+            offFrame1= preStmLength + stLength + 1 : length(obj.AveTrace);
             
             obj.stadata.area(1,:) = trapz(onFrame1,obj.AveTrace(onFrame1,:));
             obj.stadata.area(2,:) = trapz(offFrame1,obj.AveTrace(offFrame1,:));

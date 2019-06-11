@@ -74,12 +74,12 @@ classdef stim < handle
             uimenu(viewMenu,...
                 'Label','Fitted Trace',...
                 'Callback',@obj.showFitTrace);
-            uimenu(viewMenu,...
-                'Label','Pattern Trace',...
-                'Callback',@obj.showPatternTrace);
-            uimenu(viewMenu,...
-                'Label','Pattern Parameters',...
-                'Callback',@obj.showPatternParameter);
+%             uimenu(viewMenu,...
+%                 'Label','Pattern Trace',...
+%                 'Callback',@obj.showPatternTrace);
+%             uimenu(viewMenu,...
+%                 'Label','Pattern Parameters',...
+%                 'Callback',@obj.showPatternParameter);
  
             %
             if nargin
@@ -114,7 +114,7 @@ classdef stim < handle
             try
                 plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
             catch
-                baseline=mean(obj.data(1:50,1));
+                baseline=mode(obj.data(1:50,1));
                 if baseline == 0 
                     obj.data(:,2) = obj.data(:,1);
                 else
@@ -243,16 +243,17 @@ classdef stim < handle
                 obj.trailInfo(i). endFrameN=endFrameN(i);
                 
                 amplitude=mean(obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,2));
-                if amplitude<0
-                    obj.trailInfo(i). amplitude=yLimits(1)/2;
-                else
+%                 if amplitude<0
+%                     obj.trailInfo(i). amplitude=yLimits(1)/2;
+%                 else
                     obj.trailInfo(i). amplitude=yLimits(2)/2;
-                end
+%                 end
                 obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
-                text(startFrameN(i),amplitude,sprintf('%d',i));text(endFrameN(i),amplitude,sprintf('%d',i));
+                text(startFrameN(i),amplitude,sprintf('%d',i));
+%                 text(endFrameN(i),amplitude,sprintf('%d',i));
             end
             axes(obj.h.axes); hold on;
-            plot(obj.data(:,3),'color','r'); title('Fitted');
+            plot(obj.data(:,3),'color','r'); title(sprintf('%d Stimulus Detected', nsti));
             
         end
         
@@ -345,7 +346,7 @@ classdef stim < handle
                 end
             end
             
-            plotPatternTrace(obj);
+%             plotPatternTrace(obj);
             obj.paraInfo=[];
             showPatternParameter(obj);
             
@@ -409,51 +410,51 @@ classdef stim < handle
         end
         
         %function to show pattern trace
-        function showPatternTrace (obj, ~, ~)
-            
-            if isempty(obj.patternInfo)
-                return;
-            else
-                try
-                axes(obj.h.axes);cla;
-                patternTraceLength=obj.data(1,4);
-                plot(1:1:patternTraceLength,obj.data(2:patternTraceLength+1,4),'Color','g');
-                axis auto; 
-                xlabel('Frame #'); title('Pattern');
-                catch
-                end
-            end
-        end
+%         function showPatternTrace (obj, ~, ~)
+%             
+%             if isempty(obj.patternInfo)
+%                 return;
+%             else
+%                 try
+%                 axes(obj.h.axes);cla;
+%                 patternTraceLength=obj.data(1,4);
+%                 plot(1:1:patternTraceLength,obj.data(2:patternTraceLength+1,4),'Color','g');
+%                 axis auto; 
+%                 xlabel('Frame #'); title('Pattern');
+%                 catch
+%                 end
+%             end
+%         end
         
         
-        function plotPatternTrace (obj, ~,~)
-            
-            patN=length(obj.patternInfo);
-            patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
-            for i=1:patN
-                
-                firstTrailN=obj.patternInfo(i).trailN(1);
-                firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
-                lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
-                
-                % Manually defined length, be cautious about this number,
-                % some stimulus interval might be shorter than this number,
-                % then there will be problem. 
-                preStartFrame=10;
-                
-                curLength=length(patternTrace);
-                s=curLength+1;
-                e=s+lastFrameN(i)-firstFrameN(i)+2*preStartFrame;
-                patternTrace(curLength+1:e)=obj.data(firstFrameN(i)-preStartFrame:lastFrameN(i)+preStartFrame,3);
-            end
-            patternTraceLength=length(patternTrace);
-            obj.data(1,4)=patternTraceLength;
-            obj.data(2:patternTraceLength+1,4)=patternTrace;
-            
-            axes(obj.h.axes);cla;
-            plot(1:1:patternTraceLength,patternTrace,'Color','g','LineWidth',2); title('Pattern'); axis auto;
-            
-        end
+%         function plotPatternTrace (obj, ~,~)
+%             
+%             patN=length(obj.patternInfo);
+%             patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
+%             for i=1:patN
+%                 
+%                 firstTrailN=obj.patternInfo(i).trailN(1);
+%                 firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
+%                 lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
+%                 
+%                 % Manually defined length, be cautious about this number,
+%                 % some stimulus interval might be shorter than this number,
+%                 % then there will be problem. 
+%                 preStartFrame=10;
+%                 
+%                 curLength=length(patternTrace);
+%                 s=curLength+1;
+%                 e=s+lastFrameN(i)-firstFrameN(i)+2*preStartFrame;
+%                 patternTrace(curLength+1:e)=obj.data(firstFrameN(i)-preStartFrame:lastFrameN(i)+preStartFrame,3);
+%             end
+%             patternTraceLength=length(patternTrace);
+%             obj.data(1,4)=patternTraceLength;
+%             obj.data(2:patternTraceLength+1,4)=patternTrace;
+%             
+%             axes(obj.h.axes);cla;
+%             plot(1:1:patternTraceLength,patternTrace,'Color','g','LineWidth',2); title('Pattern'); axis auto;
+%             
+%         end
     end
     
 end
