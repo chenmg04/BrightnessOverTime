@@ -74,12 +74,12 @@ classdef stim < handle
             uimenu(viewMenu,...
                 'Label','Fitted Trace',...
                 'Callback',@obj.showFitTrace);
-%             uimenu(viewMenu,...
-%                 'Label','Pattern Trace',...
-%                 'Callback',@obj.showPatternTrace);
-%             uimenu(viewMenu,...
-%                 'Label','Pattern Parameters',...
-%                 'Callback',@obj.showPatternParameter);
+            uimenu(viewMenu,...
+                'Label','Pattern Trace',...
+                'Callback',@obj.labelPatternTrace);
+            uimenu(viewMenu,...
+                'Label','Pattern Parameters',...
+                'Callback',@obj.showPatternParameter);
  
             %
             if nargin
@@ -179,22 +179,24 @@ classdef stim < handle
             catch
             end
             
-            delete(obj.h.fig);
-            obj.h.fig=[];
-            obj.h.axes=[];
+            
+            closeMainFig(obj);
+%             delete(obj.h.fig);
+%             obj.h.fig=[];
+%             obj.h.axes=[];
         end
         
         %function to close main stimulus figure
-        function closeMainFig(obj, hObject, ~)
+        function closeMainFig(obj, ~, ~)
             
             if ~isempty(findobj('Name','Stimulus Pattern'))
                 close('Stimulus Pattern');
             end
             
-            delete(hObject);
+            delete(obj.h.fig);
             obj.h.fig=[];
             obj.h.axes=[];
-            
+  
         end
         
         % function to detect stimulus
@@ -346,9 +348,18 @@ classdef stim < handle
                 end
             end
             
+            labelPatternTrace(obj);
+            
+            % update auto fluorescence detector
+            try
+                hMain=findobj('Name','Auto Fluorescence Detector');
+                patternbox=findobj(hMain, 'Tag','patternedit');
+                set(patternbox, 'String', ['1:' num2str(length(obj.patternInfo))])
+            catch
+            end
 %             plotPatternTrace(obj);
             obj.paraInfo=[];
-            showPatternParameter(obj);
+%             showPatternParameter(obj);
             
         end
         
@@ -357,7 +368,8 @@ classdef stim < handle
             
             hpara= findobj('Name','Stimulus Pattern');
             if ~isempty(hpara)
-                close('Stimulus Pattern');
+%                 close('Stimulus Pattern');
+               return;
             end
             
             if ~isempty(obj.patternInfo)
@@ -404,9 +416,18 @@ classdef stim < handle
                 axes(obj.h.axes);cla;
                 plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);hold on;
                 plot(obj.data(:,3),'Color','r');
-                xlabel('Frame #'); title('Fitted');
+                xlabel('Frame #'); 
             catch
             end
+            
+             nsti = length(obj.trailInfo);
+              title(sprintf('%d Stimulus', nsti));
+              for i = 1:nsti
+                  
+                      amplitude=mean(obj.data(obj.trailInfo(i).startFrameN:obj.trailInfo(i).endFrameN,2));
+                      text(obj.trailInfo(i).startFrameN,amplitude,sprintf('%d',i));
+              
+              end
         end
         
         %function to show pattern trace
@@ -426,7 +447,21 @@ classdef stim < handle
 %             end
 %         end
         
-        
+          function labelPatternTrace(obj, ~, ~)
+              showRawTrace(obj);
+              
+              patN = length(obj.patternInfo);
+              title(sprintf('%d Stimulus Patterns', patN));
+              for i = 1:patN
+                  ntrail = length(obj.patternInfo(i).trailN);
+                  for j = 1:ntrail
+                      trail = obj.patternInfo(i).trailN(j);
+                      amplitude=mean(obj.data(obj.trailInfo(trail). startFrameN:obj.trailInfo(trail). endFrameN,2));
+                      text(obj.trailInfo(trail). startFrameN,amplitude,sprintf('%d',i));
+                  end
+              end
+              
+              end
 %         function plotPatternTrace (obj, ~,~)
 %             
 %             patN=length(obj.patternInfo);

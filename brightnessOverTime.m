@@ -332,6 +332,7 @@ classdef brightnessOverTime < handle
                 'Callback',@obj.roiToolBox);
             uimenu(toolMenu,...
                 'Label','stimulus',...
+                'Accelerator','S',...
                 'Callback',@obj.stimulus);
              uimenu(toolMenu,...
                 'Label','Notes',...
@@ -613,13 +614,11 @@ classdef brightnessOverTime < handle
             end
 %             fullfilename= fullfile(pathname,filename);
 %             imgdata=squeeze(obj.data.imagedata(:,:,2,:));
-<<<<<<< HEAD
          
             imgdata=obj.data.imagedata; 
             imgdata(:,:,3,:)=0;
             option.color=true;
-                        saveastiff(imgdata,filename,option);
-=======
+            saveastiff(imgdata,filename,option);
             % temp
             imsize = size(obj.data.imagedata);
 
@@ -641,7 +640,6 @@ end
 %             imgdata(:,:,3,:)=0;
             option.color=false;
                         saveastiff(downsampled,filename,option);
->>>>>>> 367fb4a662a8099b38153ea003d4342dd166731a
                         option.color=false;
             % %             saveastiff(squeeze(obj. data.imagedata(:,:,2,:)),[obj.openStates.image.fileName '.tif']);
 %             t = Tiff(filename,'w');
@@ -754,7 +752,7 @@ end
                        
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
-                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-350 405 350];
+                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-650 205 650];
             end
             
         end
@@ -844,7 +842,7 @@ end
                        
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
-                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-350 405 350];
+                obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-650 205 650];
             end
         end
         
@@ -863,7 +861,7 @@ end
         
         
         % Function to update image window 
-        function  updateDispFig (obj)
+             function  updateDispFig (obj)
             
             if isfield(obj.data.metadata,'previewSize')
                 figWidth =obj.data.metadata.previewSize(1);
@@ -1107,7 +1105,7 @@ end
                 filedir=uigetdir(curImagePath);
             else
                 try
-                    filedir = uigetdir('E:\Jimmy''s Lab\projects\vglut3\vglut3-GCaMP3\raw');
+                    filedir = uigetdir('D:\current projects\th2-GCaMP6s');
                 catch
                     filedir = uigetdir;
                 end
@@ -1963,11 +1961,10 @@ end
         % slice Alignment
         function sliceAlignment (obj, ~, ~)
             
-<<<<<<< HEAD
+
             % use average from first 5s
-=======
+
             % use average from first 500 frames
->>>>>>> 367fb4a662a8099b38153ea003d4342dd166731a
             
             % load imagedata
             if ~obj.data.info.immat.loaded
@@ -1978,11 +1975,9 @@ end
             end
             
             %
-<<<<<<< HEAD
-            refImage= mean(obj.data.imagedata(:,:,2,1:200),4);
-=======
+
+%             refImage= mean(obj.data.imagedata(:,:,2,1:200),4);
             refImage= mean(obj.data.imagedata(:,:,2,1:500),4);
->>>>>>> 367fb4a662a8099b38153ea003d4342dd166731a
             obj.data.metadata.previewFrame{2} = refImage;
             
             % open uncorrected averaged image in a new window
@@ -2020,11 +2015,8 @@ end
              % for the whole mini batches, for example, all the 500 frames
              % will move 2 in x direction
              
-<<<<<<< HEAD
-             batchsize = 50;
-=======
+
              batchsize = 100;
->>>>>>> 367fb4a662a8099b38153ea003d4342dd166731a
              nbatches  = ceil(obj.data.metadata.iminfo.framenumber / batchsize);
              if obj.data.metadata.iminfo.framenumber - batchsize * (nbatches-1) < 0.7*batchsize
                  nbatches = nbatches -1;
@@ -2058,7 +2050,6 @@ end
                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, 2, frames);  
                  end
              end
-<<<<<<< HEAD
                  
 %              for i=1:imsize(4)
 %                  waitbar_fill(obj.loadAxes,i/imsize(4));
@@ -2080,8 +2071,7 @@ end
 %                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
 %                  end
                  
-=======
-                 
+           
 %              for i=1:imsize(4)
 %                  waitbar_fill(obj.loadAxes,i/imsize(4));
 %                  set(obj.infoTxt,'String', sprintf('Correcting Image # %d / %d',i, imsize(4)));
@@ -2102,7 +2092,6 @@ end
 %                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
 %                  end
                  
->>>>>>> 367fb4a662a8099b38153ea003d4342dd166731a
 %              end         
             
             set(obj.loadTxt,'string',[]);
@@ -2278,6 +2267,10 @@ end
             % is open
             if ~isempty(obj.fp)
                 obj.fp.srEdit.String = ['1:' num2str(curROIn)];
+                
+                if obj.fp.srRb.Value && obj.fp.irRb.Value
+                    showIndividualROI(obj);
+                end
             end
                 
         end
@@ -2332,6 +2325,7 @@ end
         function deleteRoi (obj, ~, ~)
             
             selectIndex=obj.openStates.roi.curRoiN;
+            selectROI=obj.openStates.roi.curRoih;
             
             if ~isfield(obj.data,'metadata')
                 NoImage;
@@ -2339,7 +2333,7 @@ end
             elseif ~isfield(obj.data.metadata,'ROIdata') || isempty(obj.data.metadata.ROIdata)
                 NoROI;
                 return;
-            elseif isempty(selectIndex)
+            elseif isempty(selectIndex) || isempty(selectROI)
                 if strcmp(DeleteAll,'No')
                     return;
                 else
@@ -2368,7 +2362,7 @@ end
             nROIs  =length(obj.data.metadata.ROIdata);
             
             % delete selected ROI
-            selectROI=obj.openStates.roi.curRoih;
+%             selectROI=obj.openStates.roi.curRoih;
             delete(selectROI);
             
             % delete text for selected ROI
@@ -2399,6 +2393,10 @@ end
                     obj.fp.srEdit.String = '';
                 else
                     obj.fp.srEdit.String = ['1:' num2str(leftnROIs)];
+                    
+                    if obj.fp.srRb.Value && obj.fp.irRb.Value
+                    showIndividualROI(obj);
+                    end
                 end
             end
 
@@ -2422,7 +2420,7 @@ end
                 hold on;
                 if isfield(metadata,'ROIdata') && ~isempty(metadata.ROIdata)
                     obj.data.metadata.ROIdata=metadata.ROIdata;
-                    nROIs  =length(obj.data.metadata.ROIdata); 
+                    nROIs  =length(obj.data.metadata.ROIdata);
                     t=zeros(nROIs);
                     for i=1:nROIs
                         lineh=plot(obj.data.metadata.ROIdata{i}.pos(:,1),obj.data.metadata.ROIdata{i}.pos(:,2),'white', 'LineWidth',2);
@@ -2436,6 +2434,16 @@ end
                     %                         roiToolBox (obj);
                     set(obj.roiTool.roiList,'string',{1:1:nROIs}, 'userdata',{1:1:nROIs});
                     set(obj.roiTool.roiList,'Value',1);
+                    
+                    % Add defaut value to Total ROI number in Measure panel if it
+                    % is open
+                    if ~isempty(obj.fp)
+                        obj.fp.srEdit.String = ['1:' num2str(curROIn)];
+                        
+                        if obj.fp.srRb.Value && obj.fp.irRb.Value
+                            showIndividualROI(obj);
+                        end
+                    end
                     
                 else
                     NoROI;
@@ -2894,6 +2902,7 @@ end
                 'Parent',  obj.autoFluoDetector.sti);
             obj.autoFluoDetector.patternEdit         =uicontrol('Style','edit',...
                 'String','0',...
+                'Tag','patternedit',...
                 'BackgroundColor','white',...
                 'Position',[110 3 40 15],...
                 'Parent',  obj.autoFluoDetector.sti);
@@ -3287,6 +3296,11 @@ end
             
             frameNumber = obj.data.metadata.iminfo.framenumber;
             selectIndex = obj.openStates.roi.curRoiN;
+            
+            % if no roi selected, use the 1st roi as default
+            if isempty(selectIndex)
+                selectIndex = 1;
+            end
             
             %channel info
             if obj.data.metadata.iminfo.channel == 1
