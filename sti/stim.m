@@ -29,7 +29,7 @@ classdef stim < handle
             %align stimulus gui with the main figure
             try
                 dispfig=findobj('Tag','dispfig');
-                set(obj.h.fig,'Position',[dispfig.Position(1) dispfig.Position(2)-350 512 250]);
+                set(obj.h.fig,'Position',[dispfig.Position(1) 40 512 250]);
             catch
                 set(obj.h.fig,'Position', [300 40 512 250]);
             end
@@ -51,6 +51,9 @@ classdef stim < handle
                 'Label','Detect',...
                 'Callback',@obj.detectStimulus);
             uimenu(editMenu,...
+                'Label','Delete',...
+                'Callback',@obj.deleteStimulus);
+            uimenu(editMenu,...
                 'Label','Insert',...
                 'Callback',@obj.insertStimulus);
             uimenu(editMenu,...
@@ -62,7 +65,7 @@ classdef stim < handle
             uimenu(toolsMenu,...
                 'Label','Zoom In',...
                 'Callback',@(src,evt)zoom(obj.h.fig,'on'));
-             uimenu(toolsMenu,...
+            uimenu(toolsMenu,...
                 'Label','Data cursor',...
                 'Callback',@(src,evt)datacursormode(obj.h.fig,'on'));
             % View Menu
@@ -80,7 +83,10 @@ classdef stim < handle
             uimenu(viewMenu,...
                 'Label','Pattern Parameters',...
                 'Callback',@obj.showPatternParameter);
- 
+            uimenu(viewMenu,...
+                'Label','Original Data',....
+                'Callback',@obj.showOriginal);
+            
             %
             if nargin
                 try
@@ -111,19 +117,32 @@ classdef stim < handle
                 'Parent',obj.h.fig,...
                 'Position',[.12,.2,.83,.7]);
             
-            try
-                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
-            catch
-                baseline=mode(obj.data(1:50,1));
-                if baseline == 0 
-                    obj.data(:,2) = obj.data(:,1);
+            if ~isempty(obj.trailInfo)
+                showRawTrace(obj);
+                nsti = length(obj.trailInfo);
+                if ~isempty(obj.patternInfo)
+                    npat = length(obj.patternInfo);
+                    title(sprintf('%d Stimulus and %d Patterns', nsti, npat));
                 else
-                obj.data(:,2)=(obj.data(:,1)-baseline)/obj.data(1,1);
+                    title(sprintf('%d Stimulus', nsti));
+                end
+            else
+                % some files very short, due to errors
+                try
+                   baseline=mode(obj.data(1:50,1));
+                catch
+                    baseline = obj.data(1,1);
                 end
                 
-                plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);   
+                % some files baseline are 0 due to some errors
+                if baseline == 0
+                    obj.data(:,2) = obj.data(:,1);
+                else
+                    obj.data(:,2)=(obj.data(:,1)-baseline)/obj.data(1,1);
+                end
+                showRawTrace(obj);
             end
-            xlabel('Frame #'); title('Raw');
+          
         end
         
         
@@ -151,20 +170,20 @@ classdef stim < handle
             end
             
             if size(obj.data,2)==1
-%                 baseline=mean(obj.data(1:50,1));
+                %                 baseline=mean(obj.data(1:50,1));
                 obj.data(:,2)=obj.data(:,1);
             end
             plot(obj.data(:,2),'Parent',obj.h.axes);xlim([0 length(obj.data(:,2))]);
         end
         
         function saveStimulus(obj,~,~)
- 
+            
             stidata.threshold=obj.threshold;
             stidata.data=obj.data;
             stidata.trailInfo=obj.trailInfo;
             stidata.patternInfo=obj.patternInfo;
             stidata.paraInfo=obj.paraInfo;
- 
+            
             imf = findobj('Tag', 'dispfig');
             filedir = imf.UserData;
             [~, filename]=fileparts(filedir);
@@ -181,9 +200,7 @@ classdef stim < handle
             
             
             closeMainFig(obj);
-%             delete(obj.h.fig);
-%             obj.h.fig=[];
-%             obj.h.axes=[];
+            
         end
         
         %function to close main stimulus figure
@@ -196,14 +213,14 @@ classdef stim < handle
             delete(obj.h.fig);
             obj.h.fig=[];
             obj.h.axes=[];
-  
+            
         end
         
         % function to detect stimulus
         function detectStimulus(obj, ~, ~)
             
-            showRawTrace (obj);
-            % 
+%             showRawTrace (obj);
+            %
             prompt={'Enter Data Range','Enter Threshold Value', 'Filter Data (Boxcar n)'};
             dlg_title='Threshold';
             num_lines=1;
@@ -214,7 +231,7 @@ classdef stim < handle
                 def={['1:' num2str(length(obj.data))],'0.02','0'};
             end
             p=inputdlg(prompt,dlg_title,num_lines,def);
-            % 
+            %
             if isequal(obj.threshold,p)
                 axes(obj.h.axes);
                 hold on;
@@ -231,8 +248,8 @@ classdef stim < handle
             
             % selected data range
             dataRange=str2num(p{1});
-            [nsti, startFrameN, endFrameN] = detectEvent(obj.data(dataRange,2), str2double(p{2}), 'positive');
-            
+%             [nsti, startFrameN, endFrameN] = detectEvent(obj.data(dataRange,2), str2double(p{2}), 'positive');
+            [nsti, startFrameN, endFrameN] = detectEvent(norSti(dataRange), str2double(p{2}), 'positive');
             %
             startFrameN=startFrameN+filtern+dataRange(1)-1;
             endFrameN=endFrameN-filtern+dataRange(1)-1;
@@ -245,20 +262,34 @@ classdef stim < handle
                 obj.trailInfo(i). endFrameN=endFrameN(i);
                 
                 amplitude=mean(obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,2));
-%                 if amplitude<0
-%                     obj.trailInfo(i). amplitude=yLimits(1)/2;
-%                 else
-                    obj.trailInfo(i). amplitude=yLimits(2)/2;
-%                 end
+                obj.trailInfo(i). amplitude=yLimits(2)/2;
                 obj.data(obj.trailInfo(i). startFrameN:obj.trailInfo(i). endFrameN,3)=obj.trailInfo(i). amplitude;
                 text(startFrameN(i),amplitude,sprintf('%d',i));
-%                 text(endFrameN(i),amplitude,sprintf('%d',i));
             end
             axes(obj.h.axes); hold on;
             plot(obj.data(:,3),'color','r'); title(sprintf('%d Stimulus Detected', nsti));
             
         end
         
+        %
+        function deleteStimulus (obj,~, ~)
+            
+            prompt = {'Enter Stimulus #, e.g., 8 or 8, 9'};
+            dlg_title = 'Delete';
+            num_lines = 1;
+            def = {''};
+            d = inputdlg(prompt,dlg_title,num_lines,def);
+            n = str2num(d{1});
+            
+            m = 0; % none deleted initially
+            for i = 1: length(n)
+                ind = n(i) - m;
+                obj.data(obj.trailInfo(ind).startFrameN:obj.trailInfo(ind).endFrameN,3)=0;
+                obj.trailInfo(ind)=[];
+                m = m + 1;
+            end
+            showFitTrace(obj);
+        end
         
         %
         function insertStimulus (obj,~, ~)
@@ -271,22 +302,17 @@ classdef stim < handle
             
             s=str2num(insertFrameN{1});
             n=str2num(insertFrameN{2});
+            
             % insert new stimulus into the end
             nSti=length(obj.trailInfo);
             yLimits=get(obj.h.axes,'YLim');
             for i=1:length(s)
                 obj.trailInfo(nSti+i).startFrameN=s(i);
                 obj.trailInfo(nSti+i).endFrameN=n(i);
-%                 amplitude=mean(obj.data(obj.trailInfo(nSti+i). startFrameN:obj.trailInfo(nSti+i). endFrameN,2));
-%                 if amplitude<0
-%                     obj.trailInfo(nSti+i). amplitude=yLimits(1)/2;
-%                 else
-%                     obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
-%                 end
+
                 % Make all amplitude as positive, and half of the
                 % yLimit(1/25/2018)
                 obj.trailInfo(nSti+i). amplitude=yLimits(2)/2;
-                
                 obj.data(s(i):n(i),3)=obj.trailInfo(nSti+i).amplitude;
             end
             %sortrows
@@ -299,10 +325,8 @@ classdef stim < handle
                     obj.trailInfo(i).amplitude=sortedmtrail(i,3);
                 end
             end
-            axes(obj.h.axes);  cla;
-            plot(obj.data(:,2)); hold on;
-            plot(obj.data(:,3),'color','r');
-            
+           
+            showFitTrace(obj);
         end
         
         
@@ -313,8 +337,23 @@ classdef stim < handle
             prompt={'Pattern:', 'Drug'};
             dlg_title='Set Stimulus Pattern';
             num_lines=1;
-            def={'0', ''};
+            
+            m ='';
+            if isempty(obj.patternInfo)
+                def={'', ''};
+            else
+                m = num2str(obj.patternInfo(1).trailN);
+                for i = 2:length(obj.patternInfo)
+                    m = strcat(m, ';', num2str(obj.patternInfo(i).trailN));
+                end
+                def={m, ''};
+            end
             p=inputdlg(prompt,dlg_title,num_lines,def);
+            
+            % 
+            if isequal(m,p{1})
+                return;
+            end
             
             q=strsplit(p{1},';');
             % single scalar, e.g., 8, indicates 8 patterns, and the repeat
@@ -357,9 +396,7 @@ classdef stim < handle
                 set(patternbox, 'String', ['1:' num2str(length(obj.patternInfo))])
             catch
             end
-%             plotPatternTrace(obj);
             obj.paraInfo=[];
-%             showPatternParameter(obj);
             
         end
         
@@ -368,8 +405,8 @@ classdef stim < handle
             
             hpara= findobj('Name','Stimulus Pattern');
             if ~isempty(hpara)
-%                 close('Stimulus Pattern');
-               return;
+                %                 close('Stimulus Pattern');
+                return;
             end
             
             if ~isempty(obj.patternInfo)
@@ -388,13 +425,7 @@ classdef stim < handle
                 hpara=stimPara(para, nPat);
                 waitfor(hpara.h.fig);
                 obj.paraInfo=hpara.data;
-                %                  for i=1:nPat
-                %                      nTrail=length(obj.patternInfo(i).trailN);
-                %                      for j=1:nTrail
-                %                          obj.paraInfo(obj.patternInfo(i).trailN(j))=hpara.data(i);
-                %                      end
-                %                  end
-                
+            
             end
             
         end
@@ -405,91 +436,62 @@ classdef stim < handle
         function showRawTrace (obj, ~, ~)
             
             axes(obj.h.axes);cla;
-            plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);
+            plot(obj.data(:,2));axis auto; xlim([0 length(obj.data(:,2))]);
             xlabel('Frame #'); title('Raw');
         end
         
-        %function to show fit trace
+        % function to show fit trace
         function showFitTrace (obj, ~, ~)
             
             try
                 axes(obj.h.axes);cla;
                 plot(obj.data(:,2));xlim([0 length(obj.data(:,2))]);hold on;
                 plot(obj.data(:,3),'Color','r');
-                xlabel('Frame #'); 
+                xlabel('Frame #');
             catch
             end
             
-             nsti = length(obj.trailInfo);
-              title(sprintf('%d Stimulus', nsti));
-              for i = 1:nsti
-                  
-                      amplitude=mean(obj.data(obj.trailInfo(i).startFrameN:obj.trailInfo(i).endFrameN,2));
-                      text(obj.trailInfo(i).startFrameN,amplitude,sprintf('%d',i));
-              
-              end
+            nsti = length(obj.trailInfo);
+            title(sprintf('%d Stimulus', nsti));
+            for i = 1:nsti
+                
+                amplitude=mean(obj.data(obj.trailInfo(i).startFrameN:obj.trailInfo(i).endFrameN,2));
+                text(obj.trailInfo(i).startFrameN,amplitude,sprintf('%d',i));
+                
+            end
         end
         
-        %function to show pattern trace
-%         function showPatternTrace (obj, ~, ~)
-%             
-%             if isempty(obj.patternInfo)
-%                 return;
-%             else
-%                 try
-%                 axes(obj.h.axes);cla;
-%                 patternTraceLength=obj.data(1,4);
-%                 plot(1:1:patternTraceLength,obj.data(2:patternTraceLength+1,4),'Color','g');
-%                 axis auto; 
-%                 xlabel('Frame #'); title('Pattern');
-%                 catch
-%                 end
-%             end
-%         end
+        % function to label traces as different patterns
+        function labelPatternTrace(obj, ~, ~)
+            showRawTrace(obj);
+            
+            patN = length(obj.patternInfo);
+            title(sprintf('%d Stimulus Patterns', patN));
+            for i = 1:patN
+                ntrail = length(obj.patternInfo(i).trailN);
+                for j = 1:ntrail
+                    trail = obj.patternInfo(i).trailN(j);
+                    amplitude=mean(obj.data(obj.trailInfo(trail). startFrameN:obj.trailInfo(trail). endFrameN,2));
+                    text(obj.trailInfo(trail). startFrameN,amplitude,sprintf('%d',i));
+                end
+            end
+            
+        end
         
-          function labelPatternTrace(obj, ~, ~)
-              showRawTrace(obj);
-              
-              patN = length(obj.patternInfo);
-              title(sprintf('%d Stimulus Patterns', patN));
-              for i = 1:patN
-                  ntrail = length(obj.patternInfo(i).trailN);
-                  for j = 1:ntrail
-                      trail = obj.patternInfo(i).trailN(j);
-                      amplitude=mean(obj.data(obj.trailInfo(trail). startFrameN:obj.trailInfo(trail). endFrameN,2));
-                      text(obj.trailInfo(trail). startFrameN,amplitude,sprintf('%d',i));
-                  end
-              end
-              
-              end
-%         function plotPatternTrace (obj, ~,~)
-%             
-%             patN=length(obj.patternInfo);
-%             patternTrace=[]; firstFrameN=zeros(patN); lastFrameN=zeros(patN);
-%             for i=1:patN
-%                 
-%                 firstTrailN=obj.patternInfo(i).trailN(1);
-%                 firstFrameN(i)=obj.trailInfo( firstTrailN). startFrameN;
-%                 lastFrameN(i) =obj.trailInfo( firstTrailN). endFrameN;
-%                 
-%                 % Manually defined length, be cautious about this number,
-%                 % some stimulus interval might be shorter than this number,
-%                 % then there will be problem. 
-%                 preStartFrame=10;
-%                 
-%                 curLength=length(patternTrace);
-%                 s=curLength+1;
-%                 e=s+lastFrameN(i)-firstFrameN(i)+2*preStartFrame;
-%                 patternTrace(curLength+1:e)=obj.data(firstFrameN(i)-preStartFrame:lastFrameN(i)+preStartFrame,3);
-%             end
-%             patternTraceLength=length(patternTrace);
-%             obj.data(1,4)=patternTraceLength;
-%             obj.data(2:patternTraceLength+1,4)=patternTrace;
-%             
-%             axes(obj.h.axes);cla;
-%             plot(1:1:patternTraceLength,patternTrace,'Color','g','LineWidth',2); title('Pattern'); axis auto;
-%             
-%         end
+        
+        % function to show original data for some inspection
+        function showOriginal(obj,~,~)
+            
+            if ~isempty(obj.trailInfo)
+                disp(' #   start  end  duration'); 
+                for i = 1:length(obj.trailInfo)
+                    duration = obj.trailInfo(i).endFrameN - obj.trailInfo(i).startFrameN +1;
+                    fprintf('%2d % 6d,% 6d, %6d\n',i,obj.trailInfo(i).startFrameN,obj.trailInfo(i).endFrameN,duration);
+                end
+            end
+%             obj.patternInfo;
+        end
+        
     end
     
 end

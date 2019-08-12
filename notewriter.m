@@ -16,7 +16,7 @@ classdef notewriter< handle
                 'ToolBar','none',...
                 'NumberTitle','off',...
                 'Resize','off',...
-                'CloseRequestFcn',@obj.closeMainFcn);
+                'CloseRequestFcn',@obj.closeMainFcn);                                                  
             
             try
                 dispfig=findobj('Tag','dispfig');
@@ -98,6 +98,7 @@ classdef notewriter< handle
                 [filename, pathname] = uiputfile('*.txt', 'Save Notes As');
                 if isequal(filename,0) || isequal(pathname,0)
                     disp('User pressed cancel')
+                    return;
                 else
                     disp(['User selected ', fullfile(pathname, filename)])
                 end
@@ -110,11 +111,13 @@ classdef notewriter< handle
             
             function closeMainFcn (obj,~,~)
                 
-%                 if isempty(obj.notes)
-%                     obj.notes = '';
-%                 end
-
-                if strcmp(obj.notes, obj.h.editField.String)
+                if isempty(obj.notes)
+                    note = '';
+                else
+                    note = obj.notes;
+                end
+                       
+                if strcmp(note, obj.h.editField.String)
                      delete(obj.h.fig);
                      obj.h = [];
                 else

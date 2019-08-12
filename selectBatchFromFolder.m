@@ -10,7 +10,12 @@ if nargin && iscell(varargin{1}) %listdlg
     
 else
     
-    filedir=uigetdir;
+    try
+        filedir = uigetdir('D:\current projects\th2-GCaMP6s');
+    catch
+        filedir = uigetdir;
+    end
+    
     if ~filedir
         selectFileNames=[];
         return;

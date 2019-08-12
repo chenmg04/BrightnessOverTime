@@ -22,7 +22,7 @@ classdef brightnessOverTime < handle
         autoFluoDetector
         fp
         nf % notes figure
-%         hgendatabase
+        %         hgendatabase
         cell
         fileInfo
         openStates
@@ -32,15 +32,15 @@ classdef brightnessOverTime < handle
     properties(Constant)
         
         mag =  [3.1 4.2 6.2 8.3 12.5 16.7 25 33.3 50 75 100,...
-               150 200 300 400 600 800 1200 1600 2400 3200];
-           
+            150 200 300 400 600 800 1200 1600 2400 3200];
+        
         screendims=get(0,'Screensize');
         
     end
     
     
-        
-   
+    
+    
     methods
         
         % Creat the main gui, including figure, infoTxt, menu, axes
@@ -52,7 +52,7 @@ classdef brightnessOverTime < handle
                 defaultsize=9;
             end
             set(0,'defaultUicontrolFontSize',defaultsize);
-%             cd('C:\Users\ZhouLab\Documents\MATLAB\brightnessOverTime');
+            %             cd('C:\Users\ZhouLab\Documents\MATLAB\brightnessOverTime');
             
             obj.hMain    =figure('Name','BrightnessOverTime',...
                 'MenuBar','none',...
@@ -93,8 +93,8 @@ classdef brightnessOverTime < handle
                 'Position',[(obj.screendims(3)-512)/2 obj.screendims(4)-652 512 512],...
                 'Visible','off',...
                 'CloseRequestFcn',@obj.closeSingleImage,...
-                'WindowKeyPressFcn',@obj.zoomImage);    
-           
+                'WindowKeyPressFcn',@obj.zoomImage);
+            
             
             obj.axes1    = axes('Parent',obj.dispFig,...
                 'Units','pixels',...
@@ -102,7 +102,7 @@ classdef brightnessOverTime < handle
                 'YColor',get(obj.dispFig,'Color'),...
                 'XTick',[],...
                 'YTick',[],...
-                'Position',[0 15 512 512]);                     
+                'Position',[0 15 512 512]);
             
             obj.chSlider = uicontrol(obj.dispFig,...
                 'Style','slider',...
@@ -115,7 +115,7 @@ classdef brightnessOverTime < handle
                 'Interruptible','on',...
                 'Callback',@obj.channelSelection);
             
-             obj.frameSlider = uicontrol(obj.dispFig,...
+            obj.frameSlider = uicontrol(obj.dispFig,...
                 'Style','slider',...
                 'BackgroundColor',get(obj.hMain,'Color'),...
                 'Min', 1,'Max',2,...
@@ -125,21 +125,21 @@ classdef brightnessOverTime < handle
                 'Visible','off',...
                 'TooltipString','frame',...
                 'Interruptible','on');
-%                 'Callback',@obj.frameSelection);
-                hhSlider = handle (obj.frameSlider);
-                hProp= findprop(hhSlider, 'Value');
-                try
+            %                 'Callback',@obj.frameSelection);
+            hhSlider = handle (obj.frameSlider);
+            hProp= findprop(hhSlider, 'Value');
+            try
                 hListener = addlistener (hhSlider, hProp, 'PostSet', @obj.frameSelection);% for matlab version 2014 or older
-                catch
-                 hListener = handle.listener (hhSlider, hProp, 'PostSet', @obj.frameSelection);% for matlab version before 2014
-                end
-                setappdata ( obj.frameSlider, 'sliderListener', hListener);
-                
-                % add a listener to dispFig Position
-%                 addlistener(obj.dispFig, 'OuterPosition', 'PostSet', @obj.dispFigPositionChangeFcn);
-                
-                clear; 
-                clc;
+            catch
+                hListener = handle.listener (hhSlider, hProp, 'PostSet', @obj.frameSelection);% for matlab version before 2014
+            end
+            setappdata ( obj.frameSlider, 'sliderListener', hListener);
+            
+            % add a listener to dispFig Position
+            %                 addlistener(obj.dispFig, 'OuterPosition', 'PostSet', @obj.dispFigPositionChangeFcn);
+            
+            clear;
+            clc;
             
         end
         
@@ -161,7 +161,7 @@ classdef brightnessOverTime < handle
                 'Accelerator','O',...
                 'Separator','off',...
                 'Callback',@obj.openFromFolder);
-             % Open sample
+            % Open sample
             uimenu(fileMenu,...
                 'Label','Open Sample',...
                 'Separator','off',...
@@ -174,13 +174,13 @@ classdef brightnessOverTime < handle
                 'Label','Open Cell',...
                 'Separator','off',...
                 'Callback',@obj.openCell);
-%             openSampleMenu=uimenu(fileMenu,...
-%                 'Label','Open Sample',...
-%                 'Separator','off');
-%             uimenu(openSampleMenu,...
-%                 'Label','Tiff Stack',...
-%                 'Separator','off',...
-%                 'Callback',@obj.openSample); 
+            %             openSampleMenu=uimenu(fileMenu,...
+            %                 'Label','Open Sample',...
+            %                 'Separator','off');
+            %             uimenu(openSampleMenu,...
+            %                 'Label','Tiff Stack',...
+            %                 'Separator','off',...
+            %                 'Callback',@obj.openSample);
             openList = uimenu(fileMenu,...
                 'Label','Open List',...
                 'Tag','file list');
@@ -190,7 +190,16 @@ classdef brightnessOverTime < handle
             uimenu(importMenu,...
                 'Label','Tiff Stack',...
                 'Separator','off',...
-                'Callback',@obj.importTiffStack);  
+                'Callback',@obj.importTiffStack);
+            
+            uimenu(fileMenu,...
+                'Label','Move Files',...
+                'Callback',@obj.movefiles);
+            
+            uimenu(fileMenu,...
+                'Label','Read Files',...
+                'Callback',@obj.readfiles);
+            
             % Close item
             uimenu(fileMenu,...
                 'Label','Close',...
@@ -209,14 +218,14 @@ classdef brightnessOverTime < handle
                 'Label','Save As...',...
                 'Separator','off',...
                 'Callback',@obj.saveImageAs);
-             uimenu(fileMenu,...
+            uimenu(fileMenu,...
                 'Label','Save Imagedata...',...
                 'Separator','off',...
                 'Callback',@obj.saveImagedata);
-%             uimenu(fileMenu,...
-%                 'Label','Save Stimulus...',...
-%                 'Separator','off',...
-%                 'Callback',@obj.saveStimulus);
+            %             uimenu(fileMenu,...
+            %                 'Label','Save Stimulus...',...
+            %                 'Separator','off',...
+            %                 'Callback',@obj.saveStimulus);
             
             uimenu(fileMenu,...
                 'Label','Export Stack',...
@@ -238,22 +247,22 @@ classdef brightnessOverTime < handle
             stackMenu = uimenu(imageMenu,...
                 'Label', 'Stack',...
                 'Separator','on');
-             uimenu(stackMenu,...
+            uimenu(stackMenu,...
                 'Label','Make Substack',...
                 'Separator','off',...
-                'Callback',@obj.makeSubstack);  
+                'Callback',@obj.makeSubstack);
             %View
             viewMenu=uimenu(imageMenu,...
                 'Label', 'View',...
-                 'Separator','off');
-           uimenu(viewMenu,...
+                'Separator','off');
+            uimenu(viewMenu,...
                 'Label','Original Stack',...
                 'Separator','off',...
-                'Callback',@obj.viewOriginalStack);  
+                'Callback',@obj.viewOriginalStack);
             uimenu(viewMenu,...
                 'Label','Average Frame',...
                 'Separator','off',...
-                'Callback',@obj.viewAverageFrame); 
+                'Callback',@obj.viewAverageFrame);
             uimenu(viewMenu,...
                 'Label','Open Image in New Window',...
                 'Separator','off',...
@@ -334,8 +343,9 @@ classdef brightnessOverTime < handle
                 'Label','stimulus',...
                 'Accelerator','S',...
                 'Callback',@obj.stimulus);
-             uimenu(toolMenu,...
+            uimenu(toolMenu,...
                 'Label','Notes',...
+                'Accelerator','N',...
                 'Callback',@obj.addnote);
             uimenu(toolMenu,...
                 'Label','Cell',...
@@ -361,7 +371,7 @@ classdef brightnessOverTime < handle
             
         end
         
-        % 
+        %
         function dispFigPositionChangeFcn (obj)
             % update position of ROI box if it is open
             if ~isempty(obj.roiTool)
@@ -376,7 +386,7 @@ classdef brightnessOverTime < handle
             end
         end
         
-        % Function to close main window 
+        % Function to close main window
         function mainCloseRequestFcn (obj,hObject,~)
             
             delete(obj.dispFig);
@@ -398,40 +408,40 @@ classdef brightnessOverTime < handle
                 obj.fp=[];
             end
             
-%             if ~isempty(obj.stiTool)
-%                 close(stimulus);
-%                 obj.stiTool=[];
-%             end
-
-            % 
+            %             if ~isempty(obj.stiTool)
+            %                 close(stimulus);
+            %                 obj.stiTool=[];
+            %             end
+            
+            %
             if ~isempty(findobj('Name','Stimulus'))
                 close('Stimulus');
             end
             
             %
-%             if ~isempty (obj.cell)
-%                 delete(obj.cell.h.fig)
-%                 obj.cell = [];
-%             end
-%             
+            %             if ~isempty (obj.cell)
+            %                 delete(obj.cell.h.fig)
+            %                 obj.cell = [];
+            %             end
+            %
             % To add more
             delete(hObject);
         end
         
-        % Function to close image window/single image 
+        % Function to close image window/single image
         function closeSingleImage(obj,~,~)
             
             if ~isempty (obj.roiTool)&&~isempty(get(obj.roiTool.roiList,'String'))
                 
-%                 selection=questdlg('Save the ROIs?',...
-%                     'ROI ToolBox',...
-%                     'Yes','No','Yes');
-%                 switch selection
-%                     case'Yes'
-%                         saveRoi(obj);
-%                     case'No'
-%                         
-%                 end
+                %                 selection=questdlg('Save the ROIs?',...
+                %                     'ROI ToolBox',...
+                %                     'Yes','No','Yes');
+                %                 switch selection
+                %                     case'Yes'
+                %                         saveRoi(obj);
+                %                     case'No'
+                %
+                %                 end
                 
                 set(obj.roiTool.roiList,'String',[]);
                 set(obj.roiTool.roiList,'Value',1);
@@ -464,10 +474,10 @@ classdef brightnessOverTime < handle
                     set(obj.dispFig,'Visible','off');
                     set(obj.infoTxt,'String','No Image Open!');
                 else
-                    deleteFileName=get(obj.dispFig,'name');
-                    deleteFileName=deleteFileName(1:37); % when zoom in, dispFig name is different, e.g +(100%) 
+%                     deleteFileName=get(obj.dispFig,'name');
+%                     deleteFileName=deleteFileName(1:37); % when zoom in, dispFig name is different, e.g +(100%)
                     for i=1:fileN
-                        if strfind(fileList.fullFileName{i},deleteFileName)
+                        if strfind(fileList.fullFileName{i},obj.openStates.image.fileName)
                             delete(obj.subList(i));
                             obj.subList(i)=[];
                             fileList.fullFileName{i}=[];
@@ -483,23 +493,23 @@ classdef brightnessOverTime < handle
             end
             
             
-                      
+            
         end
         
-        % Function to close all images 
+        % Function to close all images
         function closeAllImage(obj,~,~)
             
-             if ~isempty (obj.roiTool)&&~isempty(get(obj.roiTool.roiList,'String'))
+            if ~isempty (obj.roiTool)&&~isempty(get(obj.roiTool.roiList,'String'))
                 
-%                 selection=questdlg('Save the ROIs?',...
-%                     'ROI ToolBox',...
-%                     'Yes','No','Yes');
-%                 switch selection
-%                     case'Yes'
-%                         saveRoi(obj);
-%                     case'No'
-%                         
-%                 end
+                %                 selection=questdlg('Save the ROIs?',...
+                %                     'ROI ToolBox',...
+                %                     'Yes','No','Yes');
+                %                 switch selection
+                %                     case'Yes'
+                %                         saveRoi(obj);
+                %                     case'No'
+                %
+                %                 end
                 
                 set(obj.roiTool.roiList,'String',[]);
                 set(obj.roiTool.roiList,'Value',1);
@@ -528,7 +538,7 @@ classdef brightnessOverTime < handle
             obj.cell = [];
         end
         
-        % Function to save single image in the original folder 
+        % Function to save single image in the original folder
         function saveImage(obj,~,~)
             
             imPosition=get(obj.dispFig,'Position');
@@ -545,8 +555,8 @@ classdef brightnessOverTime < handle
             
             defaultPath = 'C:\Users\Minggang\Google Drive\Projects\vGluT3\vglut3-GCaMP6\Paper';
             [filename, pathname] = uiputfile({'*.tif','Tiff(*.tif)';'*.jpg','Jpeg(*.jpg)';...
-                                              '*.png','Png(*.png)';'*.gif','Gif(*.gif)';...
-                                              '*.*','All Files(*.*)' },'Save as',defaultPath);
+                '*.png','Png(*.png)';'*.gif','Gif(*.gif)';...
+                '*.*','All Files(*.*)' },'Save as',defaultPath);
             if isequal(filename,0) || isequal(pathname,0)
                 set(obj.infoTxt,'String','User pressed cancel!');
                 return;
@@ -558,43 +568,23 @@ classdef brightnessOverTime < handle
             set(obj.infoTxt,'String',sprintf('Image saved to %s\n',fullfile(pathname, filename)));
         end
         
-         function saveImagedata(obj,~,~)
-             if ~exist(['raw_im_' obj.openStates.image.fileName '.mat'],'file')
-                 movefile(['im_' obj.openStates.image.fileName '.mat'], ['raw_im_' obj.openStates.image.fileName '.mat']);
-             end
-             imagedata = obj.data.imagedata;
-             if obj.data.metadata.iminfo.channel ==1
+        function saveImagedata(obj,~,~)
+            if ~exist(['raw_im_' obj.openStates.image.fileName '.mat'],'file')
+                movefile(['im_' obj.openStates.image.fileName '.mat'], ['raw_im_' obj.openStates.image.fileName '.mat']);
+            end
+            imagedata = obj.data.imagedata;
+            if obj.data.metadata.iminfo.channel ==1
                 obj.data.metadata.previewFrame =mean(imagedata(:,:,:),3);
             else
                 obj.data.metadata.previewFrame{1}=mean(imagedata(:,:,1,:),4);
                 obj.data.metadata.previewFrame{2}=mean(imagedata(:,:,2,:),4);
-             end
+            end
             metadata=obj.data.metadata;
             save(obj.data.info.metamat.name,'metadata')
             
-             save(obj.data.info.immat.name, 'imagedata');
-             set(obj.infoTxt,'String','Imagedata Was Saved!');
-         end
-         % Function to save stimulus in the metadata
-%         function saveStimulus(obj,~,~)
-%             
-%             if isempty(obj.stiTool) | isempty (obj.stiTool.patternInfo)
-%                 return;
-%             end
-%             
-%             obj.data.metadata.stiInfo.data=obj.stiTool.data;
-%             obj.data.metadata.stiInfo.baselineLength=obj.stiTool.baselineLength;
-%             obj.data.metadata.stiInfo.threshold=obj.stiTool.threshold;
-%             obj.data.metadata.stiInfo.avenum=obj.stiTool.avenum;
-%             obj.data.metadata.stiInfo.nSti=obj.stiTool.nSti;
-%             obj.data.metadata.stiInfo.startFrameN=obj.stiTool.startFrameN;
-%             obj.data.metadata.stiInfo.endFrameN=obj.stiTool.endFrameN;
-%             obj.data.metadata.stiInfo.trailInfo=obj.stiTool.trailInfo;
-%             obj.data.metadata.stiInfo.patternInfo=obj.stiTool.patternInfo;
-%             metadata=obj.data.metadata;
-%             save(obj.data.info.metamat.name,'metadata');
-%             set(obj.infoTxt,'String','Stimulus Was Saved!');
-%         end
+            save(obj.data.info.immat.name, 'imagedata');
+            set(obj.infoTxt,'String','Imagedata Was Saved!');
+        end
         
         function exportStack (obj,~,~)
             
@@ -612,48 +602,48 @@ classdef brightnessOverTime < handle
                     obj.data.info.immat.loaded=1;
                 end
             end
-%             fullfilename= fullfile(pathname,filename);
-%             imgdata=squeeze(obj.data.imagedata(:,:,2,:));
-         
-            imgdata=obj.data.imagedata; 
+            %             fullfilename= fullfile(pathname,filename);
+            %             imgdata=squeeze(obj.data.imagedata(:,:,2,:));
+            
+            imgdata=obj.data.imagedata;
             imgdata(:,:,3,:)=0;
             option.color=true;
             saveastiff(imgdata,filename,option);
             % temp
             imsize = size(obj.data.imagedata);
-
-batchsize = 100;
-nbatches  = ceil(imsize(4) / batchsize);
-if imsize(4) - batchsize * (nbatches-1) < 0.7*batchsize
-    nbatches = nbatches -1;
-end
-downsampled = zeros(imsize(1),imsize(2),nbatches,'uint16');
-for i = 1: nbatches
-    if i ==nbatches
-        frames = (i-1)*batchsize+1:imsize(4);
-    else
-        frames = (i-1)*batchsize+1:i*batchsize;
-    end
-    downsampled(:,:,i) = mean(obj.data.imagedata(:,:,2,frames),4);
-end
-%             imgdata=obj.data.imagedata; 
-%             imgdata(:,:,3,:)=0;
+            
+            batchsize = 100;
+            nbatches  = ceil(imsize(4) / batchsize);
+            if imsize(4) - batchsize * (nbatches-1) < 0.7*batchsize
+                nbatches = nbatches -1;
+            end
+            downsampled = zeros(imsize(1),imsize(2),nbatches,'uint16');
+            for i = 1: nbatches
+                if i ==nbatches
+                    frames = (i-1)*batchsize+1:imsize(4);
+                else
+                    frames = (i-1)*batchsize+1:i*batchsize;
+                end
+                downsampled(:,:,i) = mean(obj.data.imagedata(:,:,2,frames),4);
+            end
+            %             imgdata=obj.data.imagedata;
+            %             imgdata(:,:,3,:)=0;
             option.color=false;
-                        saveastiff(downsampled,filename,option);
-                        option.color=false;
+            saveastiff(downsampled,filename,option);
+            option.color=false;
             % %             saveastiff(squeeze(obj. data.imagedata(:,:,2,:)),[obj.openStates.image.fileName '.tif']);
-%             t = Tiff(filename,'w');
-%             tagstruct.ImageLength = size(imgdata,1);
-%             tagstruct.ImageWidth = size(imgdata,2);
-%             tagstruct.Photometric = Tiff.Photometric.MinIsBlack;
-%             tagstruct.BitsPerSample = 64;
-%             tagstruct.SamplesPerPixel = 1;
-%             tagstruct.RowsPerStrip = 16;
-%             tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
-%             tagstruct.Software = 'MATLAB';
-%             t.setTag(tagstruct);
-%             t.write(imgdata);
-%             t.close();
+            %             t = Tiff(filename,'w');
+            %             tagstruct.ImageLength = size(imgdata,1);
+            %             tagstruct.ImageWidth = size(imgdata,2);
+            %             tagstruct.Photometric = Tiff.Photometric.MinIsBlack;
+            %             tagstruct.BitsPerSample = 64;
+            %             tagstruct.SamplesPerPixel = 1;
+            %             tagstruct.RowsPerStrip = 16;
+            %             tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
+            %             tagstruct.Software = 'MATLAB';
+            %             t.setTag(tagstruct);
+            %             t.write(imgdata);
+            %             t.close();
             set(obj.infoTxt,'String',sprintf('ImageStack exported to %s\n',pathname));
         end
         
@@ -661,7 +651,7 @@ end
         % downarrow zoom out; leftarrow, back to original
         function zoomImage(obj,hObject,eventdata)
             % Callback to parse keypress event data to zoom image
-%             axes(obj.axes1);
+            %             axes(obj.axes1);
             if strcmp(eventdata.Key,'uparrow')
                 zoomIn(obj,hObject, eventdata)
             elseif strcmp(eventdata.Key,'downarrow')
@@ -671,7 +661,7 @@ end
             end
         end
         
-        % Function to zoom in image 
+        % Function to zoom in image
         function zoomIn(obj,~, ~)
             
             % Determin whether there are image open
@@ -704,14 +694,14 @@ end
             updateImHeight=imHeight*magFactor/100;
             
             mainFigPos=get(obj.hMain,'Position');
-            figPosition=get(obj.dispFig,'Position');            
+            figPosition=get(obj.dispFig,'Position');
             axesPosition=get(obj.axes1, 'Position');
             
             if zoomFactor || figPosition (3)>800 || figPosition (4)>800 || updateImWidth>800 || updateImHeight>800
                 axes(obj.axes1);
                 zoom(obj.mag(magN)/obj.mag(magN-1));
-                zoomFactor=zoomFactor+1;                
-            
+                zoomFactor=zoomFactor+1;
+                
             elseif updateImWidth < figPosition(3)
                 set(obj.dispFig,'Position',[figPosition(1) mainFigPos(2)-60-updateImHeight figPosition(3) updateImHeight+figPosition(4)-axesPosition(4)]);
                 set(obj.axes1,'Position',[(figPosition(3)-updateImWidth)/2  axesPosition(2) updateImWidth updateImHeight]);
@@ -725,7 +715,7 @@ end
                     set(obj.chSlider,'Position',[0 15 updateImWidth 15]);
                     set(obj.frameSlider,'Position',[0 0 updateImWidth 15]);
                 end
-
+                
             end
             
             figName=obj.openStates.image.fileName;
@@ -737,19 +727,19 @@ end
             set(obj.dispFig,'Name',updateFigName);
             
             obj.openStates.image.magN = magN;
-            obj.openStates.image.zoomFactor =zoomFactor; 
+            obj.openStates.image.zoomFactor =zoomFactor;
             
             dispFigPos               = obj.dispFig.Position;
             % update position of ROI box if it is open
-            if ~isempty(obj.roiTool) 
+            if ~isempty(obj.roiTool)
                 obj.roiTool.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250];
             end
             
             % update position of auto detection box if it is open
-            if ~isempty(obj.autoFluoDetector)    
+            if ~isempty(obj.autoFluoDetector)
                 obj.autoFluoDetector.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-400 160 110];
             end
-                       
+            
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
                 obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-650 205 650];
@@ -757,7 +747,7 @@ end
             
         end
         
-        % Function to zoom out image 
+        % Function to zoom out image
         function zoomOut(obj,~, ~)
             
             % Determin whether there are image open
@@ -806,16 +796,16 @@ end
                 else
                     set(obj.chSlider,'Position',[0 15 134 15]);
                     set(obj.frameSlider,'Position',[0 0 134 15]);
-                 end
+                end
             elseif updateImWidth >=134
                 set(obj.dispFig,'Position',[figPosition(1) mainFigPos(2)-60-updateImHeight updateImWidth updateImHeight+figPosition(4)-axesPosition(4)]);
                 set(obj.axes1,'Position',[0 axesPosition(2) updateImWidth updateImHeight]);
-                 if obj.openStates.image.viewMode==1
+                if obj.openStates.image.viewMode==1
                     set(obj.chSlider,'Position',[0 0 updateImWidth 15]);
                 else
                     set(obj.chSlider,'Position',[0 15 updateImWidth 15]);
                     set(obj.frameSlider,'Position',[0 0 updateImWidth 15]);
-                 end
+                end
             end
             
             figName=obj.openStates.image.fileName;
@@ -827,26 +817,26 @@ end
             set(obj.dispFig,'Name',updateFigName);
             
             obj.openStates.image.magN = magN;
-            obj.openStates.image.zoomFactor =zoomFactor; 
+            obj.openStates.image.zoomFactor =zoomFactor;
             
             dispFigPos               = obj.dispFig.Position;
             % update position of ROI box if it is open
-            if ~isempty(obj.roiTool) 
+            if ~isempty(obj.roiTool)
                 obj.roiTool.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250];
             end
             
             % update position of auto detection box if it is open
-            if ~isempty(obj.autoFluoDetector)    
+            if ~isempty(obj.autoFluoDetector)
                 obj.autoFluoDetector.fig.Position = [dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-400 160 110];
             end
-                       
+            
             % update position of Measure box if it is open
             if ~isempty(obj.fp)
                 obj.fp.fig.Position = [dispFigPos(1)+dispFigPos(3)+200 dispFigPos(2)+dispFigPos(4)-650 205 650];
             end
         end
         
-        % Function to zoom reset image 
+        % Function to zoom reset image
         function zoomReset(~,~, ~)
             
             
@@ -860,8 +850,8 @@ end
         end
         
         
-        % Function to update image window 
-             function  updateDispFig (obj)
+        % Function to update image window
+        function  updateDispFig (obj)
             
             if isfield(obj.data.metadata,'previewSize')
                 figWidth =obj.data.metadata.previewSize(1);
@@ -874,9 +864,9 @@ end
             % Update dispFig
             mainFigPos=get(obj.hMain,'Position');
             updateFigName=obj.openStates.image.fileName;
-             set(obj.dispFig,'Name',updateFigName,'Visible','on');axis off;
+            set(obj.dispFig,'Name',updateFigName,'Visible','on');axis off;
             if figWidth >134 % figure width can not be smaller than 134
-            set(obj.dispFig,'Position',[mainFigPos(1) mainFigPos(2)-60-figHeight figWidth figHeight+15]);
+                set(obj.dispFig,'Position',[mainFigPos(1) mainFigPos(2)-60-figHeight figWidth figHeight+15]);
             else
                 set(obj.dispFig,'Position',[mainFigPos(1) mainFigPos(2)-60-figHeight 134 figHeight+15]);
             end
@@ -884,7 +874,7 @@ end
             % Update Axes
             imPosition=get(obj.dispFig,'Position');
             if imPosition(3)>figWidth
-                set(obj.axes1,'Position',[(imPosition(3)-figWidth)/2 15 figWidth figHeight]);drawnow;                
+                set(obj.axes1,'Position',[(imPosition(3)-figWidth)/2 15 figWidth figHeight]);drawnow;
             else
                 set(obj.axes1,'Position',[0 15 figWidth figHeight]);drawnow;
             end
@@ -892,9 +882,9 @@ end
             %Update chSlider
             axesPosition = get(obj.axes1, 'Position');
             if obj.data.metadata.iminfo.channel==1
-%                 delete(obj.chSlider);
+                %                 delete(obj.chSlider);
                 set(obj.chSlider, 'Visible','off');
-                set(obj.axes1,'Position',[axesPosition(1) axesPosition(2)-15 axesPosition(3) axesPosition(4)+15]);drawnow;   
+                set(obj.axes1,'Position',[axesPosition(1) axesPosition(2)-15 axesPosition(3) axesPosition(4)+15]);drawnow;
                 obj.data.fluoImageHandles=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;
                 colorSelection('Green');
                 obj.openStates.image.color='Green';
@@ -902,10 +892,10 @@ end
                 set(obj.chSlider, 'Visible','on');
                 if imPosition(3)>figWidth
                     set(obj.chSlider,'Position',[0 0 imPosition(3) 15]);drawnow;
-%                     set(obj.frameSlider,'Position',[0 0 imPosition(3) 15]);drawnow;
+                    %                     set(obj.frameSlider,'Position',[0 0 imPosition(3) 15]);drawnow;
                 else
                     set(obj.chSlider,'Position',[0 0 figWidth 15]);drawnow;
-%                      set(obj.frameSlider,'Position',[0 0 figWidth 15]);drawnow;
+                    %                      set(obj.frameSlider,'Position',[0 0 figWidth 15]);drawnow;
                 end
                 set(obj.chSlider,'Value',2);
                 obj.data.fluoImageHandles=imagesc(obj.data.metadata.previewFrame{2}, 'Parent',obj.axes1); axis off;drawnow;colorSelection('Green');
@@ -914,24 +904,24 @@ end
             end
             
             % Update frameSlider
-%             frameNumber = obj.data.metadata.iminfo.framenumber;
-%             set( obj. frameSlider, 'Max', frameNumber);
-%             set (obj. frameSlider, 'SliderStep', [1/frameNumber 10/frameNumber]);
+            %             frameNumber = obj.data.metadata.iminfo.framenumber;
+            %             set( obj. frameSlider, 'Max', frameNumber);
+            %             set (obj. frameSlider, 'SliderStep', [1/frameNumber 10/frameNumber]);
             
             
         end
         
         % Function to select different channels in GRB image
-        function sliderSelection (obj,hObject,option) 
+        function sliderSelection (obj,hObject,option)
             
             if obj.data.metadata.iminfo.channel==2
-            chSliderValue=get(obj.chSlider,'Value');
+                chSliderValue=get(obj.chSlider,'Value');
             end
             axes(obj.axes1);
-%             cla ;
+            %             cla ;
             
             magN     = obj.openStates.image.magN;
-            zoomFactor= obj.openStates.image.zoomFactor; 
+            zoomFactor= obj.openStates.image.zoomFactor;
             
             hAxes1 = get(obj.axes1,'Children');
             delete (hAxes1(end));
@@ -948,12 +938,12 @@ end
                     if   obj.data.metadata.iminfo.channel==2
                         
                         if obj.openStates.image.viewMode==1 % view Average Frame
-%                             hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
-                             hAxes1(nhAxes1+1) = imshow(obj.data.metadata.previewFrame{chSliderValue},[],'Parent',obj.axes1);
-                             axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});drawnow;axis off;drawnow;
+                            %                             hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame{chSliderValue}, 'Parent',obj.axes1);axis off;drawnow;colorSelection(obj.openStates.image.color{chSliderValue});
+                            hAxes1(nhAxes1+1) = imshow(obj.data.metadata.previewFrame{chSliderValue},[],'Parent',obj.axes1);
+                            axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});drawnow;axis off;drawnow;
                         else % view Original Stacks
                             hAxes1(nhAxes1+1)  = imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue));axis off;drawnow;
-                             axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
+                            axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
                         end
                         set(obj.chSlider, 'Enable', 'off');
                         figure(obj.dispFig);
@@ -961,7 +951,7 @@ end
                         set(obj.chSlider, 'Enable', 'on');
                     else
                         hAxes1(nhAxes1+1)=imagesc(obj.data.metadata.previewFrame, 'Parent',obj.axes1);axis off;drawnow;
-                         axes(obj.axes1);colorSelection(obj.openStates.image.color);
+                        axes(obj.axes1);colorSelection(obj.openStates.image.color);
                     end
                     
                 case  2 % for frameSlider
@@ -974,16 +964,16 @@ end
                         end
                     end
                     if obj.data.metadata.iminfo.channel==1
-                         hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,1, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;
-                          axes(obj.axes1);colorSelection(obj.openStates.image.color);
+                        hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,1, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;
+                        axes(obj.axes1);colorSelection(obj.openStates.image.color);
                     else
                         hAxes1(nhAxes1+1)=imagesc(obj.data.imagedata(:,:,chSliderValue, frameSliderValue), 'Parent',obj.axes1);axis off;drawnow;
-                         axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
+                        axes(obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
                     end
-                        set(obj.frameSlider, 'Enable', 'off');
-                        figure(obj.dispFig);
-                        drawnow;
-                        set(obj.frameSlider, 'Enable', 'on');
+                    set(obj.frameSlider, 'Enable', 'off');
+                    figure(obj.dispFig);
+                    drawnow;
+                    set(obj.frameSlider, 'Enable', 'on');
             end
             
             
@@ -993,102 +983,102 @@ end
                     zoom (obj.mag(magN)/obj.mag(startZoomMagN));
                 end
             end
-                
-            curhAxes1=get(obj.axes1,'Children'); % some problem here 
+            
+            curhAxes1=get(obj.axes1,'Children'); % some problem here
             if hAxes1(end)~=curhAxes1(end)
                 set(obj.axes1,'Children',hAxes1);
             end
-%             % a but needs figure out
-%             if nhAxes1==0
-%                 if ~isfield(obj.openStates,'roi')
-%                     if zoomFactor
-%                         startZoomMagN=magN-zoomFactor;
-%                         zoom (obj.mag(magN)/obj.mag(startZoomMagN));
-%                     end
-%                 end
-%             else
-%                 if zoomFactor
-%                     startZoomMagN=magN-zoomFactor;
-%                     zoom (obj.mag(magN)/obj.mag(startZoomMagN));
-%                 end
-%             end
+            %             % a but needs figure out
+            %             if nhAxes1==0
+            %                 if ~isfield(obj.openStates,'roi')
+            %                     if zoomFactor
+            %                         startZoomMagN=magN-zoomFactor;
+            %                         zoom (obj.mag(magN)/obj.mag(startZoomMagN));
+            %                     end
+            %                 end
+            %             else
+            %                 if zoomFactor
+            %                     startZoomMagN=magN-zoomFactor;
+            %                     zoom (obj.mag(magN)/obj.mag(startZoomMagN));
+            %                 end
+            %             end
             
             % force the slider to lose focus, so to use KeyPressFcn for zoomImage. This is very much a hack.
-%             set(hObject, 'Enable', 'off');
-%             figure(obj.dispFig);
-%             drawnow;
-%             set(hObject, 'Enable', 'on');
-
+            %             set(hObject, 'Enable', 'off');
+            %             figure(obj.dispFig);
+            %             drawnow;
+            %             set(hObject, 'Enable', 'on');
+            
         end
         
-         function channelSelection (obj,hObject,~) 
-             
-              option =1;
-            sliderSelection (obj,hObject,option); 
-         end
+        function channelSelection (obj,hObject,~)
+            
+            option =1;
+            sliderSelection (obj,hObject,option);
+        end
         
         function frameSelection(obj,hObject, ~)
             
             option =2;
-            sliderSelection (obj,hObject,option); 
+            sliderSelection (obj,hObject,option);
         end
         
         function importTiffStack (obj, ~, ~)
-           % reading tiff 
+            % reading tiff
             [filename,pathname] = uigetfile ('*.tif', 'Pick a .tif file');
             cd(pathname);
             fullfilename=fullfile(pathname,filename);
             processImage (obj, fullfilename);
-
             
-%             infoImage = imfinfo(filename);
-%             mImage =infoImage(1).Width;
-%             nImage =infoImage(1). Height;
-%             ch = infoImage(1).SamplesPerPixel;
-%             frameNumber = length(infoImage);
-%             imagedata=zeros (nImage, mImage, ch, frameNumber, 'uint16');
-%             
-%             t= Tiff (filename, 'r');
-%             for i=1:frameNumber
-%                 t.setDirectory(i);
-%                 imagedata(:,:,:,i)=t.read();
-%             end
-%             t.close;
-%             % set  obj data
-%             obj.data =[];
-%             % imagedata
-%             if ch==1
-%             obj.data.imagedata = imagedata;
-%             iminfo.channel=1;
-%             obj.data.metadata.previewFrame =mean(imagedata(:,:,:),3);
-%             else
-%             obj.data.imagedata = imagedata(:,:,1:2,:);  
-%              iminfo.channel=2;
-%              obj.data.metadata.previewFrame{1}=mean(imagedata(:,:,1,:),4);
-%              obj.data.metadata.previewFrame{2}=mean(imagedata(:,:,2,:),4);
-%             end
-%             % metadata
-%             obj.openStates.image.fileName=filename;
-%             obj.data.info.immat.loaded =1;
-%             iminfo.data= infoImage(1).FileModDate;
-%             iminfo.framenumber=frameNumber;
-%             iminfo.pixelsPerLine=mImage;
-%             iminfo.linesPerFrame=nImage;
-%            obj.data.metadata.iminfo=iminfo;
-%                
-%             set(obj.infoTxt,'String', 'Creating Image');           
-%             
-%             axes(obj.axes1);
-%             cla reset;
-%             updateDispFig(obj);
-%             
-%             obj.openStates.image.curImage=obj.data.metadata.previewFrame;
-%             obj.openStates.image.curImagePath=pathname;
-%             obj.openStates.image.magN=11;
-%             obj.openStates.image.zoomFactor=0;
-%             obj.openStates.image.viewMode=1;
-%        
-%             set(obj.infoTxt,'string', []);
+            
+            %             infoImage = imfinfo(filename);
+            %             mImage =infoImage(1).Width;
+            %             nImage =infoImage(1). Height;
+            %             ch = infoImage(1).SamplesPerPixel;
+            %             frameNumber = length(infoImage);
+            %             imagedata=zeros (nImage, mImage, ch, frameNumber, 'uint16');
+            %
+            %             t= Tiff (filename, 'r');
+            %             for i=1:frameNumber
+            %                 t.setDirectory(i);
+            %                 imagedata(:,:,:,i)=t.read();
+            %             end
+            %             t.close;
+            %             % set  obj data
+            %             obj.data =[];
+            %             % imagedata
+            %             if ch==1
+            %             obj.data.imagedata = imagedata;
+            %             iminfo.channel=1;
+            %             obj.data.metadata.previewFrame =mean(imagedata(:,:,:),3);
+            %             else
+            %             obj.data.imagedata = imagedata(:,:,1:2,:);
+            %              iminfo.channel=2;
+            %              obj.data.metadata.previewFrame{1}=mean(imagedata(:,:,1,:),4);
+            %              obj.data.metadata.previewFrame{2}=mean(imagedata(:,:,2,:),4);
+            %             end
+            %             % metadata
+            %             obj.openStates.image.fileName=filename;
+            %             obj.data.info.immat.loaded =1;
+            %             iminfo.data= infoImage(1).FileModDate;
+            %             iminfo.framenumber=frameNumber;
+            %             iminfo.pixelsPerLine=mImage;
+            %             iminfo.linesPerFrame=nImage;
+            %            obj.data.metadata.iminfo=iminfo;
+            %
+            %             set(obj.infoTxt,'String', 'Creating Image');
+            %
+            %             axes(obj.axes1);
+            %             cla reset;
+            %             updateDispFig(obj);
+            %
+            %             obj.openStates.image.curImage=obj.data.metadata.previewFrame;
+            %             obj.openStates.image.curImagePath=pathname;
+            %             obj.openStates.image.magN=11;
+            %             obj.openStates.image.zoomFactor=0;
+            %             obj.openStates.image.viewMode=1;
+            %
+            %             set(obj.infoTxt,'string', []);
             
         end
         
@@ -1114,16 +1104,16 @@ end
             if ~filedir
                 set(obj.infoTxt,'String','No folder selected!');
                 return;
-%             elseif isempty(strfind(filedir,'BrightnessOverTime'))&& isempty(strfind(filedir,'ZSeries'))&& isempty(strfind(filedir,'TSeries'))
-%                 set(obj.infoTxt,'String','Not Support!');
-%                 return;
+                %             elseif isempty(strfind(filedir,'BrightnessOverTime'))&& isempty(strfind(filedir,'ZSeries'))&& isempty(strfind(filedir,'TSeries'))
+                %                 set(obj.infoTxt,'String','Not Support!');
+                %                 return;
             end
             cd(filedir);
             obj.data=[];
             processImage(obj, filedir);
-%             if ~go
-%                 set(obj.infoTxt,'String','Error in the folder!')
-%             end
+            %             if ~go
+            %                 set(obj.infoTxt,'String','Error in the folder!')
+            %             end
             
         end
         
@@ -1135,17 +1125,18 @@ end
             obj.data=[];
             processImage(obj, filedir);
         end
+        
         % Function to open multiple files from folder
         function openBatchFromFolder (obj,~,~)
-                                                   
-           selectFileNames = selectBatchFromFolder (obj.hMain.Position);
-           
-           if ~isempty(selectFileNames)
-               for i=1:length(selectFileNames)
-                   processImage(obj,selectFileNames{i});
-               end
-           end
-           
+            
+            selectFileNames = selectBatchFromFolder (obj.hMain.Position);
+            
+            if ~isempty(selectFileNames)
+                for i=1:length(selectFileNames)
+                    processImage(obj,selectFileNames{i});
+                end
+            end
+            
         end
         
         function openCell (obj,~,~)
@@ -1161,11 +1152,81 @@ end
                     fullfilename{i} = fullfile(filedir, cellinfo.data.fileinfo.filenames{i});
                     processImage(obj, fullfilename{i});
                 end
-                obj.cell = cellmaker(fullfilename,filedir); 
+                obj.cell = cellmaker(fullfilename,filedir);
                 obj.cell.cellinfo = cellinfo.data.cellinfo;
                 obj.cell.h.cellinfo.String = obj.cell.cellinfo;
             end
-         end
+        end
+        
+        
+        
+        % copy files form multiple experiments, only .mat files, no raw
+        % images
+        function movefiles (obj,~,~)
+            
+            folder_from = uigetdir('D:\current projects\th2-GCaMP6s','Pick a Directory to copy from');
+            folder_to   = uigetdir('C:\Users\ZhouLab\Documents\Minggang','Pick a Directory to copy to');
+            
+            % select folders to copy
+            folder = dir(folder_from);
+            folder_names = {folder.name};
+            selectedFolderNames = selectBatchFromFolder(folder_names);
+            
+            % copy files for each subfolder
+            for i = 1: length(selectedFolderNames)
+                mkdir(folder_to, selectedFolderNames{i});
+                set(obj.infoTxt,'String',sprintf('Copying %s\n',selectedFolderNames{i})); drawnow;
+                % copy .mat files from each BOT folder
+                botfolder = dir(fullfile(folder_from, selectedFolderNames{i}));
+                for j = 1: length(botfolder)
+                    if startsWith(botfolder(j).name,'Brightness')
+                        cd(fullfile(fullfile(folder_from, selectedFolderNames{i}),botfolder(j).name));
+                        if ~isempty(dir('*mat'))
+                            mkdir(fullfile(folder_to, selectedFolderNames{i}),botfolder(j).name);
+                            copyfile('*.mat', fullfile(fullfile(folder_to, selectedFolderNames{i}),botfolder(j).name));
+                        end
+                    end
+                end
+
+            end
+            obj.infoTxt.String = 'Copy Finished';
+        end
+            
+        % import files form multiple experiments     
+        function readfiles(obj,~,~)
+            
+%             folder_from = uigetdir('D:\current projects\th2-GCaMP6s','Pick a Directory to copy from');
+            folder_from = 'D:\current projects\th2-GCaMP6s';            
+            % select folders to import files
+            folder = dir(folder_from);
+            folder_names = {folder.name};
+            selectedFolderNames = selectBatchFromFolder(folder_names);
+            
+            % import files for each subfolder
+            for i = 1: length(selectedFolderNames)
+                
+                % copy .mat files from each BOT folder
+                botfolder = dir(fullfile(folder_from, selectedFolderNames{i}));
+                for j = 1: length(botfolder)
+                    if startsWith(botfolder(j).name,'Brightness')
+                        set(obj.infoTxt,'String',sprintf('Checking %s\n',botfolder(j).name(20:end))); drawnow;
+                        filedir = fullfile(fullfile(folder_from, selectedFolderNames{i}),botfolder(j).name);
+                        cd(filedir);
+                        if isempty(dir('*.mat')) && ~isempty(dir('*.tif'))
+                            try
+                                processImage(obj, filedir);
+                            catch
+                                fprintf('Error in %s\n',filedir);
+                            end
+                        end
+                    end
+                end
+
+            end
+            obj.infoTxt.String = 'Reading Finished';
+        end
+            
+       
         
         % Function to open a file from the open list
         function openListFile (obj,~,~,filedir)
@@ -1196,7 +1257,7 @@ end
         % Function to process image information when openning files
         function  processImage (obj, filedir)
             
-            obj.dispFig.UserData = filedir; % for later use, e.g., to save stimulus, notes, exact this path info. Previously used pwd, but there were errors. 
+            obj.dispFig.UserData = filedir; % for later use, e.g., to save stimulus, notes, exact this path info. Previously used pwd, but there were errors.
             
             [~, fileName] = fileparts(filedir);
             obj.openStates.image.fileName=fileName;
@@ -1204,7 +1265,7 @@ end
             
             % generate open list
             fileList=obj.fileInfo;
-                      
+            
             if isfield(fileList,'fullFileName') && ~isempty(fileList.fullFileName)
                 fileN=length(fileList.fullFileName);
                 i=1;
@@ -1226,8 +1287,8 @@ end
                 obj.subList(1)=uimenu(obj.openList,'label',filedir,'position',1,'Callback',{@obj.openListFile,filedir});
                 
             end
-            obj.fileInfo =  fileList;         
-                        
+            obj.fileInfo =  fileList;
+            
             %load image
             
             axes(obj.axes1);
@@ -1237,170 +1298,164 @@ end
             catch
             end
             set(obj.dispFig,'visible','off');
-%             setappdata(handles.axes1,'zoomFactor',0);
-            
-
-%             obj.data.info.immat.exist=0; obj.data.info.immat.loaded=0;
-%             obj.data.info.metamat.exist=0; obj.data.info.metamat.loaded=0;
             
             obj.data.info.immat.name  =fullfile(filedir, sprintf('im_%s.mat',fileName)); obj.data.info.immat.loaded=0;
             obj.data.info.metamat.name=fullfile(filedir, sprintf('meta_%s.mat',fileName));
             obj.data.info.stimmat.name=fullfile(filedir, sprintf('stim_%s.mat',fileName));
+
             
-%             go=0;
-%             
-%             if ~go
-%                 
-%                 imagedataUP=0;
+            if  exist(obj.data.info.immat.name,'file') && exist (obj.data.info.metamat.name,'file')
                 
-                if  exist(obj.data.info.immat.name,'file') && exist (obj.data.info.metamat.name,'file')
-                    
-%                     obj.data.info.metamat.exist=1;
-                    load(obj.data.info.metamat.name);
-                    
-                    if isfield(metadata.iminfo, 'frameNumber')
-                        f=fieldnames(metadata.iminfo);
-                        f{strmatch('frameNumber', f, 'exact')}='framenumber';
-                        c=struct2cell(metadata.iminfo);
-                        metadata.iminfo=cell2struct(c,f);
-                    end
-                    
-%                     obj.data.info.metamat.loaded=1;
-                    obj.data.metadata=metadata;
-                                        
-%                     if  isfield(metadata,'previewFrame')
-                        
-                        updateDispFig(obj);
-%                         obj.data.fluoImageHandles=imagesc(metadata.previewFrame,'parent',obj.axes1);drawnow;
-%                         axis off;
-%                         colormap(jet);
-                        obj.openStates.image.curImage=metadata.previewFrame;
-                        obj.openStates.image.curImagePath=filedir;
-                        obj.openStates.image.magN=11;
-                        obj.openStates.image.zoomFactor=0;
-                        obj.openStates.image.viewMode =1;
-%                         imagedataUP=1;
-%                     else
-%                         try
-%                             dy=metadata.imheader.acq.linesPerFrame;
-%                             dx=metadata.imheader.acq.pixelsPerLine;
-%                             obj.data.fluoImageHandles=imagesc(uint16(1000*rand(dy,dx)),'parent',obj.axes1);
-%                         catch
-%                             
-%                         end
-%                     end
-                    obj.data.metadata=metadata;
-                else
-                   openImage(obj,filedir);
+                %                     obj.data.info.metamat.exist=1;
+                load(obj.data.info.metamat.name);
+                
+                if isfield(metadata.iminfo, 'frameNumber')
+                    f=fieldnames(metadata.iminfo);
+                    f{strmatch('frameNumber', f, 'exact')}='framenumber';
+                    c=struct2cell(metadata.iminfo);
+                    metadata.iminfo=cell2struct(c,f);
                 end
                 
-%                 if imagedataUP %show ROI
-                    
-                    axes(obj.axes1);
+                %                     obj.data.info.metamat.loaded=1;
+                obj.data.metadata=metadata;
+                
+                %                     if  isfield(metadata,'previewFrame')
+                
+                updateDispFig(obj);
+                %                         obj.data.fluoImageHandles=imagesc(metadata.previewFrame,'parent',obj.axes1);drawnow;
+                %                         axis off;
+                %                         colormap(jet);
+                obj.openStates.image.curImage=metadata.previewFrame;
+                obj.openStates.image.curImagePath=filedir;
+                obj.openStates.image.magN=11;
+                obj.openStates.image.zoomFactor=0;
+                obj.openStates.image.viewMode =1;
+                %                         imagedataUP=1;
+                %                     else
+                %                         try
+                %                             dy=metadata.imheader.acq.linesPerFrame;
+                %                             dx=metadata.imheader.acq.pixelsPerLine;
+                %                             obj.data.fluoImageHandles=imagesc(uint16(1000*rand(dy,dx)),'parent',obj.axes1);
+                %                         catch
+                %
+                %                         end
+                %                     end
+                obj.data.metadata=metadata;
+            else
+                openImage(obj,filedir);
+            end
+            
+            %                 if imagedataUP %show ROI
+            
+            axes(obj.axes1);
+            hold on;
+            if isfield(obj.data.metadata,'ROIdata')  && ~isempty(obj.data.metadata.ROIdata)
+                nROIs  =length(obj.data.metadata.ROIdata);
+                t=zeros(nROIs);
+                for i=1:nROIs
+                    lineh=plot(obj.data.metadata.ROIdata{i}.pos(:,1),obj.data.metadata.ROIdata{i}.pos(:,2),'white', 'LineWidth',2);
+                    obj.data.metadata.ROIdata{i}.linehandles=lineh;
+                    t(i)=text(obj.data.metadata.ROIdata{i}.cenX,obj.data.metadata.ROIdata{i}.cenY,sprintf('%d',i),'color','white','parent',obj.axes1);
+                    obj.data.metadata.ROIdata{i}.thandles=t(i);
                     hold on;
-                    if isfield(obj.data.metadata,'ROIdata')  && ~isempty(obj.data.metadata.ROIdata)
-                        nROIs  =length(obj.data.metadata.ROIdata);
-                        t=zeros(nROIs);
-                        for i=1:nROIs
-                            lineh=plot(obj.data.metadata.ROIdata{i}.pos(:,1),obj.data.metadata.ROIdata{i}.pos(:,2),'white', 'LineWidth',2);
-                            obj.data.metadata.ROIdata{i}.linehandles=lineh;
-                            t(i)=text(obj.data.metadata.ROIdata{i}.cenX,obj.data.metadata.ROIdata{i}.cenY,sprintf('%d',i),'color','white','parent',obj.axes1);
-                            obj.data.metadata.ROIdata{i}.thandles=t(i);
-                            hold on;
-                        end
-                        obj.openStates.roi.curRoih=[];
-                        obj.openStates.roi.curRoiN=1;
-                        roiToolBox (obj);
-                        set(obj.roiTool.roiList,'string',{1:1:nROIs}, 'userdata',{1:1:nROIs});
-                        set(obj.roiTool.roiList,'Value',1);
+                end
+                obj.openStates.roi.curRoih=[];
+                obj.openStates.roi.curRoiN=1;
+                roiToolBox (obj);
+                set(obj.roiTool.roiList,'string',{1:1:nROIs}, 'userdata',{1:1:nROIs});
+                set(obj.roiTool.roiList,'Value',1);
+            else
+                if ~isempty(obj.roiTool)
+                    set(obj.roiTool.roiList,'string',[]);
+                    set(obj.roiTool.roiList,'value',1);
+                end
+            end
+            
+            % if the fluoProcessor is open, read parameters from
+            % metadata
+            if ~isempty(obj.fp)
+                if isfield(obj.data.metadata,'processPara')
+                    obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
+                    obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
+                    obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
+                    obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
+                    
+                    % read baseline parameters
+                    baselineLength  = obj.data.metadata.processPara.baselineLength;
+                    if ~isempty(baselineLength) && ~unique(isnan(baselineLength))
+                        obj.fp.tivblRb.Value   = 1;
+                        obj.fp.tvblEdit.String = baselineLength;
                     else
-                        if ~isempty(obj.roiTool)
-                            set(obj.roiTool.roiList,'string',[]);
-                            set(obj.roiTool.roiList,'value',1);
-                        end
-                    end
-                    
-                    % if the fluoProcessor is open, read parameters from
-                    % metadata
-                    if ~isempty(obj.fp)
-                        if isfield(obj.data.metadata,'processPara')
-                            obj.fp.bcftEdit.String             = obj.data.metadata.processPara.filter;
-                            obj.fp.traceLengthEdit.String      = obj.data.metadata.processPara.traceLength;
-                            obj.fp.yminEdit.String             = obj.data.metadata.processPara.ymin;
-                            obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
-                            
-                            % read baseline parameters
-                            baselineLength  = obj.data.metadata.processPara.baselineLength;
-                            if ~isempty(baselineLength) && ~unique(isnan(baselineLength))
-                                obj.fp.tivblRb.Value   = 1;
-                                obj.fp.tvblEdit.String = baselineLength;
-                            else
-                                % previous version only has baselineLength
-                                
-                                fixedLength     = obj.data.metadata.processPara.fixedLength;
-                                if ~isempty(fixedLength) && ~unique(isnan(fixedLength))
-                                    obj.fp.fdRb.Value    = 1;
-                                    obj.fp.fdEdit.String = fixedLength;
-                                else
-                                    fixedValue      = obj.data.metadata.processPara.fixedValue;
-                                    obj.fp.fvRb.Value    = 1;
-                                    obj.fp.fvEdit.String = fixedValue;
-                                end
-                            end
-                            % read prestimulus length, earlier version doesn't have
-                            % this parameter
-                            try
-                                obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
-                            catch
-                            end
-                        end
+                        % previous version only has baselineLength
                         
-                        try
-                            nROI = length(obj.data.metadata.ROIdata);
-                            obj.fp.srEdit.String = ['1:' num2str(nROI)];
-                        catch
+                        fixedLength     = obj.data.metadata.processPara.fixedLength;
+                        if ~isempty(fixedLength) && ~unique(isnan(fixedLength))
+                            obj.fp.fdRb.Value    = 1;
+                            obj.fp.fdEdit.String = fixedLength;
+                        else
+                            fixedValue      = obj.data.metadata.processPara.fixedValue;
+                            obj.fp.fvRb.Value    = 1;
+                            obj.fp.fvEdit.String = fixedValue;
                         end
                     end
- 
-                if ~isempty (obj.stiTool) 
-                    
-%                     if ~isempty(obj.stiTool.hfig)
-                    if ~isempty(findobj('Name', 'Stimulus'))
-                        close('Stimulus');
+                    % read prestimulus length, earlier version doesn't have
+                    % this parameter
+                    try
+                        obj.fp.preStmLengthEdit.String = obj.data.metadata.processPara.preStmLength;
+                    catch
                     end
-                    obj.stiTool=[];
                 end
                 
-                if  exist(obj.data.info.stimmat.name,'file') 
-                    
-                    load(obj.data.info.stimmat.name);
-                    obj.stiTool=stidata;
+                try
+                    nROI = length(obj.data.metadata.ROIdata);
+                    obj.fp.srEdit.String = ['1:' num2str(nROI)];
+                catch
                 end
+            end
+            
+            if ~isempty (obj.stiTool)
                 
-                if ~isempty(obj.nf) 
-                    if ~isempty(obj.nf.h) % notes figure is open
-                        try
-                            obj.nf.notes = obj.data.metadata.notes;
-                            obj.nf.h.editField.String = obj.nf.notes;
-                        catch
-%                             delete(obj.nf.h.fig);
-%                             obj.nf =[];
-                            obj.nf.notes = [];
+                %                     if ~isempty(obj.stiTool.hfig)
+                if ~isempty(findobj('Name', 'Stimulus'))
+                    close('Stimulus');
+                end
+                obj.stiTool=[];
+            end
+            
+            if  exist(obj.data.info.stimmat.name,'file')
+                
+                load(obj.data.info.stimmat.name);
+                obj.stiTool=stidata;
+            end
+            
+            % open notes
+            if isfield(obj.data.metadata,'notes') && ~isempty(obj.data.metadata.notes) % there are notes
+                obj.nf.notes = obj.data.metadata.notes;
+                if isprop(obj.nf,'h') && ~isempty(obj.nf.h) % notes window is open 
+                    obj.nf.h.editField.String = obj.nf.notes;
+                else
+                    obj.nf = notewriter(obj.nf.notes);
+                end
+            else
+                if ~isempty(obj.nf)
+                    obj.nf.notes = [];
+                    if isprop(obj.nf,'h')
+                        if ~isempty(obj.nf.h)
                             obj.nf.h.editField.String = '';
                         end
-                    else
-                        obj.nf =[];
                     end
                 end
-%                 go=1;
-%             end
+            end
+                
+                         
+            
         end
         
         % Function to open a new file
-        function openImage(obj,filedir)           
-             
+        function openImage(obj,filedir)
+            
             if isdir(filedir)
-            [imagedata, metadata] = importPrairieTif(obj,filedir);
+                [imagedata, metadata] = importPrairieTif(obj,filedir);
             else
                 [imagedata, metadata] = openTiffStack(obj,filedir);
                 [filepath, filename] = fileparts (filedir);
@@ -1432,17 +1487,17 @@ end
                 end
                 
             else
-%                 try
+                %                 try
                 if metadata.iminfo.channel ==1
                     metadata.previewFrame =mean(imagedata(:,:,:),3);
                 else
                     metadata.previewFrame{1}=mean(imagedata(:,:,1,:),4);
                     metadata.previewFrame{2}=mean(imagedata(:,:,2,:),4);
                 end
-%                 catch
-%                     metadata.iminfo.channel =1;
-%                     metadata.previewFrame =mean(imagedata(:,:,:),3);
-%                 end
+                %                 catch
+                %                     metadata.iminfo.channel =1;
+                %                     metadata.previewFrame =mean(imagedata(:,:,:),3);
+                %                 end
                 %             metadata.stiInfo.sti(:,1)= 1:1:metadata.iminfo.framenumber;
                 %             metadata.stiInfo.sti(:,2)= squeeze(mean((mean(imagedata(:,:,1,:),1)),2)); % average all pixel intensity in every frame in CH1 to show light stimulus
                 
@@ -1451,41 +1506,41 @@ end
                 drawnow;
                 save(obj.data.info.immat.name,'imagedata')
             end
-%             obj.data.info.metamat.exist=1;
+            %             obj.data.info.metamat.exist=1;
             obj.data.metadata=metadata;
             
-            set(obj.infoTxt,'String', 'Creating Image');           
+            set(obj.infoTxt,'String', 'Creating Image');
             
             axes(obj.axes1);
             cla reset;
             updateDispFig(obj);
-%             obj.data.fluoImageHandles=imagesc(metadata.previewFrame,'parent',obj.axes1);
-%             axis off;
-%             cmap=zeros(64,3);cmap(:,2)=0:1/63:1;colormap(cmap);
+            %             obj.data.fluoImageHandles=imagesc(metadata.previewFrame,'parent',obj.axes1);
+            %             axis off;
+            %             cmap=zeros(64,3);cmap(:,2)=0:1/63:1;colormap(cmap);
             obj.openStates.image.curImage=metadata.previewFrame;
             obj.openStates.image.curImagePath=filedir;
             obj.openStates.image.magN=11;
             obj.openStates.image.zoomFactor=0;
             obj.openStates.image.viewMode=1;
             
-%             set(obj.infoTxt,'string', 'Saving Imagedata');
-%             drawnow;
-%             save(obj.data.info.immat.name,'imagedata')
-%             obj.data.info.immat.exist=1;
-            obj.data.imagedata=imagedata;        
+            %             set(obj.infoTxt,'string', 'Saving Imagedata');
+            %             drawnow;
+            %             save(obj.data.info.immat.name,'imagedata')
+            %             obj.data.info.immat.exist=1;
+            obj.data.imagedata=imagedata;
             set(obj.infoTxt,'string', []);
             
             
-%             go=1;
+            %             go=1;
         end
         
         %------------------------------------------------------------------
         % Function to open Prairie Tiffs, modified from import_PrairieTif.m
         % @GrassRoots Biotechnology 2011
         function [imagedata, metadata]=importPrairieTif(obj,img_full_path)
-                                  
-            DataType      ='uint16';         
-
+            
+            DataType      ='uint16';
+            
             % If image folder or tif or XML files DNE, return empty
             if isempty(dir(img_full_path)) || numel(dir([img_full_path '/*.tif']))==0 ...
                     || numel(dir([img_full_path '/*.xml']))==0
@@ -1493,9 +1548,9 @@ end
             end
             
             % Make path *nix compatible, extract name of image
-%             img_full_path = regexprep(img_full_path, '\', '/');
+            %             img_full_path = regexprep(img_full_path, '\', '/');
             [~, img_name] = fileparts(img_full_path);
-                        
+            
             % Read in metadata from xml file
             text = fileread([img_full_path '/' img_name '.xml']);
             
@@ -1514,13 +1569,40 @@ end
                 ydim = str2double(regexp(text, ...
                     'PVStateValue key="linesPerFrame" value="(\d*)"', 'tokens','once'));
                 
-                % Channel dimension
-                ch_img_names_cell =  regexp(text, ...
-                    'File channel="(\d*)".*?filename="(.*?)"', 'tokens');
-                ch = cellfun(@(x) str2double(x{1}),ch_img_names_cell);
-                img_names = cellfun(@(x) x{2},ch_img_names_cell, 'UniformOutput', 0);
-                ch_n   = unique (ch);
-                nCh    = numel(ch_n);
+                
+                %2019-8-1 add, to identify imaging file with only 1 channel
+                %strategy: because of the inconsistence between header file and tif
+                %file, avoid reading the header file information but read
+                %the channel and file name information directly from the
+                %file folder.
+ 
+                cd(img_full_path);
+                imgs = dir('*.tif');
+                img_names1 = {imgs.name};
+                ch1 = cellfun(@(x) str2double(x(strfind(x,'Ch') + 2)),img_names1); 
+                  ch_n   = unique (ch1);
+                  nCh    = numel(ch_n);
+                  im_number = length(ch1);
+                  
+                  if nCh ==1
+                      img_names = img_names1;
+                      ch = ch1;
+                  else
+                      img_names(1:2:im_number) = img_names1(1:im_number/2);
+                      img_names(2:2:im_number) = img_names1(im_number/2+1:im_number);
+                      ch(1:2:im_number) = ch1(1:im_number/2);
+                      ch(2:2:im_number) = ch1(im_number/2+1:im_number);
+                  end
+
+                                               
+                
+%                 % Channel dimension
+%                 ch_img_names_cell =  regexp(text, ...
+%                     'File channel="(\d*)".*?filename="(.*?)"', 'tokens');
+%                 ch = cellfun(@(x) str2double(x{1}),ch_img_names_cell);
+%                 img_names = cellfun(@(x) x{2},ch_img_names_cell, 'UniformOutput', 0);
+%                 ch_n   = unique (ch);
+%                 nCh    = numel(ch_n);
                 
                 % Z or framenumber for timeseries
                 framenumber = length(ch)/nCh;
@@ -1592,16 +1674,16 @@ end
             
             % Channel index
             ch_ind = ch;
-                 
+            
             
             % Zslice and timpoint index need to be repeated to match img_names elements
             flat = @(x) x(:);
             z_ind = flat(repmat(zslice, [nCh 1]));
             t_ind = flat(repmat(tpoints, [numel(unique(z_ind))*nCh 1]));
-                        
+            
             % Clear xml text form memory, not needed for final img import
             clear text;
-                        
+            
             % Initialize image specified datatype
             imagedata = zeros(ydim, xdim, nCh, ...
                 max(zslice), max(tpoints), DataType);
@@ -1621,7 +1703,7 @@ end
             end
             set(obj.loadTxt,'string',[]);
             
-            % make waitbar invible after loading 
+            % make waitbar invible after loading
             c = get(obj.loadAxes,'Children');
             delete (c);
             set(obj.loadAxes,'visible','off');
@@ -1648,29 +1730,29 @@ end
             
             
             % metadata, only import several useful from image headers
-           metadata.iminfo.date = infoImage(1).FileModDate;
-           frameNumber= length(infoImage); metadata.iminfo.frameNumber=frameNumber;
-           mImage=infoImage(1).Width;  metadata.iminfo.pixelsPerLine=mImage;
-           nImage=infoImage(1).Height;  metadata.iminfo.linesPerFrame=nImage;
-           metadata.iminfo.bitDepth=infoImage(1).BitDepth;
-           switch software
-               case 'ScanImage'
-                   ch=str2double(regexp(infoImage(1).ImageDescription, 'state.acq.numberOfChannelsSave=(\d*)', 'tokens','once'));
-                   frameRate=str2double(regexp(infoImage(1).ImageDescription, 'state.acq.frameRate=(\d*)', 'tokens','once'));
-               case 'ImageJ'
-                   
-               case 'Others'
-           end
-           
-        
+            metadata.iminfo.date = infoImage(1).FileModDate;
+            frameNumber= length(infoImage); metadata.iminfo.frameNumber=frameNumber;
+            mImage=infoImage(1).Width;  metadata.iminfo.pixelsPerLine=mImage;
+            nImage=infoImage(1).Height;  metadata.iminfo.linesPerFrame=nImage;
+            metadata.iminfo.bitDepth=infoImage(1).BitDepth;
+            switch software
+                case 'ScanImage'
+                    ch=str2double(regexp(infoImage(1).ImageDescription, 'state.acq.numberOfChannelsSave=(\d*)', 'tokens','once'));
+                    frameRate=str2double(regexp(infoImage(1).ImageDescription, 'state.acq.frameRate=(\d*)', 'tokens','once'));
+                case 'ImageJ'
+                    
+                case 'Others'
+            end
+            
+            
             mImage =infoImage(1).Width;
             nImage =infoImage(1). Height;
             ch = infoImage(1).SamplesPerPixel;
             frameNumber = length(infoImage);
             imagedata=zeros (nImage, mImage, ch, frameNumber, 'uint16');
             
-%             t= Tiff (filename, 'r');
- t= Tiff (filedir, 'r');
+            %             t= Tiff (filename, 'r');
+            t= Tiff (filedir, 'r');
             for i=1:frameNumber
                 t.setDirectory(i);
                 imagedata(:,:,:,i)=t.read();
@@ -1680,7 +1762,7 @@ end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Part 2. edit image
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Function to show image info
         function showImageInfo (obj, ~, ~)
@@ -1699,9 +1781,9 @@ end
                 dispFigPos            =get(obj.dispFig,'Position');
                 
                 figure   ('Name',figName(1,end-8:end),'NumberTitle','off','color','white',...
-                                   'MenuBar','none','position',[dispFigPos(1)-240 100 220 400],'Resize','off');
+                    'MenuBar','none','position',[dispFigPos(1)-240 100 220 400],'Resize','off');
                 infoList=uicontrol('Style','listbox','Value',1,'BackgroundColor','white',...
-                                   'Position',[1 1 219 400],'HorizontalAlignment','left','FontSize',10);
+                    'Position',[1 1 219 400],'HorizontalAlignment','left','FontSize',10);
                 set(infoList,'String',info);
                 set(infoList,'Value',1);
             else
@@ -1721,7 +1803,7 @@ end
             dlg_title= 'Substack Maker';
             num_lines= 1;
             def      = {''};
-            p        = inputdlg(prompt,dlg_title,num_lines,def); 
+            p        = inputdlg(prompt,dlg_title,num_lines,def);
             slices   = str2num(p{1});
             
             if ~obj.data.info.immat.loaded
@@ -1765,33 +1847,33 @@ end
             set(obj.axes1, 'Position', [axesPosition(1) axesPosition(2)+15 axesPosition(3) axesPosition(4)]);
             %update sliders
             if  obj.data.metadata.iminfo.channel==2
-            slider1Position=get(obj.chSlider, 'Position');
-            set(obj.chSlider, 'Position', [ slider1Position(1) slider1Position(2)+15 slider1Position(3) slider1Position(4)]);
-            set(obj.frameSlider, 'Position', [ slider1Position(1) 0 slider1Position(3) slider1Position(4)]);
-            set(obj.frameSlider, 'Value', 1);
+                slider1Position=get(obj.chSlider, 'Position');
+                set(obj.chSlider, 'Position', [ slider1Position(1) slider1Position(2)+15 slider1Position(3) slider1Position(4)]);
+                set(obj.frameSlider, 'Position', [ slider1Position(1) 0 slider1Position(3) slider1Position(4)]);
+                set(obj.frameSlider, 'Value', 1);
             else
                 set(obj.frameSlider, 'Position', [ 0 0 axesPosition(3) 15]);
             end
             set(obj.frameSlider,'Visible', 'on');
             try
-            frameNumber = obj.data.metadata.iminfo.framenumber;
+                frameNumber = obj.data.metadata.iminfo.framenumber;
             catch
                 frameNumber = obj.data.metadata.iminfo.frameNumber;
             end
             set( obj. frameSlider, 'Max', frameNumber);
             set (obj. frameSlider, 'SliderStep', [1/frameNumber 10/frameNumber]);
             %update image
-            sliderSelection (obj,hObject,2); 
+            sliderSelection (obj,hObject,2);
         end
         
         %
         function viewAverageFrame (obj,hObject, ~)
             
-             if obj.openStates.image.viewMode==1
+            if obj.openStates.image.viewMode==1
                 return;
-             end
+            end
             
-             obj.openStates.image.viewMode=1;
+            obj.openStates.image.viewMode=1;
             % update dispFig
             imPosition=get(obj.dispFig,'Position');
             set(obj.dispFig, 'Position', [imPosition(1) imPosition(2)+15 imPosition(3) imPosition(4)-15]);
@@ -1800,12 +1882,12 @@ end
             set(obj.axes1, 'Position', [axesPostion(1) axesPostion(2)-15 axesPostion(3) axesPostion(4)]);
             %update sliders
             if  obj.data.metadata.iminfo.channel==2
-            slider1Position=get(obj.chSlider, 'Position');
-            set(obj.chSlider, 'Position', [ slider1Position(1) slider1Position(2)-15 slider1Position(3) slider1Position(4)]);
+                slider1Position=get(obj.chSlider, 'Position');
+                set(obj.chSlider, 'Position', [ slider1Position(1) slider1Position(2)-15 slider1Position(3) slider1Position(4)]);
             end
             set(obj.frameSlider,'Visible', 'off');
             %update image
-            sliderSelection (obj,hObject,1); 
+            sliderSelection (obj,hObject,1);
             
         end
         
@@ -1836,29 +1918,29 @@ end
             end
             
             obj.resize.fig         =figure   ('Name','Resize','NumberTitle','off',...
-                                              'MenuBar','none','Position',[150 150 200 140],...
-                                              'Resize','off','Color','white');
+                'MenuBar','none','Position',[150 150 200 140],...
+                'Resize','off','Color','white');
             obj.resize.fixedRatio  =uicontrol('Style','checkbox','String','Constrain aspect ratio',...
-                                              'Value',1,'Position',[10 40 150 20],...
-                                              'HorizontalAlignment','left','Backgroundcolor','white');
-                                    uicontrol('Style','text','String','Width (pixels):',...
-                                              'Position',[10 95 100 20],...
-                                              'HorizontalAlignment','right','Backgroundcolor','white');
-                                    uicontrol('Style','text','String','Height (pixels):',...
-                                              'Position',[10 70 100 20],...
-                                              'HorizontalAlignment','right','Backgroundcolor','white');
+                'Value',1,'Position',[10 40 150 20],...
+                'HorizontalAlignment','left','Backgroundcolor','white');
+            uicontrol('Style','text','String','Width (pixels):',...
+                'Position',[10 95 100 20],...
+                'HorizontalAlignment','right','Backgroundcolor','white');
+            uicontrol('Style','text','String','Height (pixels):',...
+                'Position',[10 70 100 20],...
+                'HorizontalAlignment','right','Backgroundcolor','white');
             obj.resize.imWidthEdit =uicontrol('Style','edit','String',imWidth,...
-                                              'Position',[120 95 50 20],...
-                                              'HorizontalAlignment','left','Backgroundcolor','white');
+                'Position',[120 95 50 20],...
+                'HorizontalAlignment','left','Backgroundcolor','white');
             obj.resize.imHeightEdit=uicontrol('Style','edit','string',imHeight,...
-                                              'Position',[120 70 50 20],...
-                                              'HorizontalAlignment','left','backgroundcolor','white');
+                'Position',[120 70 50 20],...
+                'HorizontalAlignment','left','backgroundcolor','white');
             set(obj.resize.imWidthEdit,'Callback',@obj.changeImWidth);
             set(obj.resize.imHeightEdit,'Callback',@obj.changeImHeight);
             obj.resize.processResize=uicontrol('Style','pushbutton','String','OK',...
-                                               'Position',[120 10 50 20],...
-                                               'HorizontalAlignment','center','Backgroundcolor','white',...
-                                               'Callback',@obj.processResize);
+                'Position',[120 10 50 20],...
+                'HorizontalAlignment','center','Backgroundcolor','white',...
+                'Callback',@obj.processResize);
         end
         
         % Function to change image width
@@ -1906,7 +1988,7 @@ end
                 magFactor =obj.mag(magN);
                 
                 obj.openStates.image.magN = magN;
-                obj.openStates.image.zoomFactor =0; 
+                obj.openStates.image.zoomFactor =0;
                 
                 updatedImWidth=round(imWidth*magFactor/100);
                 updatedImHeight=round(imHeight*magFactor/100);
@@ -1924,7 +2006,7 @@ end
                 set(obj.dispFig,'Name',figName,'Position',[figPosition(1) obj.screendims(4)-140-imHeight 134 imHeight+15]);
                 set(obj.axes1,'Position',[(134-imWidth)/2 15 imWidth imHeight]);
                 set(obj.chSlider,'Position',[0 0 134 15]);
-            else    
+            else
                 
                 obj.openStates.image.magN = 11;
                 obj.openStates.image.zoomFactor =0;
@@ -1944,7 +2026,7 @@ end
             imcontrast;
         end
         
-        % Function to set colors 
+        % Function to set colors
         function colorSet (obj, hObject, ~)
             
             label = get( hObject, 'Label' );
@@ -1957,160 +2039,121 @@ end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Part 3. Tools
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % slice Alignment
-        function sliceAlignment (obj, ~, ~)
+        function sliceAlignment (obj, hObject, ~)
             
-
-            % use average from first 5s
-
-            % use average from first 500 frames
+            % load original imagedata
+            obj.data.imagedata = [];
+            obj.data.imagedata = getfield(load(obj.data.info.immat.name),'imagedata');
+            obj.data.info.immat.loaded=1;
             
-            % load imagedata
-            if ~obj.data.info.immat.loaded
-                if exist(obj.data.info.immat.name,'file')
-                    obj.data.imagedata=getfield(load(obj.data.info.immat.name),'imagedata');
-                    obj.data.info.immat.loaded=1;
-                end
-            end
+            originImage = mean(obj.data.imagedata(:,:,2,:),4);
+            showFluoChange(obj,hObject,originImage,2);
             
-            %
-
-%             refImage= mean(obj.data.imagedata(:,:,2,1:200),4);
-            refImage= mean(obj.data.imagedata(:,:,2,1:500),4);
-            obj.data.metadata.previewFrame{2} = refImage;
-            
-            % open uncorrected averaged image in a new window
+            % open original image in a new window for comparison
             openImageInNewWindow(obj);
             
-            % update image with new average
-            axes(obj.axes1);
-            cla reset;
-            updateDispFig(obj);
-
+            % define reference image as avarged image of frames within
+            % certain time period; and frames within another time priod as a batch,
+            % assuming there is almost no motion within this time period
+            %
+            framerate = round(1 / obj.data.metadata.iminfo.framePeriod);
+            prompt={'Time Interval to Average for Reference Image ','Time Interval for Batch'};
+            dlg_title=[num2str(framerate) 'Frames/s'];
+            num_lines=1;
+            def ={'30','5'};
+            p=inputdlg(prompt,dlg_title,num_lines,def);
+            lengthOfReferenceImage = round(str2double(p{1})*framerate);
+            lengthOfBatch          = round(str2double(p{2})*framerate);
+            %
+            
+            refImage= mean(obj.data.imagedata(:,:,2,1:lengthOfReferenceImage),4);
+            showFluoChange(obj,hObject,refImage,2);
+            
             % choose a template from the reference image
             set(obj.infoTxt,'String','Please select a rectangle region!');
             axes(obj.axes1);
             selectedRegion = drawrectangle;
             selectedRegionPosition = round(selectedRegion.Position);
             template = refImage(selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
-                                                            selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3));
-%             chSliderValue=get(obj.chSlider,'Value');
-%             frameSliderValue=round(get(obj.frameSlider,'Value'));
-%             
+                selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3));
             
-%             template = obj.data.imagedata( selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
-%                                                             selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3),...
-%                                                             chSliderValue, frameSliderValue);
-             imsize = size(obj.data.imagedata);
-             corImagedata= zeros( imsize(1), imsize(2),imsize(3),imsize(4), 'uint16');
-             waitbar_init(obj.loadAxes);
-             
-             % since motion is tiny between the next 2 frames, to make the
-             % correction faster, use average frame from a set of frames,
-             % e.g., 500 frames depends on the frame rate, instead of
-             % correct for every frame. Also, the averaged frame would have
-             % much better signal-to-noise for the cell, which will
-             % increase the accuracy. Afterward, make same x-y correction
-             % for the whole mini batches, for example, all the 500 frames
-             % will move 2 in x direction
-             
-
-             batchsize = 100;
-             nbatches  = ceil(obj.data.metadata.iminfo.framenumber / batchsize);
-             if obj.data.metadata.iminfo.framenumber - batchsize * (nbatches-1) < 0.7*batchsize
-                 nbatches = nbatches -1;
-             end
-             
-             for i = 1: nbatches
-                 waitbar_fill(obj.loadAxes,i/nbatches);
-                 set(obj.infoTxt,'String', sprintf('Correcting %d %',round(i/nbatches *100)));
-                 if i ==nbatches
-                     frames = (i-1)*batchsize+1:obj.data.metadata.iminfo.framenumber;
-                 else
-                 frames = (i-1)*batchsize+1:i*batchsize;
-                 end
-                 targetImage = mean(obj.data.imagedata(:,:,2,frames),4);
-                 c=normxcorr2(template,targetImage);
-                 [ypeak, xpeak] = find (c==max(c(:)));
-                 yoffSet = ypeak-size (template, 1);
-                 xoffSet = xpeak-size (template, 2);
-                 ycor = selectedRegionPosition(2)-yoffSet;
-                 xcor = selectedRegionPosition(1)-xoffSet;
-                 set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
-                 
-                 % correct single frames
-                 if ycor>0 && xcor>0
-                 corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, 2, frames);
-                 elseif ycor<=0 &&xcor<=0
-                 corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), 2, frames);
-                 elseif ycor>0 && xcor<=0
-                  corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), 2, frames);
-                 else
-                  corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, 2, frames);  
-                 end
-             end
-                 
-%              for i=1:imsize(4)
-%                  waitbar_fill(obj.loadAxes,i/imsize(4));
-%                  set(obj.infoTxt,'String', sprintf('Correcting Image # %d / %d',i, imsize(4)));
-%                  c=normxcorr2( template,obj.data.imagedata(:,:,chSliderValue, i));
-%                  [ypeak, xpeak] = find (c==max(c(:)));
-%                  yoffSet = ypeak-size (template, 1);
-%                  xoffSet = xpeak-size (template, 2);
-%                  ycor = selectedRegionPosition(2)-yoffSet;
-%                  xcor = selectedRegionPosition(1)-xoffSet;
-%                  set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
-%                  if ycor>0 && xcor>0
-%                  corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, chSliderValue, i);
-%                  elseif ycor<=0 &&xcor<=0
-%                  corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), chSliderValue, i);
-%                  elseif ycor>0 && xcor<=0
-%                   corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), chSliderValue, i);
-%                  else
-%                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
-%                  end
-                 
-           
-%              for i=1:imsize(4)
-%                  waitbar_fill(obj.loadAxes,i/imsize(4));
-%                  set(obj.infoTxt,'String', sprintf('Correcting Image # %d / %d',i, imsize(4)));
-%                  c=normxcorr2( template,obj.data.imagedata(:,:,chSliderValue, i));
-%                  [ypeak, xpeak] = find (c==max(c(:)));
-%                  yoffSet = ypeak-size (template, 1);
-%                  xoffSet = xpeak-size (template, 2);
-%                  ycor = selectedRegionPosition(2)-yoffSet;
-%                  xcor = selectedRegionPosition(1)-xoffSet;
-%                  set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
-%                  if ycor>0 && xcor>0
-%                  corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, chSliderValue, i);
-%                  elseif ycor<=0 &&xcor<=0
-%                  corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), chSliderValue, i);
-%                  elseif ycor>0 && xcor<=0
-%                   corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), chSliderValue, i)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), chSliderValue, i);
-%                  else
-%                   corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), chSliderValue, i)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, chSliderValue, i);  
-%                  end
-                 
-%              end         
+            imsize = size(obj.data.imagedata);
+            corImagedata= zeros( imsize(1), imsize(2),imsize(3),imsize(4), 'uint16');
+            waitbar_init(obj.loadAxes);
+            
+            % since motion is tiny between the next 2 frames, to make the
+            % correction faster, use average frames from a set of frames,
+            % e.g., 500 frames depends on the frame rate, instead of
+            % correcting for every frame. Also, the averaged frame would have
+            % much better signal-to-noise for the cell, which will
+            % increase the accuracy. Afterward, make same x-y correction
+            % for the whole mini batches, for example, all the 500 frames
+            % will move 2 in x direction
+            
+            
+            nbatches  = ceil(obj.data.metadata.iminfo.framenumber / lengthOfBatch);
+            if obj.data.metadata.iminfo.framenumber - lengthOfBatch * (nbatches-1) < 0.7*lengthOfBatch
+                nbatches = nbatches -1;
+            end
+            
+            for i = 1: nbatches
+                waitbar_fill(obj.loadAxes,i/nbatches);
+                set(obj.infoTxt,'String', sprintf('Correcting %d %',round(i/nbatches *100)));
+                if i ==nbatches
+                    frames = (i-1)*lengthOfBatch+1:obj.data.metadata.iminfo.framenumber;
+                else
+                    frames = (i-1)*lengthOfBatch+1:i*lengthOfBatch;
+                end
+                targetImage = mean(obj.data.imagedata(:,:,2,frames),4);
+                c=normxcorr2(template,targetImage);
+                [ypeak, xpeak] = find (c==max(c(:)));
+                yoffSet = ypeak-size (template, 1);
+                xoffSet = xpeak-size (template, 2);
+                ycor = selectedRegionPosition(2)-yoffSet;
+                xcor = selectedRegionPosition(1)-xoffSet;
+                set(obj.loadTxt,'String',sprintf('X: %d, Y: %d',xcor, ycor));
+                
+                % correct single frames
+                if ycor>0 && xcor>0
+                    corImagedata(ycor+1: imsize(1), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, 1:imsize(2)-xcor, 2, frames);
+                elseif ycor<=0 &&xcor<=0
+                    corImagedata(1: imsize(1)-abs(ycor), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), abs(xcor)+1:imsize(2), 2, frames);
+                elseif ycor>0 && xcor<=0
+                    corImagedata(ycor+1: imsize(1), 1:imsize(2)-abs(xcor), 2, frames)=obj.data.imagedata(1: imsize(1)-ycor, abs(xcor)+1:imsize(2), 2, frames);
+                else
+                    corImagedata(1: imsize(1)-abs(ycor), xcor+1:imsize(2), 2, frames)=obj.data.imagedata(abs(ycor)+1: imsize(1), 1:imsize(2)-xcor, 2, frames);
+                end
+            end
+            
             
             set(obj.loadTxt,'string',[]);
             
-            % make waitbar invible after loading 
+            % make waitbar invible after loading
             c = get(obj.loadAxes,'Children');
             delete (c);
             set(obj.loadAxes,'visible','off');
             drawnow;
             
-             selectedRegion.delete;
-             obj.data.imagedata(:,:,2,:)=corImagedata(:,:,2,:);
-             set(obj.infoTxt,'String','Correction was done!');
-             
+            selectedRegion.delete;
+            obj.data.imagedata(:,:,2,:)=corImagedata(:,:,2,:);
+            set(obj.infoTxt,'String','Correction was done!');
+            
             % update image
             obj.data.metadata.previewFrame{2} = mean(corImagedata(:,:,2,:),4);
-            axes(obj.axes1);
-            cla reset;
-            updateDispFig(obj);
+            showFluoChange(obj,hObject,obj.data.metadata.previewFrame{2},2);
+            
+            % imagedata changed, delete roi intensity data it there is
+            if isfield(obj.data.metadata,'ROIdata')  && ~isempty(obj.data.metadata.ROIdata)
+                nROIs  =length(obj.data.metadata.ROIdata);
+                for i=1:nROIs
+                    if isfield(obj.data.metadata.ROIdata{i},'intensity')
+                        obj.data.metadata.ROIdata{i}=rmfield(obj.data.metadata.ROIdata{i},'intensity');
+                    end
+                end
+            end
+            
         end
         
         % roiToolBox
@@ -2127,46 +2170,46 @@ end
             dispFigPos            =get(obj.dispFig,'Position');
             
             obj.roiTool.fig       =figure   ('Name','ROI ToolBox','NumberTitle','off',...
-                                             'MenuBar','none','Position',[dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250],...
-                                             'Resize','off','Color','white',... 
-                                             'CloseRequestFcn',@obj.roiToolBoxClose);
-                                         
-%             setappdata(obj.roiToolBox,'handles',obj.roiToolBoxh);
+                'MenuBar','none','Position',[dispFigPos(1)+dispFigPos(3)+20 dispFigPos(2)+dispFigPos(4)-250 160 250],...
+                'Resize','off','Color','white',...
+                'CloseRequestFcn',@obj.roiToolBoxClose);
+            
+            %             setappdata(obj.roiToolBox,'handles',obj.roiToolBoxh);
             obj.roiTool.roiList   =uicontrol('Style','listbox','Value',1,'BackgroundColor','white',...
-                                             'Position',[1 1 80 249],...
-                                             'HorizontalAlignment','left',...
-                                             'Callback',@obj.roiList);
+                'Position',[1 1 80 249],...
+                'HorizontalAlignment','left',...
+                'Callback',@obj.roiList);
             obj.roiTool.addRoi    =uicontrol('Style','pushbutton','String','Add',...
-                                             'Position',[81 220 79 30],...
-                                             'Callback',@obj.addRoi);
+                'Position',[81 220 79 30],...
+                'Callback',@obj.addRoi);
             obj.roiTool.updateRoi =uicontrol('Style','pushbutton','String','Update',...
-                                             'Position',[81 190 79 30],...
-                                             'Callback',@obj.updateRoi);
+                'Position',[81 190 79 30],...
+                'Callback',@obj.updateRoi);
             obj.roiTool.deletRoi  =uicontrol('Style','pushbutton','String','Delete',...
-                                             'Position',[81 160 79 30],...
-                                             'Callback',@obj.deleteRoi);
+                'Position',[81 160 79 30],...
+                'Callback',@obj.deleteRoi);
             obj.roiTool.importRoi =uicontrol('Style','pushbutton','String','Import',...
-                                             'Position',[81 130 79 30],...
-                                             'Callback',@obj.importRoi);
+                'Position',[81 130 79 30],...
+                'Callback',@obj.importRoi);
             obj.roiTool.saveRoi   =uicontrol('Style','pushbutton','String','Save',...
-                                             'Position',[81 100 79 30],...
-                                             'Callback',@obj.saveRoi);
+                'Position',[81 100 79 30],...
+                'Callback',@obj.saveRoi);
             obj.roiTool.measureRoi=uicontrol('Style','pushbutton','String','Measure',...
-                                             'Position',[81 70 79 30],...
-                                             'Callback',@obj.measureRoi);
-            obj.roiTool.showAllRoi=uicontrol('Style','checkbox','String','ShowAll',...
-                                             'Position',[81 35 77 25],'Backgroundcolor','white');
-            obj.roiTool.labelRoi  =uicontrol('Style','checkbox','String','Labels',...
-                                             'Position',[81 10 77 25],'Backgroundcolor','white',...
-                                             'Callback',@obj.labelRoi );
+                'Position',[81 70 79 30],...
+                'Callback',@obj.measureRoi);
+            %             obj.roiTool.showAllRoi=uicontrol('Style','checkbox','String','ShowAll',...
+            %                                              'Position',[81 35 77 25],'Backgroundcolor','white');
+            %             obj.roiTool.labelRoi  =uicontrol('Style','checkbox','String','Labels',...
+            %                                              'Position',[81 10 77 25],'Backgroundcolor','white',...
+            %                                              'Callback',@obj.labelRoi );
         end
         
         % Functio to select in roiList
         function roiList (obj, hObject, ~)
             
-           
+            
             % handles.roiList=getappdata(handles.roiToolBox,'handles');
-%             obj.roiList=guidata(obj.axes1);
+            %             obj.roiList=guidata(obj.axes1);
             if ~isfield(obj.data,'metadata') || ~isfield(obj.data.metadata,'ROIdata')  || isempty(obj.data.metadata.ROIdata)
                 NoROI;
                 return;
@@ -2180,12 +2223,12 @@ end
             
             if preSelectIndex ~=0
                 if nROIs==1 %only one ROI
-%                   return;
+                    %                   return;
                 else
                     if ~isempty(preSelectROI)
-                    delete(preSelectROI);
-                    lineh=plot(obj.data.metadata.ROIdata{preSelectIndex}.pos(:,1),obj.data.metadata.ROIdata{preSelectIndex}.pos(:,2),'white', 'LineWidth',2);
-                    obj.data.metadata.ROIdata{preSelectIndex}.linehandles=lineh;
+                        delete(preSelectROI);
+                        lineh=plot(obj.data.metadata.ROIdata{preSelectIndex}.pos(:,1),obj.data.metadata.ROIdata{preSelectIndex}.pos(:,2),'white', 'LineWidth',2);
+                        obj.data.metadata.ROIdata{preSelectIndex}.linehandles=lineh;
                     end
                 end
             end
@@ -2233,8 +2276,8 @@ end
                     delete(preSelectROI);
                     lineh=plot(obj.data.metadata.ROIdata{preSelectIndex}.pos(:,1),obj.data.metadata.ROIdata{preSelectIndex}.pos(:,2),'white', 'LineWidth',2);
                     obj.data.metadata.ROIdata{preSelectIndex}.linehandles=lineh;
-%                     setappdata(handles.roiList,'handles',[]);
-%                     setappdata(handles.roiList,'index',[]);
+                    %                     setappdata(handles.roiList,'handles',[]);
+                    %                     setappdata(handles.roiList,'index',[]);
                 end
                 
             else
@@ -2254,7 +2297,7 @@ end
             y=(min(newROIdata(:,2))+max(newROIdata(:,2)))/2;
             t(curROIn)=text(x,y,sprintf('%d',curROIn),'color','white','Parent',obj.axes1);
             set(obj.roiTool.roiList,'String',{1:1:curROIn}, 'Userdata',{1:1:curROIn});
-            set(obj.roiTool.roiList,'Value', curROIn);           
+            set(obj.roiTool.roiList,'Value', curROIn);
             
             newROIdata=[newROIdata;newROIdata(1,:)];
             obj.data.metadata.ROIdata{curROIn}.pos=newROIdata;
@@ -2272,7 +2315,7 @@ end
                     showIndividualROI(obj);
                 end
             end
-                
+            
         end
         
         % Function to update roi
@@ -2316,7 +2359,7 @@ end
             if isfield(obj.data.metadata.ROIdata{selectIndex},'intensity')
                 obj.data.metadata.ROIdata{selectIndex}=rmfield(obj.data.metadata.ROIdata{selectIndex},'intensity');
             end
-
+            
             obj.openStates.roi.curRoiN=selectIndex;
             obj.openStates.roi.curRoih=updateROI;
         end
@@ -2342,7 +2385,7 @@ end
                     chSliderValue=get(obj.chSlider,'Value');
                     
                     hAxes1 = get(obj.axes1,'Children');
-                    nhAxes1=length(hAxes1);            
+                    nhAxes1=length(hAxes1);
                     
                     if isequal(obj.openStates.image.curImage,obj.data.metadata.previewFrame)
                         hAxes1(nhAxes1+1)=imagesc(obj.openStates.image.curImage{chSliderValue},'Parent',obj.axes1);colorSelection(obj.openStates.image.color{chSliderValue});
@@ -2358,11 +2401,11 @@ end
                 end
             end
             
-%             hold on;
+            %             hold on;
             nROIs  =length(obj.data.metadata.ROIdata);
             
             % delete selected ROI
-%             selectROI=obj.openStates.roi.curRoih;
+            %             selectROI=obj.openStates.roi.curRoih;
             delete(selectROI);
             
             % delete text for selected ROI
@@ -2373,7 +2416,7 @@ end
             leftnROIs=nROIs-1;
             if leftnROIs==0
                 set(obj.roiTool.roiList,'String',[]);
-            else  
+            else
                 t=zeros(leftnROIs);
                 for i=1:leftnROIs
                     delete(obj.data.metadata.ROIdata{i}.thandles)
@@ -2382,7 +2425,7 @@ end
                 end
                 set(obj.roiTool.roiList,'String',{1:1:leftnROIs}, 'Userdata',{1:1:leftnROIs});
             end
-            set(obj.roiTool.roiList,'Value',1); 
+            set(obj.roiTool.roiList,'Value',1);
             obj.openStates.roi.curRoiN=[];
             obj.openStates.roi.curRoih=[];
             
@@ -2395,16 +2438,16 @@ end
                     obj.fp.srEdit.String = ['1:' num2str(leftnROIs)];
                     
                     if obj.fp.srRb.Value && obj.fp.irRb.Value
-                    showIndividualROI(obj);
+                        showIndividualROI(obj);
                     end
                 end
             end
-
+            
         end
         
         % Function to import roi
         function importRoi (obj, ~, ~ )
-                        
+            
             if isfield(obj.data,'metadata')
                 
                 filedir=uigetdir;
@@ -2416,6 +2459,27 @@ end
                 metafilename=fullfile(filedir, ['meta_' filename '.mat']);
                 load(metafilename);
                 
+                % add template matching first to detect motion between the
+                % two image sequences
+                previousImage = metadata.previewFrame{2};
+                currentImage  = obj.openStates.image.curImage{2};
+                
+                set(obj.infoTxt,'String','Please select a rectangle region!');
+                axes(obj.axes1);
+                selectedRegion = drawrectangle;
+                selectedRegionPosition = round(selectedRegion.Position);
+                template = currentImage(selectedRegionPosition(2)+1:selectedRegionPosition(2)+selectedRegionPosition(4),...
+                    selectedRegionPosition(1)+1:selectedRegionPosition(1)+selectedRegionPosition(3));
+                c=normxcorr2(template,previousImage);
+                [ypeak, xpeak] = find (c==max(c(:)));
+                yoffSet = ypeak-size (template, 1);
+                xoffSet = xpeak-size (template, 2);
+                ycor = selectedRegionPosition(2)-yoffSet;
+                xcor = selectedRegionPosition(1)-xoffSet;
+                
+                selectedRegion.delete;
+                
+                % correct the x,y for ROIs
                 axes(obj.axes1);
                 hold on;
                 if isfield(metadata,'ROIdata') && ~isempty(metadata.ROIdata)
@@ -2423,7 +2487,12 @@ end
                     nROIs  =length(obj.data.metadata.ROIdata);
                     t=zeros(nROIs);
                     for i=1:nROIs
-                        lineh=plot(obj.data.metadata.ROIdata{i}.pos(:,1),obj.data.metadata.ROIdata{i}.pos(:,2),'white', 'LineWidth',2);
+                        obj.data.metadata.ROIdata{i}.pos = obj.data.metadata.ROIdata{i}.pos + [xcor ycor];
+                        x = obj.data.metadata.ROIdata{i}.pos(:,1);
+                        y = obj.data.metadata.ROIdata{i}.pos(:,2);
+                        obj.data.metadata.ROIdata{i}.cenX = (min(x)+max(x))/2;
+                        obj.data.metadata.ROIdata{i}.cenY = (min(y)+max(y))/2;
+                        lineh=plot(x,y,'white', 'LineWidth',2);
                         obj.data.metadata.ROIdata{i}.linehandles=lineh;
                         t(i)=text(obj.data.metadata.ROIdata{i}.cenX,obj.data.metadata.ROIdata{i}.cenY,sprintf('%d',i),'color','white','parent',obj.axes1);
                         obj.data.metadata.ROIdata{i}.thandles=t(i);
@@ -2435,10 +2504,11 @@ end
                     set(obj.roiTool.roiList,'string',{1:1:nROIs}, 'userdata',{1:1:nROIs});
                     set(obj.roiTool.roiList,'Value',1);
                     
+                    set(obj.infoTxt,'String',sprintf('Corrected X: %d, Y: %d',xcor, ycor));
                     % Add defaut value to Total ROI number in Measure panel if it
                     % is open
                     if ~isempty(obj.fp)
-                        obj.fp.srEdit.String = ['1:' num2str(curROIn)];
+                        obj.fp.srEdit.String = ['1:' num2str(nROIs)];
                         
                         if obj.fp.srRb.Value && obj.fp.irRb.Value
                             showIndividualROI(obj);
@@ -2459,7 +2529,7 @@ end
         % Function to save roi
         function saveRoi (obj, ~, ~)
             
-            try 
+            try
                 d = obj.data.metadata.ROIdata;
             catch
                 obj.infoTxt.String = 'Error! No Image or No ROI data!';
@@ -2469,23 +2539,23 @@ end
             nROIs  =length(d); %only save ROI info, no fluo intensity.
             for i=1:nROIs
                 if isfield(d{i},'intensity')
-                    d{i}=rmfield(d{i},'intensity');                   
+                    d{i}=rmfield(d{i},'intensity');
                 end
                 
                 if isfield(d{i},'linehandles')
-                    d{i}=rmfield(d{i},'linehandles');                   
+                    d{i}=rmfield(d{i},'linehandles');
                 end
                 
                 if isfield(d{i},'ROIhandles')
                     d{i}=rmfield(d{i},'ROIhandles');
                 end
                 
-                 if isfield(d{i},'thandles')
-                     d{i}=rmfield(d{i},'thandles');
+                if isfield(d{i},'thandles')
+                    d{i}=rmfield(d{i},'thandles');
                 end
             end
             
-            load(obj.data.info.metamat.name); 
+            load(obj.data.info.metamat.name);
             metadata.ROIdata = d;
             save(obj.data.info.metamat.name, 'metadata');
             set(obj.infoTxt,'string','ROIs Saved!');
@@ -2494,11 +2564,7 @@ end
         % Function to measure the intensity of roi
         function measureRoi (obj, ~, ~)
             
-        
-            nFrames  =obj.data.metadata.iminfo.framenumber;
-           
-            frameRate=obj.data.metadata.iminfo.framePeriod;
-            fluoTime =frameRate*(1:1:nFrames);
+            framenumber  =obj.data.metadata.iminfo.framenumber;
             
             selectIndex=obj.openStates.roi.curRoiN;
             if isempty(selectIndex)
@@ -2514,9 +2580,9 @@ end
             
             figure(200);
             if chN==1
-                plot(fluoTime,intensityAve,'Color','b');
+                plot(1:framenumber,intensityAve,'Color','b');
             else
-                plot(fluoTime,intensityAve,'Color','k');
+                plot(1:framenumber,intensityAve,'Color','k');
             end
             hold on;
         end
@@ -2530,7 +2596,7 @@ end
                 intensityAve=obj.data.metadata.ROIdata{ROIn}.intensity{chN};
             else
                 try
-                nFrames  =obj.data.metadata.iminfo.framenumber;
+                    nFrames  =obj.data.metadata.iminfo.framenumber;
                 catch
                     nFrames  =obj.data.metadata.iminfo.frameNumber;
                 end
@@ -2565,7 +2631,7 @@ end
         
         function labelRoi(obj,hObject,~)
             
-             if isempty(obj.openStates) % no image open 
+            if isempty(obj.openStates) % no image open
                 return;
             end
             
@@ -2576,9 +2642,9 @@ end
                     nROIs  =length(ROIdata);
                 catch
                 end
-   
+                
             end
-           
+            
             if get(hObject, 'Value')
                 
                 for i=1:nROIs
@@ -2590,52 +2656,52 @@ end
                     obj.data.metadata.ROIdata{i}=rmfield(obj.data.metadata.ROIdata{i},'thandles');
                 end
             end
-                
+            
             
             
         end
         % Function to close roiToolBox window
         function roiToolBoxClose (obj, ~, ~)
             
-%             handles.roiList=guidata(handles.axes1);
+            %             handles.roiList=guidata(handles.axes1);
             
             if ~isempty(get(obj.roiTool.roiList,'String'))
                 
-%                 load(obj.data.info.metamat.name); 
-%                 if ~isequal(metadata.ROIdata, obj.data.metadata.ROIdata)
-%                     
-%                     selection=questdlg('ROIs were changed. Save the changes?',...
-%                         'ROI ToolBox',...
-%                         'Yes','No','Yes');
-%                     switch selection
-%                         case'Yes'
-%                             saveRoi(obj);
-%                             
-%                         case'No'
-%                             
-%                     end
-%                 end
+                %                 load(obj.data.info.metamat.name);
+                %                 if ~isequal(metadata.ROIdata, obj.data.metadata.ROIdata)
+                %
+                %                     selection=questdlg('ROIs were changed. Save the changes?',...
+                %                         'ROI ToolBox',...
+                %                         'Yes','No','Yes');
+                %                     switch selection
+                %                         case'Yes'
+                %                             saveRoi(obj);
+                %
+                %                         case'No'
+                %
+                %                     end
+                %                 end
                 
                 axes(obj.axes1);
-                 hAxes1 = get(obj.axes1,'Children');
-                  nhAxes1=length(hAxes1);
-                  delete(hAxes1(1:nhAxes1-1));
-                 updateHAxes1=hAxes1(end);
-                 set(obj.axes1,'Children',updateHAxes1);
-                 
-%                 cla;
-%                 if isequal(obj.openStates.image.curImage,obj.data.metadata.previewFrame)
-%                     imagesc(obj.openStates.image.curImage{2},'Parent',obj.axes1);colormap(jet);
-%                 else
-%                     imagesc(obj.openStates.image.curImage{2},'Parent',obj.axes1);colormap(gray);
-%                 end
+                hAxes1 = get(obj.axes1,'Children');
+                nhAxes1=length(hAxes1);
+                delete(hAxes1(1:nhAxes1-1));
+                updateHAxes1=hAxes1(end);
+                set(obj.axes1,'Children',updateHAxes1);
+                
+                %                 cla;
+                %                 if isequal(obj.openStates.image.curImage,obj.data.metadata.previewFrame)
+                %                     imagesc(obj.openStates.image.curImage{2},'Parent',obj.axes1);colormap(jet);
+                %                 else
+                %                     imagesc(obj.openStates.image.curImage{2},'Parent',obj.axes1);colormap(gray);
+                %                 end
                 obj.data.metadata=rmfield(obj.data.metadata,'ROIdata');
                 
             end
             
             delete(obj.roiTool.fig);
             obj.roiTool=[];
-        
+            
         end
         
         % stimulus
@@ -2654,25 +2720,25 @@ end
             a=datecmp(y,m,d,2019,12,31);
             
             if a>=0 % version before 12/31/2016
-            %Image open, did not open stiTool for this image
-            if isempty (obj.stiTool)
-                % Stimulus already processed, and saved in the metadata
-                if isfield(obj.data.metadata,'stiInfo')
-%                     obj.stiTool=stimulus(obj.data.metadata.stiInfo);
-                    obj.stiTool=stim(obj.data.metadata.stiInfo);
-                % First time to process the stimulus related to the image
-                else
-                    lastSti=[];
-                    if isfield(obj.openStates,'sti')
-                        lastSti=obj.openStates.sti;
-                    end
-                    
-                    if obj.data.metadata.iminfo.channel==2
-%                     choice=questdlg('Would you like to open stimulus from the red channel?',...
-%                         'Open Stimulus',...
-%                         'Yes','No','Yes');
-%                     switch choice
-%                         case 'Yes' % Chose stimulus from the red channel
+                %Image open, did not open stiTool for this image
+                if isempty (obj.stiTool)
+                    % Stimulus already processed, and saved in the metadata
+                    if isfield(obj.data.metadata,'stiInfo')
+                        %                     obj.stiTool=stimulus(obj.data.metadata.stiInfo);
+                        obj.stiTool=stim(obj.data.metadata.stiInfo);
+                        % First time to process the stimulus related to the image
+                    else
+                        lastSti=[];
+                        if isfield(obj.openStates,'sti')
+                            lastSti=obj.openStates.sti;
+                        end
+                        
+                        if obj.data.metadata.iminfo.channel==2
+                            %                     choice=questdlg('Would you like to open stimulus from the red channel?',...
+                            %                         'Open Stimulus',...
+                            %                         'Yes','No','Yes');
+                            %                     switch choice
+                            %                         case 'Yes' % Chose stimulus from the red channel
                             if ~obj.data.info.immat.loaded
                                 if exist(obj.data.info.immat.name,'file')
                                     obj.data.imagedata=getfield(load(obj.data.info.immat.name),'imagedata');
@@ -2680,69 +2746,69 @@ end
                                 end
                             end
                             stidata=squeeze(mean((mean(obj.data.imagedata(:,:,1,:),1)),2));
-%                            obj.stiTool=stimulus(stidata);
+                            %                            obj.stiTool=stimulus(stidata);
                             obj.stiTool=stim(stidata,lastSti);
-%                         case 'No'  % Import stimulus from other files
-%                             obj.stiTool=stimulius();
-                    else
+                            %                         case 'No'  % Import stimulus from other files
+                            %                             obj.stiTool=stimulius();
+                        else
                             obj.stiTool=stim();
+                        end
+                    end
+                else
+                    %Image open, opened stiTool for this image
+                    if ~isfield(obj.stiTool, 'h') || isempty(obj.stiTool.h.fig)
+                        
+                        %                     obj.stiTool=stimulus(obj.stiTool);
+                        obj.stiTool=stim(obj.stiTool);
+                    else
+                        return;
                     end
                 end
-            else
-                %Image open, opened stiTool for this image
-                if ~isfield(obj.stiTool, 'h') || isempty(obj.stiTool.h.fig)
-                    
-%                     obj.stiTool=stimulus(obj.stiTool);
-                      obj.stiTool=stim(obj.stiTool);
-                else
-                    return;
+                
+                waitfor(obj.stiTool.h.fig);
+                try
+                    obj.openStates.sti.threshold=obj.stiTool.threshold;
+                    obj.openStates.sti.patternInfo=obj.stiTool.patternInfo;
+                    obj.openStates.sti.paraInfo =obj.stiTool.paraInfo;
+                catch
                 end
-            end
-          
-            waitfor(obj.stiTool.h.fig);
-            try
-                obj.openStates.sti.threshold=obj.stiTool.threshold;
-                obj.openStates.sti.patternInfo=obj.stiTool.patternInfo;
-                obj.openStates.sti.paraInfo =obj.stiTool.paraInfo;
-            catch
-            end
             else
                 
             end
             
             
-           
-%             if ~isempty(obj.stiTool)
-%                 return;
-%             end
-%             
-%             if isempty (obj.openStates)
-%                 set(obj.infoTxt,'String','No Image Open!')
-%                 return;    
-%             end
-%             
-%             if ~isfield (obj.data.metadata,'stidata')
-%                 
-%                 choice=questdlg('Where would you like to open stimulus from?',...
-%                     'Open Stimulus',...
-%                     'File','Red Channel','Red Channel');
-%                 switch choice
-%                     case 'File',
-%                         [filename, pathname] = uigetfile('*.m', 'Pick a file');
-%                         if isequal(filename,0) || isequal(pathname,0)
-%                             set(obj.infoTxt,'String','User pressed cancel');
-%                             return;
-%                         else
-%                             set(obj.infoTxt,'String',printf('User selected %s', fullfile(pathname, filename)));
-%                         end
-%                         
-%                         stiRaw=fullfile(pathname, filename);
-%                         load(stiRaw); obj.data.metadata.stidata.stiRaw=stiRaw;
-%                     case 'Red Channel'
-%                         obj.data.metadata.stidata.stiRaw=squeeze(mean((mean(obj.data.imagedata(:,:,1,:),1)),2));
-%                         
-%                 end
-%             end
+            
+            %             if ~isempty(obj.stiTool)
+            %                 return;
+            %             end
+            %
+            %             if isempty (obj.openStates)
+            %                 set(obj.infoTxt,'String','No Image Open!')
+            %                 return;
+            %             end
+            %
+            %             if ~isfield (obj.data.metadata,'stidata')
+            %
+            %                 choice=questdlg('Where would you like to open stimulus from?',...
+            %                     'Open Stimulus',...
+            %                     'File','Red Channel','Red Channel');
+            %                 switch choice
+            %                     case 'File',
+            %                         [filename, pathname] = uigetfile('*.m', 'Pick a file');
+            %                         if isequal(filename,0) || isequal(pathname,0)
+            %                             set(obj.infoTxt,'String','User pressed cancel');
+            %                             return;
+            %                         else
+            %                             set(obj.infoTxt,'String',printf('User selected %s', fullfile(pathname, filename)));
+            %                         end
+            %
+            %                         stiRaw=fullfile(pathname, filename);
+            %                         load(stiRaw); obj.data.metadata.stidata.stiRaw=stiRaw;
+            %                     case 'Red Channel'
+            %                         obj.data.metadata.stidata.stiRaw=squeeze(mean((mean(obj.data.imagedata(:,:,1,:),1)),2));
+            %
+            %                 end
+            %             end
         end
         
         function addnote(obj, ~,~)
@@ -2756,7 +2822,7 @@ end
                     end
                 else
                     return;
-                end
+                end    
             else
                 if isempty(obj.nf.h)
                     obj.nf = notewriter(obj.nf.notes);
@@ -2815,7 +2881,7 @@ end
                 end
             end
             imdata = obj.data.imagedata;
-%             ss = setdiff(1:frameNumber, s);
+            %             ss = setdiff(1:frameNumber, s);
             ss = 1:1000;
             red.control = mean(imdata(:,:,1,ss),4);
             red.wave    = mean(imdata(:,:,1,s),4);
@@ -2824,7 +2890,7 @@ end
             
             figure(100);
             subplot(1,2,1);
-            imshow(red.control,[350 450]);axis off;drawnow;colorSelection('Red');     
+            imshow(red.control,[350 450]);axis off;drawnow;colorSelection('Red');
             subplot(1,2,2);
             imshow(red.wave,[350 450]);axis off;drawnow;colorSelection('Red');
             figure(200);
@@ -2837,21 +2903,21 @@ end
             baseline = mean(inten(ss));
             deltaF   = (inten - baseline) / baseline *100;
             plot(1:frameNumber,deltaF,'k','LineWidth',1);
-           
-%             d=find(diff(s)~=1);
-%             nSti=length(d)+1;
-%             
-%             startFrameN=[];
-%             endFrameN=[];
-%             startFrameN(1)=s(1)+filtern;
-%             startFrameN(2:nSti)=s(d+1)+filtern;
-%             endFrameN(1:nSti-1)=s(d)-filtern;
-%             endFrameN(nSti)=s(end)-filtern;
+            
+            %             d=find(diff(s)~=1);
+            %             nSti=length(d)+1;
+            %
+            %             startFrameN=[];
+            %             endFrameN=[];
+            %             startFrameN(1)=s(1)+filtern;
+            %             startFrameN(2:nSti)=s(d+1)+filtern;
+            %             endFrameN(1:nSti-1)=s(d)-filtern;
+            %             endFrameN(nSti)=s(end)-filtern;
             
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Part 4. Analyze
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Auto Fluorescence Detection figure
         function autoFluoChangeDetection (obj, ~, ~)
@@ -2862,13 +2928,13 @@ end
         end
         
         function initAutoFluoDetector (obj)
-                  
+            
             
             obj.autoFluoDetector.fig  =figure   ('Name','Auto Fluorescence Detector','NumberTitle','off',...
                 'MenuBar','none',...
                 'Resize','off','Color','white',...
                 'CloseRequestFcn',@obj.autoFluoDetectionClose);
-            try 
+            try
                 roiFigPos=get(obj.roiTool.fig,'Position');
                 set(obj.autoFluoDetector.fig,'Position',[roiFigPos(1) roiFigPos(2)-150 160 110]);
             catch
@@ -2878,17 +2944,17 @@ end
             
             %Creat uicontrol
             obj.autoFluoDetector.para               =uipanel('Title','',...
-               'FontSize',9,...
-               'BackgroundColor','white',...
-               'Units','pixels',...
-               'Position',[2 40 158 60],...
-               'Parent',  obj.autoFluoDetector.fig);
+                'FontSize',9,...
+                'BackgroundColor','white',...
+                'Units','pixels',...
+                'Position',[2 40 158 60],...
+                'Parent',  obj.autoFluoDetector.fig);
             %Sti radio group
             obj.autoFluoDetector.sti                     =uibuttongroup('Units','pixels',...
-               'BorderType','none',...
-               'BackgroundColor','white',...
-               'Position',[0 35 190 25],...
-               'Parent',obj.autoFluoDetector.para);
+                'BorderType','none',...
+                'BackgroundColor','white',...
+                'Position',[0 35 190 25],...
+                'Parent',obj.autoFluoDetector.para);
             obj.autoFluoDetector.allSti            =uicontrol('Style','radiobutton',...
                 'String','All Sti',...
                 'BackgroundColor','white',...
@@ -2906,12 +2972,12 @@ end
                 'BackgroundColor','white',...
                 'Position',[110 3 40 15],...
                 'Parent',  obj.autoFluoDetector.sti);
-             %onoff radio group
+            %onoff radio group
             obj.autoFluoDetector.resp                    =uibuttongroup('Units','pixels',...
-               'BorderType','none',...
-               'BackgroundColor','white',...
-               'Position',[0 5 190 25],...
-               'Parent',obj.autoFluoDetector.para);
+                'BorderType','none',...
+                'BackgroundColor','white',...
+                'Position',[0 5 190 25],...
+                'Parent',obj.autoFluoDetector.para);
             obj.autoFluoDetector.onResp            =uicontrol('Style','radiobutton',...
                 'String','ON',...
                 'BackgroundColor','white',...
@@ -2929,23 +2995,23 @@ end
                 'Position',[87 0 60 20],...
                 'Parent',  obj.autoFluoDetector.resp);
             % Buttons
-           
-           obj.autoFluoDetector.processAutoDetection  =uicontrol('Style','pushbutton',...
-               'String','Detect',...
-               'BackgroundColor','white',...
-               'Position',[90 10 60 25],...
-               'Parent',obj.autoFluoDetector.fig,...
-               'Callback',@obj.processAutoDetection);
-           try
+            
+            obj.autoFluoDetector.processAutoDetection  =uicontrol('Style','pushbutton',...
+                'String','Detect',...
+                'BackgroundColor','white',...
+                'Position',[90 10 60 25],...
+                'Parent',obj.autoFluoDetector.fig,...
+                'Callback',@obj.processAutoDetection);
+            try
                 stiInfo=obj.stiTool;
             catch
                 stiInfo=obj.data.metadata.stiInfo;
-           end
+            end
             
-           try
-               set(obj.autoFluoDetector.patternEdit,'String',['1:' num2str(length(stiInfo.patternInfo))]);
-           catch
-           end
+            try
+                set(obj.autoFluoDetector.patternEdit,'String',['1:' num2str(length(stiInfo.patternInfo))]);
+            catch
+            end
         end
         
         function autoFluoDetectionClose (obj,hObject, ~)
@@ -2953,7 +3019,7 @@ end
             delete(hObject);
             obj.autoFluoDetector=[];
         end
-
+        
         % function to detect fluorescence change automatically
         function processAutoDetection (obj,hObject, ~)
             
@@ -2974,16 +3040,16 @@ end
             
             if get(obj.autoFluoDetector.allSti,'Value')
                 trailN=1:1:length(stiInfo.trailInfo);
-            
-            
-            [fluoChangeData]=caculateFluoChange(obj,option,trailN);
-%             filteredFluoChangeData=moving_average(fluoChangeData,1);
-% kernel = [-1 -1 -1;-1 900 -1;-1 -1 -1];
-% filteredFluoChangeData=imfilter(fluoChangeData,kernel,'same');
-             filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-%             filteredFluoChangeData=100*fluoChangeData;
-            showFluoChange(obj,hObject,filteredFluoChangeData);
-               
+                
+                
+                [fluoChangeData]=caculateFluoChange(obj,option,trailN);
+                %             filteredFluoChangeData=moving_average(fluoChangeData,1);
+                % kernel = [-1 -1 -1;-1 900 -1;-1 -1 -1];
+                % filteredFluoChangeData=imfilter(fluoChangeData,kernel,'same');
+                filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
+                %             filteredFluoChangeData=100*fluoChangeData;
+                showFluoChange(obj,hObject,filteredFluoChangeData,1);
+                
             end
             
             if get(obj.autoFluoDetector.individualPattern,'Value')
@@ -2993,7 +3059,7 @@ end
                     trailN=stiInfo.patternInfo(pat).trailN;
                     [fluoChangeData]=caculateFluoChange(obj,option,trailN);
                     filteredFluoChangeData=wiener2(fluoChangeData,[3 3]);
-                    showFluoChange(obj,hObject,filteredFluoChangeData);
+                    showFluoChange(obj,hObject,filteredFluoChangeData,1);
                 else
                     figure(666);
                     col=ceil(sqrt(patN));
@@ -3022,37 +3088,37 @@ end
                 chN=get(obj.chSlider,'Value');
             end
             % detect whether fluoChangeData already exits
-%             switch option
-%                 case 0
-%                     try fluoChangeData=obj.data.metadata.hotSpotFrame.on{chN};return;
-%                     catch    
-%                     end
-%                 case 1
-%                     try fluoChangeData=obj.data.metadata.hotSpotFrame.off{chN};return;
-%                     catch    
-%                     end
-%                 case 2
-%                     try fluoChangeData=obj.data.metadata.hotSpotFrame.off{chN};return;
-%                     catch    
-%                     end
-%             end
-
+            %             switch option
+            %                 case 0
+            %                     try fluoChangeData=obj.data.metadata.hotSpotFrame.on{chN};return;
+            %                     catch
+            %                     end
+            %                 case 1
+            %                     try fluoChangeData=obj.data.metadata.hotSpotFrame.off{chN};return;
+            %                     catch
+            %                     end
+            %                 case 2
+            %                     try fluoChangeData=obj.data.metadata.hotSpotFrame.off{chN};return;
+            %                     catch
+            %                     end
+            %             end
+            
             % image info
-            frameRate=obj.data.metadata.iminfo.framePeriod;        
-%             % test whether there is stimulus infomation 
-%             try
-%                  stiInfo=obj.stiTool;
-%             catch
-%                 try
-%                     stiInfo=obj.data.metadata.stiInfo;
-%                 catch
-%                 stimulus(obj);
-%                 waitfor(obj.stiTool.h.fig);
-%                 stiInfo=obj.stiTool;
-%                 end
-%                 
-%             end
-
+            frameRate=obj.data.metadata.iminfo.framePeriod;
+            %             % test whether there is stimulus infomation
+            %             try
+            %                  stiInfo=obj.stiTool;
+            %             catch
+            %                 try
+            %                     stiInfo=obj.data.metadata.stiInfo;
+            %                 catch
+            %                 stimulus(obj);
+            %                 waitfor(obj.stiTool.h.fig);
+            %                 stiInfo=obj.stiTool;
+            %                 end
+            %
+            %             end
+            
             % load imagedata
             if ~obj.data.info.immat.loaded
                 if exist(obj.data.info.immat.name,'file')
@@ -3061,77 +3127,81 @@ end
                 end
             end
             
-             try
+            try
                 stiInfo=obj.stiTool;
             catch
                 stiInfo=obj.data.metadata.stiInfo;
-             end
+            end
             
-            nSti=length(trailN);  
+            nSti=length(trailN);
             sum1=0;sum2=0;sum3=0;
             for i=1:nSti
-            onStart  =stiInfo.trailInfo(trailN(i)).startFrameN;
-            onEnd   =stiInfo.trailInfo(trailN(i)).endFrameN;
-            offStart =stiInfo.trailInfo(trailN(i)).endFrameN+1;
-            offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(5/frameRate);
-            BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(1/frameRate):onStart),4);
-            sum1   =sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:onEnd),4))-BL;
-             sum2  =sum2+squeeze(mean(obj.data.imagedata(:,:,chN,offStart:offEnd),4))-BL;
+                onStart  =stiInfo.trailInfo(trailN(i)).startFrameN;
+                onEnd   =stiInfo.trailInfo(trailN(i)).endFrameN;
+                offStart =stiInfo.trailInfo(trailN(i)).endFrameN+1;
+                offEnd  =stiInfo.trailInfo(trailN(i)).endFrameN+round(5/frameRate);
+                BL       =mean(obj.data.imagedata(:,:,chN,onStart-round(1/frameRate):onStart),4);
+                sum1   =sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart:onEnd),4))-BL;
+                sum2  =sum2+squeeze(mean(obj.data.imagedata(:,:,chN,offStart:offEnd),4))-BL;
             end
-%             sum1=sum1/nSti; sum2=sum2/nSti;
+            %             sum1=sum1/nSti; sum2=sum2/nSti;
             sum3=sum1+sum2;
             fluoCh={sum1 sum2 sum3};
             fluoChangeData=fluoCh{option};
-%             fluoChangeData=fluoCh{2}-fluoCh{1};
+            %             fluoChangeData=fluoCh{2}-fluoCh{1};
             
             
             
-%             sum1     =0;
-%             sum2     =0;
-%             switch option
-%                 case 0
-%                     for i=1:nSti
-%                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i):onEnd(i)),4));
-%                         sum2=sum2+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i)-round(1/frameRate):onStart(i)),4));
-%                     end
-%                     fluoChangeData=sum1/nSti;
-%                     baselineData=sum2/nSti;
-%                     fluoChangeData=(fluoChangeData-baselineData)./baselineData;
-%                     obj.data.metadata.hotSpotFrame.on{chN}=fluoChangeData;
-%                 case 1
-%                     for i=1:nSti
-%                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,offStart(i):offEnd(i)),4));
-%                     end
-%                     fluoChangeData=sum1/nSti;
-%                     fluoChangeData=fluoChangeData-obj.data.metadata.previewFrame{chN};
-%                     obj.data.metadata.hotSpotFrame.off{chN}=fluoChangeData;
-%                 case 2
-%                     for i=1:nSti
-%                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i):onEnd(i)),4))+squeeze(mean(obj.data.imagedata(:,:,chN,offStart(i):offEnd(i)),4));
-%                     end
-%                     fluoChangeData=sum1/nSti;
-%                     fluoChangeData=fluoChangeData-2*obj.data.metadata.previewFrame{chN};
-%                     obj.data.metadata.hotSpotFrame.all{chN}=fluoChangeData;
-%                     
-%             end
+            %             sum1     =0;
+            %             sum2     =0;
+            %             switch option
+            %                 case 0
+            %                     for i=1:nSti
+            %                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i):onEnd(i)),4));
+            %                         sum2=sum2+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i)-round(1/frameRate):onStart(i)),4));
+            %                     end
+            %                     fluoChangeData=sum1/nSti;
+            %                     baselineData=sum2/nSti;
+            %                     fluoChangeData=(fluoChangeData-baselineData)./baselineData;
+            %                     obj.data.metadata.hotSpotFrame.on{chN}=fluoChangeData;
+            %                 case 1
+            %                     for i=1:nSti
+            %                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,offStart(i):offEnd(i)),4));
+            %                     end
+            %                     fluoChangeData=sum1/nSti;
+            %                     fluoChangeData=fluoChangeData-obj.data.metadata.previewFrame{chN};
+            %                     obj.data.metadata.hotSpotFrame.off{chN}=fluoChangeData;
+            %                 case 2
+            %                     for i=1:nSti
+            %                         sum1=sum1+squeeze(mean(obj.data.imagedata(:,:,chN,onStart(i):onEnd(i)),4))+squeeze(mean(obj.data.imagedata(:,:,chN,offStart(i):offEnd(i)),4));
+            %                     end
+            %                     fluoChangeData=sum1/nSti;
+            %                     fluoChangeData=fluoChangeData-2*obj.data.metadata.previewFrame{chN};
+            %                     obj.data.metadata.hotSpotFrame.all{chN}=fluoChangeData;
+            %
+            %             end
         end
         
-        function showFluoChange(obj,hObject,fluoChangeData)
+        function showFluoChange(obj,hObject,img,option)
             
             axes(obj.axes1);
-%             cla ;
+            %             cla ;
             
             magN     = obj.openStates.image.magN;
-            zoomFactor= obj.openStates.image.zoomFactor; 
+            zoomFactor= obj.openStates.image.zoomFactor;
             
             hAxes1 = get(obj.axes1,'Children');
             delete (hAxes1(end));
             hAxes1(end)=[];
             nhAxes1=length(hAxes1);
             
-%             hAxes1(nhAxes1+1) = imshow(fluoChangeData,[-3000 3000]);axis off;drawnow;colormap(jet);drawnow;
-            hAxes1(nhAxes1+1) = imagesc(fluoChangeData,[-3000 3000]);colormap(gca,jet);drawnow;axis off;drawnow;
-            obj.openStates.curImage=fluoChangeData;
+            if option ==1
+                hAxes1(nhAxes1+1) = imagesc(img,[-3000 3000]);colormap(gca,jet);drawnow;axis off;drawnow;
+            else
+                hAxes1(nhAxes1+1) = imagesc(img); colorSelection('Green'); axis off;drawnow;
+            end
+            obj.openStates.image.curImage{2}=img;
+            
             
             if ~isfield(obj.openStates,'roi')
                 if zoomFactor
@@ -3139,7 +3209,7 @@ end
                     zoom (obj.mag(magN)/obj.mag(startZoomMagN));
                 end
             end
-                
+            
             curhAxes1=get(obj.axes1,'Children');
             if hAxes1(end)~=curhAxes1(end)
                 set(obj.axes1,'Children',hAxes1);
@@ -3149,10 +3219,10 @@ end
             figure(obj.dispFig);
             drawnow;
             set(hObject, 'Enable', 'on');
-           
+            
         end
         
-       %% Tool- Measure 
+        %% Tool- Measure
         function openFluoProcessor (obj, ~, ~)
             
             if isempty(obj.fp)
@@ -3171,6 +3241,7 @@ end
             obj.fp.fig.CloseRequestFcn        = @obj.closeFluoProcessor;
             obj.fp.irRb.Callback              = @obj.showIndividualROI;
             obj.fp.osRb.Callback              = @obj.analyzeOS;
+            obj.fp.traceLengthEdit.Callback   = @obj.editTraceLength;
             obj.fp.rtRb.Callback              = @obj.showRaw;
             obj.fp.rtRb1.Callback             = @obj.showRaw;
             obj.fp.tbtRb.Callback             = @obj.showTraceByTrace;
@@ -3178,6 +3249,7 @@ end
             obj.fp.manSelectBlPb.Callback     = @obj.manuallySelectBaselineValue;
             obj.fp.saveProcessParaPb.Callback = @obj.saveProcessPara;
             obj.fp.processROIPb.Callback      = @obj.processROI;
+            
             
             
             % Initiazing
@@ -3188,7 +3260,7 @@ end
                 obj.fp.ymaxEdit.String             = obj.data.metadata.processPara.ymax;
                 
                 % read baseline parameters
-                baselineLength  = obj.data.metadata.processPara.baselineLength; 
+                baselineLength  = obj.data.metadata.processPara.baselineLength;
                 if ~isempty(baselineLength) && ~unique(isnan(baselineLength))
                     obj.fp.tivblRb.Value   = 1;
                     obj.fp.tvblEdit.String = baselineLength;
@@ -3219,8 +3291,9 @@ end
                 obj.fp.srEdit.String = ['1:' num2str(nROI)];
             catch
             end
-
             
+            % default raw, display corresponding Xmax
+            showRaw(obj);
         end
         
         % Function to close fluoProcessor
@@ -3245,20 +3318,35 @@ end
             obj.fp.pathEdit.String ='F:\current projects\th2-GCaMP6s\analysis\os\';
             obj.fp.nameEdit.String ='OSPA.mat';
         end
-        % Automatically update xmax value When Select Row 
+        
+        function editTraceLength(obj,~,~)
+            
+            % check traceLength
+            framenumber = obj.data.metadata.iminfo.framenumber;
+            framePeriod = obj.data.metadata.iminfo.framePeriod;
+            preStmLength   = str2double(obj.fp.preStmLengthEdit.String);
+            traceLength    = str2double(obj.fp.traceLengthEdit.String);
+            lastStartFrameN = obj.stiTool.trailInfo(end).startFrameN;
+            if (lastStartFrameN + (traceLength - preStmLength)/framePeriod) > framenumber
+                obj.infoTxt.String = 'Error, TraceLength Too Large!';
+                maxlength = round((framenumber - lastStartFrameN)*framePeriod - preStmLength);
+                obj.fp.traceLengthEdit.String = num2str(maxlength);
+            end
+        end
+        % Automatically update xmax value When Select Row
         function showRaw (obj, ~, ~)
             
             frameNumber = obj.data.metadata.iminfo.framenumber;
             framePeriod = obj.data.metadata.iminfo.framePeriod;
             obj.fp.xmaxEdit.String = frameNumber * framePeriod + 2;
             
-            % Baseline not regarding the stimulus, set fixed value as the
-            % defaut method of setting baseline
-            obj.fp.fvRb.Value = 1;
+            %             % Baseline not regarding the stimulus, set fixed value as the
+            %             % defaut method of setting baseline
+            %             obj.fp.fvRb.Value = 1;
             
-            % Empty other methods
-            obj.fp.tvblEdit.String = '';
-            obj.fp.fdEdit.String   = '';
+            %             % Empty other methods
+            %             obj.fp.tvblEdit.String = '';
+            %             obj.fp.fdEdit.String   = '';
             
             
         end
@@ -3272,7 +3360,7 @@ end
                 obj.infoTxt.String = 'No stimulus data available!';
                 return;
             end
-              
+            
             traceLength = str2double(obj.fp.traceLengthEdit.String);
             obj.fp.xmaxEdit.String = (traceLength + 1) * nSti + 1;
         end
@@ -3310,7 +3398,7 @@ end
             end
             inten = getintensity (obj, selectIndex, chN);
             % boxcar filter window width
-            ftnum          =str2double(obj.fp.bcftEdit.String); 
+            ftnum          =str2double(obj.fp.bcftEdit.String);
             % filter data
             inten          = moving_average(inten,ftnum);
             % create a dialog
@@ -3319,14 +3407,23 @@ end
             ax = axes ( 'parent', hFig, 'position', [0.1 0.2 0.8 0.7], 'nextplot', 'add' );
             plot(ax, 1:frameNumber,inten,'k','LineWidth',1);
             % create the draggable horizontal line
-            movableHorizontalLine( hFig, ax);
+            if ~isempty(obj.fp.fvEdit.String)
+                ini = str2double(obj.fp.fvEdit.String);
+            else
+                ini = round(mode(inten));
+            end
+            movableHorizontalLine( hFig, ax, ini);
         end
-
+        
         % Function to save process parameters
         function saveProcessPara (obj, ~, ~)
             
-            load(obj.data.info.metamat.name); 
-            metadata.processPara = obj.data.metadata.processPara;
+            load(obj.data.info.metamat.name);
+            try
+                metadata.processPara = obj.data.metadata.processPara;
+            catch
+                obj.infoTxt.String = 'Error, Please Process first!';
+            end
             save(obj.data.info.metamat.name, 'metadata');
             obj.infoTxt.String = 'Processing Parameters Saved!';
         end
@@ -3357,36 +3454,36 @@ end
             end
             selectIndex = obj.openStates.roi.curRoiN;
             curROI      = obj.openStates.roi.curRoih;
-
+            
             % reading from the panel
             
             % boxcar filter window width
-            ftnum          =str2double(obj.fp.bcftEdit.String); 
+            ftnum          =str2double(obj.fp.bcftEdit.String);
             
             % baseline values
-            baselineLength = str2double(obj.fp.tvblEdit.String); 
-            fixedLength    = str2num(obj.fp.fdEdit.String); 
-%             fixedLength    = str2double(obj.fp.fdEdit.String);
-            fixedValue     = str2double(obj.fp.fvEdit.String); 
+            baselineLength = str2double(obj.fp.tvblEdit.String);
+            fixedLength    = str2num(obj.fp.fdEdit.String);
+            %             fixedLength    = str2double(obj.fp.fdEdit.String);
+            fixedValue     = str2double(obj.fp.fvEdit.String);
             
             % trace properties
-            preStmLength   = str2double(obj.fp.preStmLengthEdit.String);  
-            traceLength    = str2double(obj.fp.traceLengthEdit.String); 
+            preStmLength   = str2double(obj.fp.preStmLengthEdit.String);
+            traceLength    = str2double(obj.fp.traceLengthEdit.String);
             
             % display modes
             dm            = {'Raw','TrailByTrail','Average'};
-            selectedValue = [1,2,3,] * [obj.fp.rtRb.Value;obj.fp.tbtRb.Value;obj.fp.atRb.Value]; 
+            selectedValue = [1,2,3,] * [obj.fp.rtRb.Value;obj.fp.tbtRb.Value;obj.fp.atRb.Value];
             selectedDm    = char(dm(selectedValue));
             
             % axis
-            xmin = str2double(obj.fp.xminEdit.String); 
+            xmin = str2double(obj.fp.xminEdit.String);
             xmax = str2double(obj.fp.xmaxEdit.String);
-            ymin = str2double(obj.fp.yminEdit.String); 
-            ymax = str2double(obj.fp.ymaxEdit.String); 
+            ymin = str2double(obj.fp.yminEdit.String);
+            ymax = str2double(obj.fp.ymaxEdit.String);
             row  = str2double(obj.fp.rowEdit.String);
             col  = str2double(obj.fp.colEdit.String);
-             
-            % color 
+            
+            % color
             c    = [obj.fp.redRb.Value 0 obj.fp.blueRb.Value];
             
             % stimulus
@@ -3398,6 +3495,7 @@ end
             end
             stidata.data(:,3) = abs(stidata.data(:,3)) * (0.15 * ymax) / max(abs(stidata.data(:,3)));
             
+                       
             % write parameters to obj.metadata
             obj.data.metadata.processPara.filter         = ftnum;
             obj.data.metadata.processPara.baselineLength = obj.fp.tvblEdit.String;
@@ -3414,12 +3512,12 @@ end
                 inten = getintensity (obj, selectIndex, chN);
                 % create a tswls object, filter, and extract traces
                 tso = createAndProcessTswlsObject (inten, stidata, ftnum, framePeriod, traceLength,...
-                                                   preStmLength,baselineLength,fixedLength,fixedValue);
+                    preStmLength,baselineLength,fixedLength,fixedValue);
                 
                 % display in differnt modes with color option
                 h = figure ('Name',[obj.openStates.image.fileName(end-3:end) '-' num2str(selectIndex) '-' selectedDm],'NumberTitle','off');
                 tso.showTraces(selectedDm,h,c);
- 
+                
             else % Multiple ROIs
                 
                 if ~isempty(curROI)
@@ -3492,81 +3590,105 @@ end
                     figure;
                     for i = 1:6
                         resp = d(i,:);
-                    
-                    % tune the responses and fit with von mises model
-                    [X,y] = align_os(resp);
-                    [po,osi,mdl] = von_Mises_fit_os(X,y);                   
-                    
-                    % distinguish peak vs area
-                    f = ceil(i/3); ff = i - 3 * (f-1);
-                    l = {'Peak','Area'};
-                    c = [1 0 0; 0 0 1; 0 0 0];
-                    
-                    % plot original data points
-                    if length(resp) == 7
-                        subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60,90],resp,'-','Color',c(ff,:));
-                    else
-                        subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60],resp,'-','Color',c(ff,:));
-                    end
-                    hold on;
-                    xticks(-90:30:90);
-                    xlabel('Bar angle');
-                    ylabel(l(f));
-                    title('original');
-                    
-                    % plot predicted line
-                    X1 = linspace(X(1),X(end)+30)';
-                    y1 = predict(mdl,linspace(-90,90)');
-                    subplot(2,4,i+f),plot(X,y,'*k');hold on;
-                    line(X1,y1,'linestyle','-','Color',c(ff,:));
-                    xticks(X(1):30:X(end)+30);
-                    xlabel('Bar angle');
-                    title(sprintf('OSD: %d, OSI: %.2f',round(po),osi));
-                    
+                        
+                        % tune the responses and fit with von mises model
+                        [X,y] = align_os(resp);
+                        [po,osi,mdl] = von_Mises_fit_os(X,y);
+                        
+                        % distinguish peak vs area
+                        f = ceil(i/3); ff = i - 3 * (f-1);
+                        l = {'Peak','Area'};
+                        c = [1 0 0; 0 0 1; 0 0 0];
+                        
+                        % plot original data points
+                        if length(resp) == 7
+                            subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60,90],resp,'-','Color',c(ff,:));
+                        else
+                            subplot(2,4,4*(f-1)+1),plot([-90,-60,-30,0,30,60],resp,'-','Color',c(ff,:));
+                        end
+                        hold on;
+                        xticks(-90:30:90);
+                        xlabel('Bar angle');
+                        ylabel(l(f));
+                        title('original');
+                        
+                        % plot predicted line
+                        X1 = linspace(X(1),X(end)+30)';
+                        y1 = predict(mdl,linspace(-90,90)');
+                        subplot(2,4,i+f),plot(X,y,'*k');hold on;
+                        line(X1,y1,'linestyle','-','Color',c(ff,:));
+                        xticks(X(1):30:X(end)+30);
+                        xlabel('Bar angle');
+                        title(sprintf('OSD: %d, OSI: %.2f',round(po),osi));
+                        
                     end
                 end
             end
-                
+            
             % Export data
             if obj.fp.edRb.Value
                 
-                if isempty(tso.stadata)
-                    return;
+                nROI = length(tso);
+                if nROI == 1
+                    if isempty(tso.stadata)
+                        onLength = 2;
+                        offLength= 2;
+                        stLength = 4;
+                        tso.getStatistics(preStmLength,stLength,framePeriod,onLength,offLength);
+                    end
+                else
+                    for i = 1:nROI
+                        if isempty(tso{i}.stadata)
+                            onLength = 2;
+                            offLength= 2;
+                            stLength = 4;
+                            tso{i}.getStatistics(preStmLength,stLength,framePeriod,onLength,offLength);
+                        end
+                    end
                 end
                 
                 fullfilename = fullfile(obj.fp.pathEdit.String,obj.fp.nameEdit.String);
                 
-                %
-                if exist(fullfilename,'file')
-                    temp = load(fullfilename);
-                    ncell= length(temp.db);
-                    for i = 1:ncell
-                        if strcmp(temp.db{i}.name,obj.openStates.image.fileName)
-                            ButtonName = questdlg('Found the same file name, your choice for the data ?', ...
-                                '', 'Discard', 'Replace', 'Append', 'Discard');                               
-                            switch ButtonName
-                                case 'Discard'
-                                    return;
-                                case 'Replace'
-                                    temp.db{i}.peak = tso.stadata.peakAveTrace;
-                                    temp.db{i}.area = tso.stadata.area;
-                                case 'Append'
-                                    continue;
-                            end 
+                if obj.fp.osRb.Value
+                    if exist(fullfilename,'file')
+                        temp = load(fullfilename);
+                        ncell= length(temp.db);
+                        for i = 1:ncell
+                            if strcmp(temp.db{i}.name,obj.openStates.image.fileName)
+                                ButtonName = questdlg('Found the same file name, your choice for the data ?', ...
+                                    '', 'Discard', 'Replace', 'Append', 'Discard');
+                                switch ButtonName
+                                    case 'Discard'
+                                        return;
+                                    case 'Replace'
+                                        temp.db{i}.peak = tso.stadata.peakAveTrace;
+                                        temp.db{i}.area = tso.stadata.area;
+                                    case 'Append'
+                                        continue;
+                                end
+                            end
+                        end
+                        temp.db{ncell+1}.name = obj.openStates.image.fileName;
+                        temp.db{ncell+1}.peak = tso.stadata.peakAveTrace;
+                        temp.db{ncell+1}.area = tso.stadata.area;
+                        db = temp.db;
+                        save(fullfilename,'db');
+                    else
+                        db{1}.name = obj.openStates.image.fileName;
+                        db{1}.peak = tso.stadata.peakAveTrace;
+                        db{1}.area = tso.stadata.area;
+                        save(fullfilename,'db');
+                    end
+                else
+                    if nROI == 1
+                        stadata = tso.stadata;
+                    else
+                        for i = 1:nROI
+                            stadata{i} = tso{i}.stadata;
                         end
                     end
-                    temp.db{ncell+1}.name = obj.openStates.image.fileName;
-                    temp.db{ncell+1}.peak = tso.stadata.peakAveTrace;
-                    temp.db{ncell+1}.area = tso.stadata.area;
-                    db = temp.db;
-                    save(fullfilename,'db');
-                else
-                    db{1}.name = obj.openStates.image.fileName;
-                    db{1}.peak = tso.stadata.peakAveTrace;
-                    db{1}.area = tso.stadata.area;
-                    save(fullfilename,'db');
+                    save(fullfilename,'stadata');
                 end
-                
                 %                 v            = outToExcel(out);
                 %                 xlswrite(fullfilename,v);
                 %                 winopen(fullfilename);
@@ -3576,8 +3698,8 @@ end
             obj.infoTxt.String = 'Process done!';
             
         end
-           
-
+        
+        
     end
 end
 
@@ -3623,7 +3745,7 @@ switch selected_color
     case 'Jet'
         colormap(gca,jet);
 end
-        
+
 
 end
 

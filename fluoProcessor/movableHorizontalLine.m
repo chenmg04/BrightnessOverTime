@@ -1,4 +1,4 @@
-function threshold = movableHorizontalLine ( hFig, ax )
+function threshold = movableHorizontalLine ( hFig, ax, ini )
 
 % Create the variable which is required to know if the line move is active or not.
 mouseDown = false;
@@ -9,8 +9,10 @@ hFig.WindowButtonMotionFcn = @MouseMove;
 hFig.WindowButtonUpFcn     = @MouseUp;
 % plot the vertical line
 xlim = get ( ax, 'xlim' );
-ylim = get ( ax, 'ylim' );
-hLine = plot ( ax, xlim, [ylim(2)/2 ylim(2)/2],'r','ButtonDownFcn', @MouseDown );
+% ylim = get ( ax, 'ylim' );
+% hLine = plot ( ax, xlim, [ylim(2)/2 ylim(2)/2],'r','ButtonDownFcn', @MouseDown );
+hLine = plot ( ax, xlim, [ini ini],'r','ButtonDownFcn', @MouseDown );
+text( ax, xlim(2),ini, num2str(ini),'Color','red');
 cp =[];
 % a function which is called whenever the mouse is moved
     function MouseMove (varargin)
@@ -44,7 +46,7 @@ cp =[];
         % reset the mouse down flag.
         mouseDown = false;
         if ~isempty(cp)
-            text( ax, cp(1,1),cp(1,2), num2str(cp(1,2)),'Color','red');
+            text( ax, cp(1,1),cp(1,2), num2str(round(cp(1,2))),'Color','red');
         end
     end
 
